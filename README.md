@@ -77,7 +77,7 @@ scripts/        repo scripts
 
 ## Prerequisites
 
-- Node `>= 20.11`
+- Node `^20.19.4 || ^22.13.0 || >=24.3.0` (see `.nvmrc`; required by React Native 0.86 / Expo SDK 57)
 - pnpm `>= 9` (`npm i -g pnpm` or `corepack enable`)
 - For native builds only: Xcode / Android Studio, plus an Expo account for EAS
 

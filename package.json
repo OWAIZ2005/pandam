@@ -5,7 +5,7 @@
   "description": "PANDAM - direct barter marketplace (technical foundation)",
   "packageManager": "pnpm@9.15.9",
   "engines": {
-    "node": ">=20.11.0",
+    "node": "^20.19.4 || ^22.13.0 || >=24.3.0",
     "pnpm": ">=9.0.0"
   },
   "scripts": {
@@ -25,20 +25,6 @@
     "eslint": "^8.57.1",
     "prettier": "^3.4.2",
     "turbo": "^2.3.3",
-    "typescript": "^5.7.3"
-  },
-  "pnpm": {
-    "overrides": {
-      "react": "18.3.1",
-      "react-dom": "18.3.1",
-      "react-native": "0.76.6",
-      "nativewind": "4.1.23",
-      "react-native-css-interop": "0.1.22"
-    },
-    "peerDependencyRules": {
-      "allowedVersions": {
-        "react": "18.3.1"
-      }
-    }
+    "typescript": "^6.0.3"
   }
 }

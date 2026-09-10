@@ -9,7 +9,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "pandam-api",
   "main": "src/index.ts",
-  "compatibility_date": "2025-01-09",
+  "compatibility_date": "2026-09-01",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
   "observability": {
@@ -82,14 +82,10 @@
   // },
 
   // ---------------------------------------------------------------------------
-  // Per-environment overrides. Fill in when these environments are set up.
+  // Per-environment overrides (`env.preview`, `env.production`) are added in a
+  // later phase, together with the real bindings. Wrangler v4 warns on every
+  // command when named environments exist but none is selected, so they are
+  // intentionally omitted until they carry real configuration. Deploys will
+  // then use `wrangler deploy --env <name>`.
   // ---------------------------------------------------------------------------
-  "env": {
-    "preview": {
-      "vars": { "PANDAM_ENV": "preview" }
-    },
-    "production": {
-      "vars": { "PANDAM_ENV": "production" }
-    }
-  }
 }

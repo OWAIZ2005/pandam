@@ -4,8 +4,7 @@
  * data/analytics.
  */
 import { QueryClientProvider } from '@tanstack/react-query';
-import { useRef } from 'react';
-import { type ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -13,7 +12,8 @@ import { AnalyticsProvider } from '@/lib/analytics';
 import { createQueryClient } from '@/lib/query';
 
 export function AppProviders({ children }: { children: ReactNode }) {
-  const queryClient = useRef(createQueryClient()).current;
+  // Lazy state initialiser → one stable QueryClient for the component's life.
+  const [queryClient] = useState(createQueryClient);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

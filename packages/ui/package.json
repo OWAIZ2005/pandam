@@ -20,17 +20,17 @@
     "@pandam/utils": "workspace:*"
   },
   "peerDependencies": {
-    "nativewind": ">=4",
-    "react": ">=18",
-    "react-native": ">=0.76"
+    "nativewind": ">=4.2",
+    "react": ">=19",
+    "react-native": ">=0.81"
   },
   "devDependencies": {
     "@pandam/config": "workspace:*",
-    "@types/react": "~18.3.12",
+    "@types/react": "~19.2.18",
     "eslint": "^8.57.1",
-    "nativewind": "4.1.23",
-    "react": "18.3.1",
-    "react-native": "0.76.6",
-    "typescript": "^5.7.3"
+    "nativewind": "^4.2.6",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "typescript": "^6.0.3"
   }
 }

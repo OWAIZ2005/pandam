@@ -7,6 +7,6 @@ import { useSession } from '@/lib/auth/hooks';
 export default function AuthLayout() {
   const { isResolving, isAuthenticated } = useSession();
   if (isResolving) return <Splash />;
-  if (isAuthenticated) return <Redirect href="/(app)" />;
+  if (isAuthenticated) return <Redirect href="/(app)/(tabs)" />;
   return <Stack screenOptions={{ headerShown: false }} />;
 }

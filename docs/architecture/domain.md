@@ -4,10 +4,12 @@ Phase 1 built the production-quality **domain foundation**: the relational
 schema, Drizzle models, D1 migrations, shared types, Zod validation, a thin
 repository layer, the deterministic matching engine, the offer / barter-
 transaction lifecycles, and the `/api/v1` route structure. It did **not** build
-the marketplace UI, AI, credits or payments — those remain out of scope.
+AI, credits or payments — those remain permanently out of scope for V1.
 
-Authentication was added in Phase 2 — see [`auth.md`](auth.md). This document
-covers the domain/data model and the non-auth API.
+Authentication was added in Phase 2 — see [`auth.md`](auth.md). The marketplace
+UI and the `listings` / `needs` API were added next — see
+[`marketplace-ui.md`](marketplace-ui.md). This document covers the domain/data
+model and the non-auth API.
 
 ## 1. Database architecture
 
@@ -173,14 +175,15 @@ not already reviewed. The DB backs this with `FK(transactionId)`,
 
 Base path **`/api/v1`** (Hono, `apps/worker/src/routes/api/v1/`).
 
-| Route                                                                                                     | Status                                                                                   |
-| --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `GET /api/v1`                                                                                             | ✅ machine-readable description of the surface                                           |
-| `POST /api/v1/auth/{register,login,logout}` · `GET /api/v1/auth/me`                                       | ✅ real session authentication — see [`auth.md`](auth.md)                                |
-| `GET/PUT/PATCH /api/v1/profiles/me`                                                                       | ✅ the caller's own profile (auth required)                                              |
-| `GET /api/v1/categories`                                                                                  | ✅ list active categories (DB-backed, public)                                            |
-| `GET /api/v1/matches`                                                                                     | ✅ reciprocal candidates for the current user (auth required)                            |
-| `/api/v1/{users,listings,needs,offers,conversations,messages,transactions,reviews,notifications,reports}` | mounted, return **501 `not_implemented`** — planned endpoints documented in `planned.ts` |
+| Route                                                                                            | Status                                                                                                |
+| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `GET /api/v1`                                                                                    | ✅ machine-readable description of the surface                                                        |
+| `POST /api/v1/auth/{register,login,logout}` · `GET /api/v1/auth/me`                              | ✅ real session authentication — see [`auth.md`](auth.md)                                             |
+| `GET/PUT/PATCH /api/v1/profiles/me`                                                              | ✅ the caller's own profile (auth required)                                                           |
+| `GET /api/v1/categories`                                                                         | ✅ list active categories (DB-backed, public)                                                         |
+| `GET · POST /api/v1/{listings,needs}` · `GET …/mine` · `GET · PATCH …/:id` · `POST …/:id/status` | ✅ "I HAVE" / "I NEED" CRUD + published-only discovery — see [`marketplace-ui.md`](marketplace-ui.md) |
+| `GET /api/v1/matches`                                                                            | ✅ reciprocal candidates for the current user, hydrated as `you ↔ them` (auth required)               |
+| `/api/v1/{users,offers,conversations,messages,transactions,reviews,notifications,reports}`       | mounted, return **501 `not_implemented`** — planned endpoints documented in `planned.ts`              |
 
 - **Response envelopes** (`apps/worker/src/lib/http.ts`, matching `@pandam/types`):
   success `{ ok: true, data }`, failure `{ ok: false, error: { code, message,

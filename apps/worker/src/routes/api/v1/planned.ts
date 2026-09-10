@@ -25,24 +25,6 @@ export const PLANNED_GROUPS: PlannedGroup[] = [
     endpoints: ['DELETE /me', 'GET /me/sessions', 'POST /me/change-password'],
   },
   {
-    name: 'listings',
-    summary: '"I HAVE" — products, services, skills offered',
-    endpoints: [
-      'GET /',
-      'POST /',
-      'GET /:id',
-      'PATCH /:id',
-      'POST /:id/status',
-      'GET /:id/images',
-      'POST /:id/images',
-    ],
-  },
-  {
-    name: 'needs',
-    summary: '"I NEED" — what a user wants in exchange',
-    endpoints: ['GET /', 'POST /', 'GET /:id', 'PATCH /:id', 'POST /:id/status'],
-  },
-  {
     name: 'offers',
     summary: 'Barter proposals between two users',
     endpoints: ['GET /incoming', 'GET /outgoing', 'POST /', 'GET /:id', 'POST /:id/respond'],

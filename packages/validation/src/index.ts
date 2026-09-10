@@ -9,6 +9,7 @@
 export * from './common';
 export * from './auth';
 export * from './profile';
+export * from './discovery';
 export * from './listing';
 export * from './need';
 export * from './offer';

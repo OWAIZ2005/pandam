@@ -7,5 +7,5 @@ import { useSession } from '@/lib/auth/hooks';
 export default function Index() {
   const { isResolving, isAuthenticated } = useSession();
   if (isResolving) return <Splash />;
-  return <Redirect href={isAuthenticated ? '/(app)' : '/(auth)/login'} />;
+  return <Redirect href={isAuthenticated ? '/(app)/(tabs)' : '/(auth)/login'} />;
 }

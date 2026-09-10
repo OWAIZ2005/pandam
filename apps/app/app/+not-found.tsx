@@ -1,16 +1,27 @@
 import { Link, Stack } from 'expo-router';
 import { View } from 'react-native';
 
-import { Text } from '@pandam/ui';
+import { Text, colors } from '@pandam/ui';
 
 export default function NotFound() {
   return (
     <>
       <Stack.Screen options={{ title: 'Not found' }} />
-      <View className="flex-1 items-center justify-center gap-2 bg-background p-6">
-        <Text variant="title">This screen doesn&apos;t exist.</Text>
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          padding: 24,
+          backgroundColor: colors.background,
+        }}
+      >
+        <Text variant="h2">This screen doesn&apos;t exist.</Text>
         <Link href="/">
-          <Text variant="muted">Go to home</Text>
+          <Text tone="accent" style={{ fontWeight: '600' }}>
+            Go home
+          </Text>
         </Link>
       </View>
     </>

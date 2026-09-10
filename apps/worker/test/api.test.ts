@@ -60,14 +60,14 @@ describe('/api/v1 surface', () => {
     };
     expect(body.data.version).toBe('v1');
     expect(body.data.implemented.map((g) => g.name)).toEqual(
-      expect.arrayContaining(['auth', 'profiles', 'categories', 'matches']),
+      expect.arrayContaining(['auth', 'profiles', 'categories', 'listings', 'needs', 'matches']),
     );
-    expect(body.data.planned.map((g) => g.name)).toContain('listings');
-    expect(body.data.planned.map((g) => g.name)).not.toContain('profiles');
+    expect(body.data.planned.map((g) => g.name)).toContain('offers');
+    expect(body.data.planned.map((g) => g.name)).not.toContain('listings');
   });
 
   it('planned groups return 501 not_implemented', async () => {
-    const res = await createApp().request('/api/v1/listings', {}, env);
+    const res = await createApp().request('/api/v1/offers', {}, env);
     expect(res.status).toBe(501);
     expect(await json(res)).toMatchObject({ ok: false, error: { code: 'not_implemented' } });
   });

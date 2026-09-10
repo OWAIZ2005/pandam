@@ -3,7 +3,14 @@
  * secrets (password hashes, token hashes) can never leak by accident: these
  * functions simply do not copy those fields.
  */
-import { type Profile, type PublicProfile, type SafeUser, type User } from '@pandam/types';
+import { type ListingWithRefs } from '@pandam/database';
+import {
+  type MarketItem,
+  type Profile,
+  type PublicProfile,
+  type SafeUser,
+  type User,
+} from '@pandam/types';
 
 export function toSafeUser(user: User): SafeUser {
   return {
@@ -27,5 +34,21 @@ export function toPublicProfile(profile: Profile | null): PublicProfile | null {
     locationCountry: profile.locationCountry,
     createdAt: profile.createdAt,
     updatedAt: profile.updatedAt,
+  };
+}
+
+export function toMarketItem(row: ListingWithRefs, kind: 'listing' | 'need'): MarketItem {
+  return {
+    id: row.id,
+    kind,
+    ownerId: row.ownerId,
+    type: row.type,
+    title: row.title,
+    description: row.description,
+    status: row.status,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    owner: row.owner,
+    category: row.category,
   };
 }

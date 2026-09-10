@@ -1,0 +1,86 @@
+/**
+ * TanStack Query hooks for listings ("I HAVE") and needs ("I NEED").
+ * `kind` selects which. Mutations invalidate the affected caches.
+ */
+import { type MarketItem } from '@pandam/types';
+import {
+  type CreateListingInput,
+  type CreateNeedInput,
+  type UpdateListingInput,
+} from '@pandam/validation';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import { type MarketKind, marketApi } from '@/lib/api/market';
+import { qk } from '@/lib/query/keys';
+
+export type DiscoverParams = {
+  category?: string;
+  type?: MarketItem['type'];
+  q?: string;
+  owner?: string;
+  limit?: number;
+};
+
+export function useDiscover(kind: MarketKind, params: DiscoverParams) {
+  return useInfiniteQuery({
+    queryKey: qk.market.discover(kind, params),
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) => marketApi.discover(kind, { ...params, cursor: pageParam ?? null }),
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+    staleTime: 20_000,
+  });
+}
+
+export function useMyItems(kind: MarketKind, enabled = true) {
+  return useQuery({
+    queryKey: qk.market.mine(kind),
+    queryFn: async () => (await marketApi.mine(kind)).items,
+    enabled,
+    staleTime: 15_000,
+  });
+}
+
+export function useItem(kind: MarketKind, id: string | undefined) {
+  return useQuery({
+    queryKey: qk.market.detail(kind, id ?? ''),
+    queryFn: async () => (await marketApi.get(kind, id!)).item,
+    enabled: !!id,
+  });
+}
+
+export function useCreateItem(kind: MarketKind) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateListingInput | CreateNeedInput) => marketApi.create(kind, input),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: qk.market.all(kind) });
+      void client.invalidateQueries({ queryKey: qk.matches });
+    },
+  });
+}
+
+export function useUpdateItem(kind: MarketKind) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: UpdateListingInput }) =>
+      marketApi.update(kind, id, patch),
+    onSuccess: (res) => {
+      client.setQueryData(qk.market.detail(kind, res.item.id), res.item);
+      void client.invalidateQueries({ queryKey: qk.market.all(kind) });
+      void client.invalidateQueries({ queryKey: qk.matches });
+    },
+  });
+}
+
+export function useSetItemStatus(kind: MarketKind) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: MarketItem['status'] }) =>
+      marketApi.setStatus(kind, id, { status }),
+    onSuccess: (res) => {
+      client.setQueryData(qk.market.detail(kind, res.item.id), res.item);
+      void client.invalidateQueries({ queryKey: qk.market.all(kind) });
+      void client.invalidateQueries({ queryKey: qk.matches });
+    },
+  });
+}

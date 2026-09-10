@@ -5,9 +5,14 @@ what they _need_, search listings, get rule-based matches, send barter offers,
 chat, complete the exchange, and review each other. No money, no credits, no
 wallet — a good is traded directly for a good.
 
-> **Status: technical foundation only.** This repository currently contains the
-> monorepo, build tooling, an empty Expo app shell, and a Worker health check.
-> None of the product features listed above are implemented yet.
+> **Status: foundation + marketplace UI.** Built: the monorepo and build
+> tooling; the full domain/database foundation; real session auth; the
+> `@pandam/ui` design system, the app navigation shell, and the I HAVE / I NEED
+> / discovery / matches / profile screens on real API data. **Not** built:
+> offers, chat, barter transactions, reviews, notifications, disputes/admin, and
+> production R2 image upload — plus the permanent V1 exclusions (AI matching,
+> credits, currency, payments). See
+> [`docs/architecture/overview.md`](docs/architecture/overview.md).
 
 ## Architecture
 
@@ -61,25 +66,29 @@ See [`docs/architecture/overview.md`](docs/architecture/overview.md) and
 ```
 apps/
   app/          Expo universal app (iOS / Android / Web)
-                  app/(auth) app/(app)  route groups + auth guards
+                  app/(auth)  app/(app)/(tabs)  route groups + auth guard
                   src/lib/api            fetch client + typed endpoint wrappers
+                  src/lib/hooks          TanStack Query hooks (market, categories, matches)
                   src/lib/auth           useSession / login / register / logout
-                  src/lib/session        native secure-store token
+                  src/components         Splash + domain cards (ItemCard, MatchCard, ...)
   worker/       Cloudflare Worker API (Hono)
-                  src/routes/api/v1     versioned API (auth, profiles, ...)
-                  src/services/auth.ts  register / login / session validation
+                  src/routes/api/v1     versioned API (auth, profiles, categories,
+                                        listings, needs, matches, ...)
+                  src/routes/api/v1/market.ts  one factory for listings + needs
                   src/middleware/auth.ts context + auth + requireAuth
                   src/domain            pure business rules (matching, lifecycles)
                   src/lib/crypto.ts     PBKDF2 password + session-token hashing
 packages/
-  ui/           cross-platform UI foundation + design tokens
+  ui/           cross-platform design system: tokens + primitives (pure RN)
   types/        shared TypeScript types (derived from the DB schema)
-  validation/   shared Zod schemas (auth, profile, listing, ...)
+  validation/   shared Zod schemas (auth, profile, listing, need, discovery, ...)
   database/     Drizzle schema + migrations + D1 client + repository layer
+                  repositories/market.ts  discovery read model (public owner slice)
   config/       shared tsconfig / eslint / prettier
   utils/        framework-agnostic helpers
 docs/
-  architecture/ (overview.md, domain.md)   product/   api/   decisions/
+  architecture/ (overview.md, domain.md, auth.md, marketplace-ui.md)
+  product/   api/   decisions/
 scripts/        repo scripts
 .github/workflows/  CI
 ```

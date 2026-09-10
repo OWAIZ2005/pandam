@@ -16,6 +16,7 @@ import { credentialsRepository } from './credentials';
 import { disputesRepository } from './disputes';
 import { listingImagesRepository } from './listing-images';
 import { listingsRepository } from './listings';
+import { marketRepository } from './market';
 import { matchesRepository } from './matches';
 import { messagesRepository } from './messages';
 import { needsRepository } from './needs';
@@ -37,6 +38,7 @@ export function createRepositories(db: Database) {
     listings: listingsRepository(db),
     listingImages: listingImagesRepository(db),
     needs: needsRepository(db),
+    market: marketRepository(db),
     matches: matchesRepository(db),
     offers: offersRepository(db),
     conversations: conversationsRepository(db),
@@ -57,6 +59,13 @@ export type { CreateSessionInput } from './sessions';
 export type { CreateProfileInput, UpdateProfileInput } from './profiles';
 export type { CreateListingInput, UpdateListingInput } from './listings';
 export type { CreateNeedInput, UpdateNeedInput } from './needs';
+export type {
+  ListingWithRefs,
+  NeedWithRefs,
+  OwnerRef,
+  CategoryRef,
+  DiscoverFilters,
+} from './market';
 export type { CreateOfferInput } from './offers';
 export type { UpsertMatchInput } from './matches';
 export type { CreateBarterTransactionInput } from './barter-transactions';

@@ -188,3 +188,55 @@ export interface AuthSession {
   /** Epoch ms when the session expires. */
   expiresAt: number;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Marketplace API shapes (listings / needs / discovery / matches)            */
+/* -------------------------------------------------------------------------- */
+
+/** Public slice of a user — everything a card needs, nothing private. */
+export interface OwnerRef {
+  id: string;
+  displayName: string;
+  username: string | null;
+}
+
+export interface CategoryRef {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+/** A listing ("I HAVE") or need ("I NEED") as returned by the API. */
+export interface MarketItem {
+  id: string;
+  kind: 'listing' | 'need';
+  ownerId: string;
+  type: ItemType;
+  title: string;
+  description: string;
+  status: PublicationStatus;
+  createdAt: number;
+  updatedAt: number;
+  owner: OwnerRef;
+  category: CategoryRef;
+}
+
+export type ListingSummary = MarketItem & { kind: 'listing' };
+export type NeedSummary = MarketItem & { kind: 'need' };
+
+/** One side of a reciprocal barter match. */
+export interface MatchSide {
+  user: OwnerRef;
+  /** What this side HAS that the other side NEEDS. */
+  have: { id: string; title: string; type: ItemType; category: CategoryRef };
+  /** What this side NEEDS that the other side HAS. */
+  need: { id: string; title: string; type: ItemType; category: CategoryRef };
+}
+
+/** `GET /api/v1/matches` item — always oriented as you ↔ them. */
+export interface ReciprocalMatchView {
+  /** Stable key derived from the four item ids. */
+  key: string;
+  you: MatchSide;
+  them: MatchSide;
+}

@@ -13,5 +13,8 @@ server validate identically.
 - `profile.ts` · `listing.ts` · `need.ts` · `offer.ts` · `message.ts` ·
   `review.ts` · `report.ts` — `create*` / `put*` / `patch*` / action schemas per
   entity, each exporting the inferred input type.
+- `discovery.ts` — `discoverQuerySchema`: the `/api/v1/{listings,needs}`
+  query-string contract (`category`, `type`, `q`, `owner`, `cursor`, `limit`),
+  used by both the Worker route and the app's query builder.
 
 More business schemas are added alongside the features that need them.

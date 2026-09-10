@@ -1,10 +1,13 @@
 # PANDAM — Architecture overview
 
 This describes the target architecture. Built so far: the Expo app with a real
-**auth + profile foundation** ([`auth.md`](auth.md)), the Worker + `/api/v1`
-structure, and the full **domain & database foundation** (schema, migrations,
-repositories, matching, lifecycles) — see [`domain.md`](domain.md). R2, Durable
-Objects and Queues remain scaffolding.
+**auth + profile foundation** ([`auth.md`](auth.md)), the full **domain &
+database foundation** (schema, migrations, repositories, matching, lifecycles) —
+see [`domain.md`](domain.md) — and the **marketplace UI & design system** (the
+`@pandam/ui` package, the tab navigation shell, and the I HAVE / I NEED /
+discovery / matches / profile screens, with `listings` / `needs` now
+implemented in `/api/v1`) — see [`marketplace-ui.md`](marketplace-ui.md). R2,
+Durable Objects and Queues remain scaffolding.
 
 ## 1. Universal Expo frontend (`apps/app`)
 
@@ -13,9 +16,12 @@ One React Native codebase compiled to three targets:
 - **iOS / Android** via Expo (managed / Continuous Native Generation).
 - **Web** via React Native Web + Expo Router's static export.
 
-Routing is file-based (`app/` directory, Expo Router). Styling is Tailwind via
-NativeWind. Animations use Reanimated; gestures use Gesture Handler. Images use
-`expo-image`.
+Routing is file-based (`app/` directory, Expo Router) with nested route groups
+(`(auth)` / `(app)` / `(app)/(tabs)`). The design system is `@pandam/ui` —
+pure-RN token-styled primitives shared by every target; app screens add
+NativeWind `className` for one-off layout, with the Tailwind theme derived from
+the same tokens. Animations use Reanimated; gestures use Gesture Handler. Images
+use `expo-image`. See [`marketplace-ui.md`](marketplace-ui.md).
 
 Client responsibilities and the tools that own them:
 
@@ -136,5 +142,11 @@ Worker (request handler)  --enqueue-->  Queue  --batch-->  Worker (queue handler
 - **PANDAM credits / multi-party barter** — `Offer` and `Transaction` are
   modelled as their own aggregates so additional offer types or N-party
   transaction graphs can be added without reworking listings or chat.
+- **Dark theme** — `@pandam/ui` tokens are one flat semantic object; a dark
+  palette is a second object plus a provider switch, no component change.
 
-None of these are implemented in this phase.
+None of these are implemented. The **offers workflow, realtime chat,
+barter-transaction workflow, reviews, notifications, disputes/admin and
+production R2 image upload** are likewise still out of scope after the
+marketplace-UI phase — unsupported actions in the app are disabled with an
+honest note, never faked.

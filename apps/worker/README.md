@@ -26,13 +26,15 @@ src/
   lib/crypto.ts         PBKDF2 password hashing + session-token generation/hashing
   lib/cookies.ts        pandam_session HttpOnly cookie helpers
   lib/http.ts           ApiError + { ok, data } / { ok, error } envelopes
-  lib/serialize.ts      row -> API shape (drops secrets)
-  lib/validate.ts       parseBody(c, zodSchema)
+  lib/serialize.ts      row -> API shape (drops secrets); toMarketItem
+  lib/validate.ts       parseBody / parseQuery (c, zodSchema)
+  lib/cursor.ts         opaque base64url keyset cursor (createdAt, id)
   domain/               pure business rules (matching, offer/barter lifecycles, reviews)
-  routes/api/v1/        auth · profiles · categories · matches · planned (501)
+  routes/api/v1/        auth · profiles · categories · listings · needs · matches · planned (501)
+                        market.ts  createMarketRoute(kind) — one factory for listings + needs
 test/
   helpers/db.ts         in-memory libsql + real migrations; createApp({ db })
-  auth.test.ts profiles.test.ts lib/crypto.test.ts api.test.ts validation.test.ts domain/*
+  auth.test.ts profiles.test.ts market.test.ts lib/crypto.test.ts api.test.ts validation.test.ts domain/*
 wrangler.jsonc          D1 binding enabled (placeholder id); R2/DO/Queues commented
 .dev.vars.example       local vars template -> copy to .dev.vars
 ```
@@ -41,7 +43,12 @@ wrangler.jsonc          D1 binding enabled (placeholder id); R2/DO/Queues commen
 
 `/api/v1` — `GET /api/v1` describes the surface. Implemented: `auth`
 (register/login/logout/me), `profiles/me` (GET/PUT/PATCH), `categories` (public
-read), `matches` (auth). Other resource groups return `501 not_implemented`.
+read), `listings` and `needs` (`GET`/`POST` `/`, `GET /mine`, `GET`/`PATCH`
+`/:id`, `POST /:id/status` — published-only public discovery with keyset
+pagination; ownership always from the session), and `matches` (auth; reciprocal
+candidates hydrated as `you ↔ them`, no score). Other resource groups return
+`501 not_implemented`. See
+[`docs/architecture/marketplace-ui.md`](../../docs/architecture/marketplace-ui.md) §4.
 
 Authentication: server-side sessions, HttpOnly `Secure` cookie for web and
 `Authorization: Bearer` for native; identity comes only from the verified

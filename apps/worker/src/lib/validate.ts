@@ -20,6 +20,18 @@ export async function parseBody<TSchema extends ZodTypeAny>(
   } catch {
     throw new ApiError('bad_request', 'Request body must be valid JSON.');
   }
+  return run(schema, raw);
+}
+
+/** Validate the query string against a Zod schema. */
+export function parseQuery<TSchema extends ZodTypeAny>(
+  c: Context<AppEnv>,
+  schema: TSchema,
+): z.infer<TSchema> {
+  return run(schema, c.req.query());
+}
+
+function run<TSchema extends ZodTypeAny>(schema: TSchema, raw: unknown): z.infer<TSchema> {
   const result = schema.safeParse(raw);
   if (!result.success) {
     throw new ApiError(

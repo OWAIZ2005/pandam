@@ -22,7 +22,10 @@ src/
                       also run on an in-memory libsql engine in tests.
   repositories/
     <entity>.ts       thin, rule-free data access (Create*/Update* input types)
-    index.ts          createRepositories(db) -> { users, listings, offers, ... }
+    market.ts         read model for discovery — item + owner profile + category
+                      JOINs; returns only the PUBLIC owner slice. Keeps the
+                      plain listings/needs repos simple CRUD.
+    index.ts          createRepositories(db) -> { users, listings, market, ... }
   seed.ts             CATEGORY_SEED, toSlug()
   index.ts            public entrypoint
 migrations/           SQL migrations applied to D1 via wrangler

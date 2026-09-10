@@ -3,11 +3,9 @@ import { loginSchema, type LoginInput } from '@pandam/validation';
 import { Link, useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { ScrollView, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Text } from '@pandam/ui';
+import { Button, Field, Row, Screen, Stack, Text } from '@pandam/ui';
 
-import { Button, Field } from '@/components/form';
 import { ApiError } from '@/lib/api/client';
 import { useLogin } from '@/lib/auth/hooks';
 
@@ -20,7 +18,7 @@ export default function LoginScreen() {
   });
 
   const onSubmit = handleSubmit((values) => {
-    login.mutate(values, { onSuccess: () => router.replace('/(app)') });
+    login.mutate(values, { onSuccess: () => router.replace('/(app)/(tabs)') });
   });
 
   const formError =
@@ -31,65 +29,77 @@ export default function LoginScreen() {
         : null;
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerClassName="grow justify-center gap-5 p-6">
-        <View className="gap-1">
-          <Text variant="heading">Welcome back</Text>
-          <Text variant="muted">Sign in to your PANDAM account.</Text>
-        </View>
-
-        <Controller
-          control={control}
-          name="email"
-          render={({ field, fieldState }) => (
-            <Field
-              label="Email"
-              keyboardType="email-address"
-              textContentType="emailAddress"
-              value={field.value}
-              onChangeText={field.onChange}
-              onBlur={field.onBlur}
-              error={fieldState.error?.message}
-            />
-          )}
-        />
-        <Controller
-          control={control}
-          name="password"
-          render={({ field, fieldState }) => (
-            <Field
-              label="Password"
-              secureTextEntry
-              textContentType="password"
-              value={field.value}
-              onChangeText={field.onChange}
-              onBlur={field.onBlur}
-              error={fieldState.error?.message}
-            />
-          )}
-        />
-
-        {formError ? (
-          <Text variant="muted" className="text-danger">
-            {formError}
-          </Text>
-        ) : null}
-
-        <Button
-          label={login.isPending ? 'Signing in…' : 'Sign in'}
-          onPress={onSubmit}
-          disabled={login.isPending || formState.isSubmitting}
-        />
-
-        <View className="flex-row justify-center gap-1">
-          <Text variant="muted">No account?</Text>
-          <Link href="/(auth)/register">
-            <Text variant="muted" className="text-primary">
-              Create one
+    <Screen padded={false} edges={['top', 'bottom']}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}>
+        <Stack gap="xl">
+          <View>
+            <Text variant="display" tone="accent">
+              PANDAM
             </Text>
-          </Link>
-        </View>
+            <Text variant="h3" style={{ marginTop: 4 }}>
+              Welcome back
+            </Text>
+            <Text tone="secondary">Trade what you have for what you need.</Text>
+          </View>
+
+          <Stack gap="lg">
+            <Controller
+              control={control}
+              name="email"
+              render={({ field, fieldState }) => (
+                <Field
+                  label="Email"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  textContentType="emailAddress"
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  error={fieldState.error?.message}
+                />
+              )}
+            />
+            <Controller
+              control={control}
+              name="password"
+              render={({ field, fieldState }) => (
+                <Field
+                  label="Password"
+                  secureTextEntry
+                  textContentType="password"
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  error={fieldState.error?.message}
+                />
+              )}
+            />
+
+            {formError ? (
+              <Text variant="bodySm" tone="danger">
+                {formError}
+              </Text>
+            ) : null}
+
+            <Button
+              label={login.isPending ? 'Signing in…' : 'Sign in'}
+              fullWidth
+              loading={login.isPending}
+              disabled={formState.isSubmitting}
+              onPress={onSubmit}
+            />
+          </Stack>
+
+          <Row gap="xs" justify="center">
+            <Text tone="secondary">No account?</Text>
+            <Link href="/(auth)/register">
+              <Text tone="accent" style={{ fontWeight: '600' }}>
+                Create one
+              </Text>
+            </Link>
+          </Row>
+        </Stack>
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }

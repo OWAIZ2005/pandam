@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -61,13 +61,20 @@ export function Button({
 }: ButtonProps) {
   const pad = PAD[size];
   const isDisabled = disabled || loading;
+  const [pressed, setPressed] = useState(false);
+
+  // NOTE: `style` is a plain array, never a function. NativeWind's jsx runtime
+  // drops function-form `style` props on native, which would strip every
+  // visual here and make the button invisible.
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ disabled: !!isDisabled, busy: loading }}
       disabled={isDisabled}
       hitSlop={8}
-      style={({ pressed }) => [
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      style={[
         styles.base,
         {
           backgroundColor: BG[variant],

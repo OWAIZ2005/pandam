@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Pressable } from 'react-native';
 
 import { colors, radii } from '../tokens';
@@ -21,6 +21,9 @@ export function IconButton({
   size = 44,
   disabled,
 }: IconButtonProps) {
+  const [pressed, setPressed] = useState(false);
+  // Plain array `style` (never a function) — NativeWind's native jsx runtime
+  // drops function-form `style` props.
   return (
     <Pressable
       accessibilityRole="button"
@@ -28,8 +31,10 @@ export function IconButton({
       accessibilityState={{ disabled: !!disabled }}
       disabled={disabled}
       onPress={onPress}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
       hitSlop={6}
-      style={({ pressed }) => ({
+      style={{
         width: size,
         height: size,
         borderRadius: radii.pill,
@@ -37,7 +42,7 @@ export function IconButton({
         justifyContent: 'center',
         backgroundColor: variant === 'filled' ? colors.surfaceMuted : 'transparent',
         opacity: disabled ? 0.4 : pressed ? 0.6 : 1,
-      })}
+      }}
     >
       {icon}
     </Pressable>

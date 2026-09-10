@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Pressable, type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 
 import { colors, radii, shadows, spacing } from '../tokens';
@@ -27,13 +27,18 @@ export function Card({
     elevated ? shadows.sm : null,
     style,
   ];
+  const [pressed, setPressed] = useState(false);
   if (!onPress) return <View style={base}>{children}</View>;
+  // Plain array `style` (never a function) — NativeWind's native jsx runtime
+  // drops function-form `style` props, which would strip the card's styling.
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
-      style={({ pressed }) => [base, pressed && { opacity: 0.9, transform: [{ scale: 0.995 }] }]}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      style={[base, pressed && { opacity: 0.9, transform: [{ scale: 0.995 }] }]}
     >
       {children}
     </Pressable>

@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { Screen, Stack, Text, colors, radii, spacing } from '@pandam/ui';
@@ -20,18 +21,21 @@ function BigChoice({
   onPress: () => void;
 }) {
   const bg = tone === 'have' ? colors.accent : colors.need;
+  const [pressed, setPressed] = useState(false);
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={title}
       onPress={onPress}
-      style={({ pressed }) => ({
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      style={{
         backgroundColor: bg,
         borderRadius: radii.lg,
         padding: spacing.xl,
         gap: spacing.sm,
         opacity: pressed ? 0.92 : 1,
-      })}
+      }}
     >
       <Ionicons name={icon} size={26} color={colors.textInverse} />
       <Text variant="h2" tone="inverse">

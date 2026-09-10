@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { Card, Row, Screen, SkeletonList, Stack, Text, colors, radii, spacing } from '@pandam/ui';
@@ -34,12 +34,15 @@ function QuickAction({
   onPress: () => void;
 }) {
   const bg = tone === 'have' ? colors.accent : colors.need;
+  const [pressed, setPressed] = useState(false);
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      style={({ pressed }) => ({
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      style={{
         flex: 1,
         backgroundColor: bg,
         borderRadius: radii.lg,
@@ -48,7 +51,7 @@ function QuickAction({
         opacity: pressed ? 0.9 : 1,
         minHeight: 116,
         justifyContent: 'space-between',
-      })}
+      }}
     >
       <Ionicons name={icon} size={22} color={colors.textInverse} />
       <Text variant="bodyStrong" tone="inverse">

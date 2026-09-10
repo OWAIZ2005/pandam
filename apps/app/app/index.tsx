@@ -1,15 +1,11 @@
-import { View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Redirect } from 'expo-router';
 
-import { Text } from '@pandam/ui';
+import { Splash } from '@/components/Splash';
+import { useSession } from '@/lib/auth/hooks';
 
+/** Entry gate: send the user to the right route group once auth is known. */
 export default function Index() {
-  return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View className="flex-1 items-center justify-center gap-2 bg-background p-6">
-        <Text variant="heading">PANDAM</Text>
-        <Text variant="muted">Technical foundation ready.</Text>
-      </View>
-    </SafeAreaView>
-  );
+  const { isResolving, isAuthenticated } = useSession();
+  if (isResolving) return <Splash />;
+  return <Redirect href={isAuthenticated ? '/(app)' : '/(auth)/login'} />;
 }

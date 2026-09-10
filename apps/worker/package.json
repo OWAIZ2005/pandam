@@ -25,7 +25,9 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260908.1",
+    "@libsql/client": "^0.15.15",
     "@pandam/config": "workspace:*",
+    "drizzle-orm": "^0.38.3",
     "eslint": "^8.57.1",
     "typescript": "^6.0.3",
     "vitest": "^2.1.8",

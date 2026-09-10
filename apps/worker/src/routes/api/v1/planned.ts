@@ -6,8 +6,8 @@
  */
 import { Hono } from 'hono';
 
-import { type AppBindings } from '../../../env';
 import { notImplemented } from '../../../lib/http';
+import { type AppEnv } from '../../../types';
 
 export interface PlannedGroup {
   /** Path segment, e.g. `listings`. */
@@ -21,13 +21,8 @@ export interface PlannedGroup {
 export const PLANNED_GROUPS: PlannedGroup[] = [
   {
     name: 'users',
-    summary: 'Account records (auth integration is a separate phase)',
-    endpoints: ['GET /me', 'PATCH /me'],
-  },
-  {
-    name: 'profiles',
-    summary: 'Public user profiles',
-    endpoints: ['GET /:userId', 'PUT /me', 'PATCH /me'],
+    summary: 'Account management (email change, delete account, session list)',
+    endpoints: ['DELETE /me', 'GET /me/sessions', 'POST /me/change-password'],
   },
   {
     name: 'listings',
@@ -85,7 +80,7 @@ export const PLANNED_GROUPS: PlannedGroup[] = [
 ];
 
 export function plannedGroupRouter(group: PlannedGroup) {
-  const router = new Hono<AppBindings>();
+  const router = new Hono<AppEnv>();
   router.all('*', (c) => notImplemented(c, `/api/v1/${group.name}`));
   return router;
 }

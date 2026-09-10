@@ -12,6 +12,8 @@
 
 export const ID_PREFIXES = {
   user: 'usr',
+  credential: 'crd',
+  session: 'ses',
   profile: 'prf',
   category: 'cat',
   listing: 'lst',

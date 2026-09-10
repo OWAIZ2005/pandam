@@ -12,6 +12,7 @@ import { type Database } from '../client';
 import { barterTransactionsRepository } from './barter-transactions';
 import { categoriesRepository } from './categories';
 import { conversationsRepository } from './conversations';
+import { credentialsRepository } from './credentials';
 import { disputesRepository } from './disputes';
 import { listingImagesRepository } from './listing-images';
 import { listingsRepository } from './listings';
@@ -23,11 +24,14 @@ import { offersRepository } from './offers';
 import { profilesRepository } from './profiles';
 import { reportsRepository } from './reports';
 import { reviewsRepository } from './reviews';
+import { sessionsRepository } from './sessions';
 import { usersRepository } from './users';
 
 export function createRepositories(db: Database) {
   return {
     users: usersRepository(db),
+    credentials: credentialsRepository(db),
+    sessions: sessionsRepository(db),
     profiles: profilesRepository(db),
     categories: categoriesRepository(db),
     listings: listingsRepository(db),
@@ -49,6 +53,7 @@ export type Repositories = ReturnType<typeof createRepositories>;
 
 export * from './helpers';
 export type { CreateUserInput } from './users';
+export type { CreateSessionInput } from './sessions';
 export type { CreateProfileInput, UpdateProfileInput } from './profiles';
 export type { CreateListingInput, UpdateListingInput } from './listings';
 export type { CreateNeedInput, UpdateNeedInput } from './needs';

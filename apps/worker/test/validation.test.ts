@@ -3,6 +3,9 @@ import {
   createNeedSchema,
   createOfferSchema,
   createReviewSchema,
+  loginSchema,
+  patchProfileSchema,
+  registerSchema,
   respondToOfferSchema,
 } from '@pandam/validation';
 import { describe, expect, it } from 'vitest';
@@ -94,5 +97,57 @@ describe('createReviewSchema', () => {
     expect(createReviewSchema.safeParse({ transactionId: btxId, rating: 0 }).success).toBe(false);
     expect(createReviewSchema.safeParse({ transactionId: btxId, rating: 6 }).success).toBe(false);
     expect(createReviewSchema.safeParse({ transactionId: btxId, rating: 3.5 }).success).toBe(false);
+  });
+});
+
+describe('registerSchema', () => {
+  it('normalises the email and accepts a strong password', () => {
+    const r = registerSchema.parse({
+      email: '  Alice@Example.COM ',
+      password: 'a decent pw 7',
+      displayName: 'Alice',
+      username: 'Alice_01',
+    });
+    expect(r.email).toBe('alice@example.com');
+    expect(r.username).toBe('alice_01');
+  });
+
+  it('rejects a short password and one with no digit', () => {
+    expect(
+      registerSchema.safeParse({ email: 'a@b.co', password: 'short1', displayName: 'A' }).success,
+    ).toBe(false);
+    const noDigit = registerSchema.safeParse({
+      email: 'a@b.co',
+      password: 'all letters here',
+      displayName: 'A',
+    });
+    expect(noDigit.success).toBe(false);
+    if (!noDigit.success)
+      expect(JSON.stringify(noDigit.error.issues)).not.toContain('all letters here');
+  });
+
+  it('rejects a bad username', () => {
+    expect(
+      registerSchema.safeParse({
+        email: 'a@b.co',
+        password: 'good pass 12',
+        displayName: 'A',
+        username: 'no spaces!',
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe('loginSchema', () => {
+  it('accepts any non-empty password (no strength policy on login)', () => {
+    expect(loginSchema.safeParse({ email: 'a@b.co', password: 'x' }).success).toBe(true);
+    expect(loginSchema.safeParse({ email: 'a@b.co', password: '' }).success).toBe(false);
+  });
+});
+
+describe('patchProfileSchema', () => {
+  it('requires at least one field', () => {
+    expect(patchProfileSchema.safeParse({}).success).toBe(false);
+    expect(patchProfileSchema.safeParse({ bio: 'hi' }).success).toBe(true);
   });
 });

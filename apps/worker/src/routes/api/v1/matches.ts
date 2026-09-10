@@ -1,24 +1,24 @@
 /**
  * `/api/v1/matches` — deterministic reciprocal barter candidates for the
- * current user. Proves the matching domain module is wired to the repositories.
- * Read-only; requires an authenticated user (dev header in non-production).
+ * authenticated user. Read-only. The user id comes from the verified session,
+ * never from the request, so a caller cannot list another user's matches.
  */
 import { Hono } from 'hono';
 
-import { buildContext, requireUserId } from '../../../context';
 import { findReciprocalMatches, type MarketItem } from '../../../domain/matching';
-import { type AppBindings } from '../../../env';
 import { sendOk } from '../../../lib/http';
+import { authMiddleware, getAuth, requireAuth } from '../../../middleware/auth';
+import { type AppEnv } from '../../../types';
 
-export const matchesRoute = new Hono<AppBindings>();
+export const matchesRoute = new Hono<AppEnv>();
 
-matchesRoute.get('/', async (c) => {
-  const userId = requireUserId(c);
-  const ctx = buildContext(c);
+matchesRoute.get('/', authMiddleware, requireAuth, async (c) => {
+  const { user } = getAuth(c);
+  const { repos } = c.get('ctx');
 
   const [listings, needs] = await Promise.all([
-    ctx.repos.listings.listAllPublished(),
-    ctx.repos.needs.listAllPublished(),
+    repos.listings.listAllPublished(),
+    repos.needs.listAllPublished(),
   ]);
 
   const toItem = (r: {
@@ -34,7 +34,7 @@ matchesRoute.get('/', async (c) => {
   });
 
   const all = findReciprocalMatches(listings.map(toItem), needs.map(toItem));
-  const mine = all.filter((m) => m.userAId === userId || m.userBId === userId);
+  const mine = all.filter((m) => m.userAId === user.id || m.userBId === user.id);
 
   return sendOk(c, { matches: mine, totalConsidered: all.length });
 });

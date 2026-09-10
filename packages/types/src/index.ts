@@ -19,6 +19,7 @@ import type {
   ConversationParticipantRow,
   ConversationRow,
   ConversationStatus,
+  CredentialRow,
   DisputeRow,
   DisputeStatus,
   ItemType,
@@ -39,6 +40,7 @@ import type {
   ReportStatus,
   ReportSubjectType,
   ReviewRow,
+  SessionRow,
   UserRow,
   UserStatus,
 } from '@pandam/database/schema';
@@ -54,6 +56,8 @@ export type IsoDateString = string;
 export type Id<TBrand extends string> = string & { readonly __brand: TBrand };
 
 export type UserId = Id<'user'>;
+export type CredentialId = Id<'credential'>;
+export type SessionId = Id<'session'>;
 export type ProfileId = Id<'profile'>;
 export type CategoryId = Id<'category'>;
 export type ListingId = Id<'listing'>;
@@ -74,6 +78,8 @@ export type DisputeId = Id<'dispute'>;
 /* -------------------------------------------------------------------------- */
 
 export type User = UserRow;
+export type Credential = CredentialRow;
+export type Session = SessionRow;
 export type Profile = ProfileRow;
 export type Category = CategoryRow;
 export type Listing = ListingRow;
@@ -139,3 +145,46 @@ export interface Paginated<TItem> {
 
 export type Platform = 'ios' | 'android' | 'web';
 export type Environment = 'development' | 'preview' | 'production';
+
+/* -------------------------------------------------------------------------- */
+/* Authentication (API-safe shapes — no hashes, no tokens)                     */
+/* -------------------------------------------------------------------------- */
+
+/** The subset of a user the API is allowed to return. Never includes secrets. */
+export interface SafeUser {
+  id: string;
+  email: string;
+  status: UserStatus;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/** A user's public profile as returned by the API. */
+export type PublicProfile = Pick<
+  Profile,
+  | 'displayName'
+  | 'username'
+  | 'bio'
+  | 'avatarKey'
+  | 'locationCity'
+  | 'locationRegion'
+  | 'locationCountry'
+  | 'createdAt'
+  | 'updatedAt'
+>;
+
+/** `GET /api/v1/auth/me` payload. */
+export interface AuthenticatedUser {
+  user: SafeUser;
+  profile: PublicProfile | null;
+}
+
+/** `POST /api/v1/auth/{register,login}` payload. `token` is for native clients;
+ *  web relies on the HttpOnly cookie and can ignore it. */
+export interface AuthSession {
+  user: SafeUser;
+  profile: PublicProfile | null;
+  token: string;
+  /** Epoch ms when the session expires. */
+  expiresAt: number;
+}

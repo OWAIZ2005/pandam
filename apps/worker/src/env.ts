@@ -1,16 +1,22 @@
 /**
- * Worker runtime bindings.
+ * Worker runtime bindings. `PANDAM_ENV` and `DB` are wired up; the rest are
+ * optional so route code can target the final shape while their wrangler.jsonc
+ * bindings are still commented out.
  *
- * Only `PANDAM_ENV` is wired up today. The rest are declared as optional so
- * route code can be written against the final shape, but nothing crashes while
- * the bindings are still commented out in wrangler.jsonc.
+ * The Hono generic every router uses is `AppEnv` (see `./types.ts`), which adds
+ * the middleware-set `Variables` (`ctx`, `auth`) on top of these `Bindings`.
  */
 export interface Env {
   /** Plain var from wrangler.jsonc. */
   PANDAM_ENV: 'development' | 'preview' | 'production';
 
+  /**
+   * Comma-separated list of browser origins allowed to send credentialed
+   * requests (cookies). Defaults to the local Expo web/dev-tools origins.
+   */
+  CORS_ORIGINS?: string;
+
   /** Secret (apps/worker/.dev.vars locally). */
-  JWT_SECRET?: string;
   SENTRY_DSN?: string;
   POSTHOG_KEY?: string;
   POSTHOG_HOST?: string;
@@ -23,9 +29,4 @@ export interface Env {
   CONVERSATION?: DurableObjectNamespace;
   /** Queue producer — enabled once the binding is uncommented. */
   JOBS?: Queue<unknown>;
-}
-
-/** Hono generics for this app: `new Hono<AppBindings>()`. */
-export interface AppBindings {
-  Bindings: Env;
 }

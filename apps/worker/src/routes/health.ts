@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 
-import { type AppBindings } from '../env';
+import { type AppEnv } from '../types';
 
-export const health = new Hono<AppBindings>();
+export const health = new Hono<AppEnv>();
 
 health.get('/health', (c) =>
   c.json({

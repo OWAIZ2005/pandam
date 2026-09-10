@@ -61,14 +61,20 @@ See [`docs/architecture/overview.md`](docs/architecture/overview.md) and
 ```
 apps/
   app/          Expo universal app (iOS / Android / Web)
+                  app/(auth) app/(app)  route groups + auth guards
+                  src/lib/api            fetch client + typed endpoint wrappers
+                  src/lib/auth           useSession / login / register / logout
+                  src/lib/session        native secure-store token
   worker/       Cloudflare Worker API (Hono)
-                  src/routes/api/v1  versioned API structure
-                  src/domain         pure business rules (matching, lifecycles)
-                  src/context.ts     per-request db + repos + (dev) user id
+                  src/routes/api/v1     versioned API (auth, profiles, ...)
+                  src/services/auth.ts  register / login / session validation
+                  src/middleware/auth.ts context + auth + requireAuth
+                  src/domain            pure business rules (matching, lifecycles)
+                  src/lib/crypto.ts     PBKDF2 password + session-token hashing
 packages/
   ui/           cross-platform UI foundation + design tokens
   types/        shared TypeScript types (derived from the DB schema)
-  validation/   shared Zod schemas
+  validation/   shared Zod schemas (auth, profile, listing, ...)
   database/     Drizzle schema + migrations + D1 client + repository layer
   config/       shared tsconfig / eslint / prettier
   utils/        framework-agnostic helpers
@@ -131,7 +137,15 @@ pnpm --filter @pandam/database migrate:local  # apply migrations to local D1
 pnpm --filter @pandam/database seed:local     # load the category seed
 ```
 
-Then `pnpm dev:worker` and `curl http://localhost:8787/api/v1/categories`.
+Then `pnpm dev:worker` and, for example:
+
+```bash
+curl http://localhost:8787/api/v1/categories
+curl -s -X POST http://localhost:8787/api/v1/auth/register \
+  -H 'content-type: application/json' \
+  -d '{"email":"a@example.com","password":"a decent pw 1","displayName":"A"}'
+# → { ok:true, data:{ user, profile, token, expiresAt } } + Set-Cookie
+```
 
 The **D1 `DB` binding is enabled** in `apps/worker/wrangler.jsonc` with a
 placeholder `database_id`, so `wrangler dev` and `--local` migrations work
@@ -139,11 +153,15 @@ against a SQLite file under `apps/worker/.wrangler/` — **no cloud resource**.
 R2, Durable Objects and Queues bindings remain declared-but-commented; provision
 each with `wrangler` and uncomment its block when needed. Nothing here creates
 cloud resources or deploys. See
-[`docs/architecture/domain.md`](docs/architecture/domain.md).
+[`docs/architecture/domain.md`](docs/architecture/domain.md) and
+[`docs/architecture/auth.md`](docs/architecture/auth.md).
 
 ## Environment variables
 
 Documented in [`.env.example`](.env.example). `EXPO_PUBLIC_*` values are embedded
-in the client bundle and are not secret. Worker secrets go in
-`apps/worker/.dev.vars` locally (gitignored) and `wrangler secret put` in
-deployed environments. No real secrets live in this repo.
+in the client bundle and are not secret (`EXPO_PUBLIC_API_URL` points the app at
+the Worker). Worker vars/secrets go in `apps/worker/.dev.vars` locally
+(gitignored) and `wrangler secret put` in deployed environments. Auth needs **no
+secret locally** — password and token hashing use the runtime's Web Crypto.
+`CORS_ORIGINS` (comma-separated) extends the credentialed-CORS allowlist beyond
+the built-in `localhost` dev origins. No real secrets live in this repo.

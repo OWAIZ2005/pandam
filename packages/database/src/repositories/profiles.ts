@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 import { newId } from '../id';
 import { type NewProfileRow, type ProfileRow, profiles } from '../schema/profiles';
@@ -20,6 +20,16 @@ export function profilesRepository(db: Database) {
 
     async findByUserId(userId: string): Promise<ProfileRow | null> {
       const rows = await db.select().from(profiles).where(eq(profiles.userId, userId)).limit(1);
+      return firstOrNull(rows);
+    },
+
+    /** Case-insensitive username lookup (the unique index is the real guard). */
+    async findByUsername(username: string): Promise<ProfileRow | null> {
+      const rows = await db
+        .select()
+        .from(profiles)
+        .where(sql`lower(${profiles.username}) = lower(${username})`)
+        .limit(1);
       return firstOrNull(rows);
     },
 

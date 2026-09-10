@@ -7,6 +7,7 @@
  * `@pandam/database/enums`, keeping schema and validation in lock-step.
  */
 export * from './common';
+export * from './auth';
 export * from './profile';
 export * from './listing';
 export * from './need';

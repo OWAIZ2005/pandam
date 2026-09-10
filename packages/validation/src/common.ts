@@ -29,6 +29,15 @@ export const boundedString = (min: number, max: number) => z.string().trim().min
 export const idSchema = (prefix: string) =>
   z.string().regex(new RegExp(`^${prefix}_[0-9a-f]{32}$`), `must be a valid ${prefix}_ id`);
 
+/** Public handle: lower-cased; letters, digits, underscore; 3–30 chars. */
+export const usernameSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(3)
+  .max(30)
+  .regex(/^[a-z0-9_]+$/, 'letters, numbers and underscores only');
+
 export const environmentSchema = z.enum(['development', 'preview', 'production']);
 export const platformSchema = z.enum(['ios', 'android', 'web']);
 

@@ -1,9 +1,10 @@
 # PANDAM — Architecture overview
 
-This describes the target architecture. Built so far: the Expo app shell, the
-Worker + `/api/v1` structure, and the full **domain & database foundation**
-(schema, migrations, repositories, matching, lifecycles) — see
-[`domain.md`](domain.md). R2, Durable Objects and Queues remain scaffolding.
+This describes the target architecture. Built so far: the Expo app with a real
+**auth + profile foundation** ([`auth.md`](auth.md)), the Worker + `/api/v1`
+structure, and the full **domain & database foundation** (schema, migrations,
+repositories, matching, lifecycles) — see [`domain.md`](domain.md). R2, Durable
+Objects and Queues remain scaffolding.
 
 ## 1. Universal Expo frontend (`apps/app`)
 
@@ -33,19 +34,21 @@ Durable Objects or Queues directly.
 A single Worker is the entire backend surface. It:
 
 - terminates all HTTP from the app,
-- authenticates requests,
+- authenticates requests via server-side sessions (cookie for web, Bearer token
+  for native) — [`auth.md`](auth.md),
 - runs business/services logic,
-- reads/writes D1 through Drizzle,
+- reads/writes D1 through Drizzle (via the repository layer only),
 - signs/streams R2 objects,
 - routes realtime connections to Durable Objects,
 - enqueues background work onto Queues.
 
 ## 3. Hono
 
-The HTTP framework inside the Worker. `createApp()` builds a `Hono` instance
-with global middleware (logger, secure headers, CORS) and mounts route modules
-(`routes/health.ts` today). It is exported as a plain app so tests call
-`app.request()` with no network.
+The HTTP framework inside the Worker. `createApp({ db? })` builds a `Hono`
+instance with global middleware (logger, secure headers, credentialed CORS
+allowlist) and mounts the route groups under `/api/v1`. It is exported as a
+plain app so tests call `app.request()` with no network; tests also pass an
+in-memory database via `createApp({ db })`.
 
 ## 4. Cloudflare D1
 

@@ -15,6 +15,13 @@
       "when": 1789035727589,
       "tag": "0001_domain_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1789038189173,
+      "tag": "0002_auth_credentials_sessions",
+      "breakpoints": true
     }
   ]
 }

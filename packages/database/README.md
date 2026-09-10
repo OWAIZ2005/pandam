@@ -12,12 +12,14 @@ src/
   id.ts               newId('user') -> "usr_<32hex>", isId()
   schema/
     _shared.ts        column helpers (timestamps, id column)
-    <aggregate>.ts    one file per table (users, profiles, categories, listings,
-                      listing-images, needs, matches, offers, conversations,
-                      messages, barter-transactions, reviews, notifications,
-                      reports, disputes) + meta
+    <aggregate>.ts    one file per table (users, credentials, sessions, profiles,
+                      categories, listings, listing-images, needs, matches,
+                      offers, conversations, messages, barter-transactions,
+                      reviews, notifications, reports, disputes) + meta
     index.ts          barrel — the single source of truth for the data model
-  client.ts           createDb(d1) -> typed Drizzle instance
+  client.ts           createDb(d1) -> Drizzle instance. `Database` is the
+                      driver-agnostic BaseSQLiteDatabase type, so repositories
+                      also run on an in-memory libsql engine in tests.
   repositories/
     <entity>.ts       thin, rule-free data access (Create*/Update* input types)
     index.ts          createRepositories(db) -> { users, listings, offers, ... }

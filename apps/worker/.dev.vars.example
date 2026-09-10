@@ -1,6 +1,15 @@
 # Copy to apps/worker/.dev.vars (gitignored) for local `wrangler dev`.
 # These are LOCAL development values only — never real production secrets.
-JWT_SECRET=dev-only-change-me
+#
+# Authentication needs NOTHING here: password hashing (PBKDF2) and session-token
+# hashing (SHA-256) use the Workers runtime's Web Crypto. See
+# docs/architecture/auth.md.
+
+# Comma-separated extra browser origins allowed to send credentialed requests.
+# The localhost dev origins (3000 / 8081 / 19006) are always allowed.
+# CORS_ORIGINS=
+
+# Observability (optional)
 SENTRY_DSN=
 POSTHOG_KEY=
 POSTHOG_HOST=https://us.i.posthog.com

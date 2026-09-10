@@ -1,0 +1,31 @@
+import { index, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+
+import { createdAt, idColumn, nullableTimestamp } from './_shared';
+import { conversations } from './conversations';
+import { users } from './users';
+
+/**
+ * A message inside a conversation. `editedAt` / `deletedAt` are soft markers so
+ * history is preserved. Realtime delivery (WebSockets / Durable Objects) is a
+ * later phase; this is storage only.
+ */
+export const messages = sqliteTable(
+  'messages',
+  {
+    id: idColumn,
+    conversationId: text('conversation_id')
+      .notNull()
+      .references(() => conversations.id, { onDelete: 'cascade' }),
+    senderId: text('sender_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    body: text('body').notNull(),
+    createdAt,
+    editedAt: nullableTimestamp('edited_at'),
+    deletedAt: nullableTimestamp('deleted_at'),
+  },
+  (t) => [index('messages_conversation_idx').on(t.conversationId, t.createdAt)],
+);
+
+export type MessageRow = typeof messages.$inferSelect;
+export type NewMessageRow = typeof messages.$inferInsert;

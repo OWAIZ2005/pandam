@@ -25,17 +25,23 @@
   },
 
   // ---------------------------------------------------------------------------
-  // D1 (Cloudflare D1 + Drizzle ORM). Migrations live in packages/database.
-  // Create with:  wrangler d1 create pandam-db
+  // D1 (Cloudflare D1 + Drizzle ORM). Schema + migrations live in
+  // packages/database. The binding is enabled so `wrangler dev` and
+  // `wrangler d1 migrations apply pandam-db --local` work against a local
+  // SQLite file under .wrangler/ (gitignored) with NO cloud resource.
+  //
+  // `database_id` is a placeholder: it is ignored for `--local`. Before any
+  // remote use, run `wrangler d1 create pandam-db` and paste the real id here
+  // (or set it per-environment). Nothing in this repo provisions or deploys.
   // ---------------------------------------------------------------------------
-  // "d1_databases": [
-  //   {
-  //     "binding": "DB",
-  //     "database_name": "pandam-db",
-  //     "database_id": "REPLACE_ME",
-  //     "migrations_dir": "../../packages/database/migrations"
-  //   }
-  // ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "pandam-db",
+      "database_id": "local-development-placeholder-0000",
+      "migrations_dir": "../../packages/database/migrations"
+    }
+  ],
 
   // ---------------------------------------------------------------------------
   // R2 (object storage for listing images). App -> Worker -> R2.

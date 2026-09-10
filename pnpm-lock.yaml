@@ -233,6 +233,10 @@ importers:
         version: 4.130.0(@cloudflare/workers-types@5.20260910.1)
 
   packages/types:
+    dependencies:
+      '@pandam/database':
+        specifier: workspace:*
+        version: link:../database
     devDependencies:
       '@pandam/config':
         specifier: workspace:*
@@ -289,6 +293,9 @@ importers:
 
   packages/validation:
     dependencies:
+      '@pandam/database':
+        specifier: workspace:*
+        version: link:../database
       zod:
         specifier: ^3.24.1
         version: 3.25.76

@@ -62,15 +62,18 @@ See [`docs/architecture/overview.md`](docs/architecture/overview.md) and
 apps/
   app/          Expo universal app (iOS / Android / Web)
   worker/       Cloudflare Worker API (Hono)
+                  src/routes/api/v1  versioned API structure
+                  src/domain         pure business rules (matching, lifecycles)
+                  src/context.ts     per-request db + repos + (dev) user id
 packages/
   ui/           cross-platform UI foundation + design tokens
-  types/        shared TypeScript types
+  types/        shared TypeScript types (derived from the DB schema)
   validation/   shared Zod schemas
-  database/     Drizzle schema, migrations, D1 client
+  database/     Drizzle schema + migrations + D1 client + repository layer
   config/       shared tsconfig / eslint / prettier
   utils/        framework-agnostic helpers
 docs/
-  architecture/ product/ api/ decisions/
+  architecture/ (overview.md, domain.md)   product/   api/   decisions/
 scripts/        repo scripts
 .github/workflows/  CI
 ```
@@ -124,13 +127,19 @@ curl http://localhost:8787/health
 
 ```bash
 pnpm --filter @pandam/database generate       # schema -> SQL migration
-pnpm --filter @pandam/database migrate:local  # apply to local D1
+pnpm --filter @pandam/database migrate:local  # apply migrations to local D1
+pnpm --filter @pandam/database seed:local     # load the category seed
 ```
 
-D1, R2, Durable Objects and Queues bindings are **declared but commented out**
-in `apps/worker/wrangler.jsonc`. Provision each resource with `wrangler` and
-uncomment its block when you need it — nothing here creates cloud resources or
-deploys.
+Then `pnpm dev:worker` and `curl http://localhost:8787/api/v1/categories`.
+
+The **D1 `DB` binding is enabled** in `apps/worker/wrangler.jsonc` with a
+placeholder `database_id`, so `wrangler dev` and `--local` migrations work
+against a SQLite file under `apps/worker/.wrangler/` — **no cloud resource**.
+R2, Durable Objects and Queues bindings remain declared-but-commented; provision
+each with `wrangler` and uncomment its block when needed. Nothing here creates
+cloud resources or deploys. See
+[`docs/architecture/domain.md`](docs/architecture/domain.md).
 
 ## Environment variables
 

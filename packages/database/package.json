@@ -8,12 +8,15 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./schema": "./src/schema/index.ts"
+    "./schema": "./src/schema/index.ts",
+    "./enums": "./src/enums.ts",
+    "./seed": "./src/seed.ts"
   },
   "scripts": {
     "generate": "drizzle-kit generate",
     "migrate:local": "wrangler d1 migrations apply pandam-db --local",
     "migrate:remote": "wrangler d1 migrations apply pandam-db --remote",
+    "seed:local": "wrangler d1 execute pandam-db --local --file=./seed/categories.sql",
     "studio": "drizzle-kit studio",
     "lint": "eslint \"src/**/*.ts\"",
     "typecheck": "tsc --noEmit",

@@ -1,7 +1,9 @@
 # PANDAM — Architecture overview
 
-This describes the target architecture. Only the shell of it exists today
-(Expo app + Worker health check); the rest is scaffolded and documented.
+This describes the target architecture. Built so far: the Expo app shell, the
+Worker + `/api/v1` structure, and the full **domain & database foundation**
+(schema, migrations, repositories, matching, lifecycles) — see
+[`domain.md`](domain.md). R2, Durable Objects and Queues remain scaffolding.
 
 ## 1. Universal Expo frontend (`apps/app`)
 
@@ -48,15 +50,30 @@ with global middleware (logger, secure headers, CORS) and mounts route modules
 ## 4. Cloudflare D1
 
 Serverless SQLite, bound to the Worker as `env.DB`. Single primary database
-(`pandam-db`). Accessed only through Drizzle. Migrations are SQL files applied
-with `wrangler d1 migrations apply`.
+(`pandam-db`). Accessed only through Drizzle, only via the repository layer.
+Migrations are SQL files (`packages/database/migrations/`) applied with
+`wrangler d1 migrations apply pandam-db --local | --remote`. No cloud database
+is provisioned — local development uses a SQLite file under `.wrangler/`.
 
 ## 5. Drizzle ORM (`packages/database`)
 
-Type-safe schema + query builder. `src/schema/` is the single source of truth
-for the data model; `createDb(env.DB)` returns a typed client. Entity types are
-derived from the schema and re-exported via `@pandam/types` so the app and
-Worker share one definition. Domain tables are not written yet.
+Type-safe schema + query builder + repository layer.
+
+- `src/schema/*` — one file per aggregate (16 domain tables + `_meta`), the
+  single source of truth for the data model. `src/enums.ts` holds the enum
+  value tuples with zero Drizzle imports so `@pandam/validation` and the app
+  can reuse them.
+- `src/id.ts` — `newId('user') → "usr_<32hex>"` application-level ids.
+- `src/client.ts` — `createDb(env.DB)` returns the typed Drizzle client.
+- `src/repositories/*` — thin, rule-free data access. `createRepositories(db)`
+  hands back one object with every entity repository. Business rules live in the
+  Worker's `domain/` layer, never here.
+- `src/seed.ts` + `seed/categories.sql` — deterministic category seed.
+
+Entity types are derived from the schema (`$inferSelect`) and re-exported via
+`@pandam/types` (from `@pandam/database/schema` — the schema barrel only, never
+the client) so the app and Worker share one definition and need no Cloudflare
+type deps. See [`domain.md`](domain.md).
 
 ## 6. Cloudflare R2
 

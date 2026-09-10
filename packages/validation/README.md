@@ -4,5 +4,11 @@ Shared [Zod](https://zod.dev) schemas used by the Expo forms (React Hook Form
 with `@hookform/resolvers/zod`) and the Worker request handlers, so client and
 server validate identically.
 
-Only shared primitives exist today. Business schemas are added alongside the
-features that need them.
+- `common.ts` — primitives: `paginationQuerySchema`, `boundedString`,
+  `idSchema(prefix)`, and the domain enums as `z.enum(...)` (enum tuples come
+  from `@pandam/database/enums`, so schema and validation never drift).
+- `profile.ts` · `listing.ts` · `need.ts` · `offer.ts` · `message.ts` ·
+  `review.ts` · `report.ts` — `create*` / `update*` / action schemas per
+  entity, each exporting the inferred input type.
+
+More business schemas are added alongside the features that need them.

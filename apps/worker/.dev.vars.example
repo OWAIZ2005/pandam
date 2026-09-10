@@ -1,0 +1,6 @@
+# Copy to apps/worker/.dev.vars (gitignored) for local `wrangler dev`.
+# These are LOCAL development values only — never real production secrets.
+JWT_SECRET=dev-only-change-me
+SENTRY_DSN=
+POSTHOG_KEY=
+POSTHOG_HOST=https://us.i.posthog.com

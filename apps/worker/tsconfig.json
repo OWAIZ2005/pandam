@@ -1,0 +1,12 @@
+{
+  "extends": "@pandam/config/tsconfig.node.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": ".",
+    "types": ["@cloudflare/workers-types"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx"
+  },
+  "include": ["src", "test", "worker-configuration.d.ts", "vitest.config.ts"],
+  "exclude": ["node_modules", "dist", ".wrangler"]
+}

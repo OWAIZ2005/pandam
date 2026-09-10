@@ -1,0 +1,25 @@
+{
+  "name": "@pandam/utils",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Framework-agnostic shared utilities for PANDAM",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist .turbo coverage *.tsbuildinfo"
+  },
+  "devDependencies": {
+    "@pandam/config": "workspace:*",
+    "eslint": "^8.57.1",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}

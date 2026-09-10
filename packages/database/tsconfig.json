@@ -1,0 +1,10 @@
+{
+  "extends": "@pandam/config/tsconfig.node.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": ".",
+    "types": ["@cloudflare/workers-types", "node"]
+  },
+  "include": ["src", "drizzle.config.ts"],
+  "exclude": ["node_modules", "dist", "migrations"]
+}

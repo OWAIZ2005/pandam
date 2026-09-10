@@ -1,0 +1,10 @@
+{
+  "extends": "@pandam/config/tsconfig.react-native.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "src",
+    "types": ["react"]
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}

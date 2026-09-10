@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "PANDAM",
+    "slug": "pandam",
+    "scheme": "pandam",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pandam.app"
+    },
+    "android": {
+      "package": "com.pandam.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#1E7A4C"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "REPLACE_ME"
+      }
+    }
+  }
+}

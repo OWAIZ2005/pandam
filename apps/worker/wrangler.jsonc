@@ -1,0 +1,95 @@
+{
+  // PANDAM API — Cloudflare Worker configuration.
+  //
+  // This file describes bindings the Worker will use. Resources are NOT created
+  // by anything in this repo — you provision them once with `wrangler` and paste
+  // the ids below (or set them per-environment in the Cloudflare dashboard / CI).
+  // Placeholders are left as "REPLACE_ME" and every binding block that needs a
+  // real resource is commented out so `wrangler dev` runs clean today.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "pandam-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-09",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "observability": {
+    "enabled": true
+  },
+
+  // ---------------------------------------------------------------------------
+  // Vars — non-secret config. Secrets go in .dev.vars locally (gitignored) and
+  // `wrangler secret put` in deployed environments.
+  // ---------------------------------------------------------------------------
+  "vars": {
+    "PANDAM_ENV": "development"
+  },
+
+  // ---------------------------------------------------------------------------
+  // D1 (Cloudflare D1 + Drizzle ORM). Migrations live in packages/database.
+  // Create with:  wrangler d1 create pandam-db
+  // ---------------------------------------------------------------------------
+  // "d1_databases": [
+  //   {
+  //     "binding": "DB",
+  //     "database_name": "pandam-db",
+  //     "database_id": "REPLACE_ME",
+  //     "migrations_dir": "../../packages/database/migrations"
+  //   }
+  // ],
+
+  // ---------------------------------------------------------------------------
+  // R2 (object storage for listing images). App -> Worker -> R2.
+  // Create with:  wrangler r2 bucket create pandam-media
+  // ---------------------------------------------------------------------------
+  // "r2_buckets": [
+  //   {
+  //     "binding": "MEDIA",
+  //     "bucket_name": "pandam-media",
+  //     "preview_bucket_name": "pandam-media-preview"
+  //   }
+  // ],
+
+  // ---------------------------------------------------------------------------
+  // Durable Objects (realtime: presence, conversation sockets). App -> Worker
+  // -> Durable Object -> WebSocket. Class is implemented later.
+  // ---------------------------------------------------------------------------
+  // "durable_objects": {
+  //   "bindings": [
+  //     { "name": "CONVERSATION", "class_name": "ConversationRoom" }
+  //   ]
+  // },
+  // "migrations": [
+  //   { "tag": "v1", "new_sqlite_classes": ["ConversationRoom"] }
+  // ],
+
+  // ---------------------------------------------------------------------------
+  // Queues (background jobs: notifications, image post-processing, etc.).
+  // Create with:  wrangler queues create pandam-jobs
+  // ---------------------------------------------------------------------------
+  // "queues": {
+  //   "producers": [
+  //     { "binding": "JOBS", "queue": "pandam-jobs" }
+  //   ],
+  //   "consumers": [
+  //     {
+  //       "queue": "pandam-jobs",
+  //       "max_batch_size": 10,
+  //       "max_batch_timeout": 5,
+  //       "max_retries": 3,
+  //       "dead_letter_queue": "pandam-jobs-dlq"
+  //     }
+  //   ]
+  // },
+
+  // ---------------------------------------------------------------------------
+  // Per-environment overrides. Fill in when these environments are set up.
+  // ---------------------------------------------------------------------------
+  "env": {
+    "preview": {
+      "vars": { "PANDAM_ENV": "preview" }
+    },
+    "production": {
+      "vars": { "PANDAM_ENV": "production" }
+    }
+  }
+}

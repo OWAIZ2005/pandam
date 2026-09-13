@@ -2,7 +2,7 @@ import { type ReactNode } from 'react';
 import { RefreshControl, ScrollView, type StyleProp, View, type ViewStyle } from 'react-native';
 import { type Edge, SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, layout, spacing } from '../tokens';
+import { colors, layout, palette, spacing } from '../tokens';
 
 export interface ScreenProps {
   children: ReactNode;
@@ -15,6 +15,10 @@ export interface ScreenProps {
   refreshing?: boolean;
   /** Sticky footer (e.g. a primary CTA) rendered outside the scroll area. */
   footer?: ReactNode;
+  /** Reserve bottom space for the floating tab bar. */
+  tabBarInset?: boolean;
+  /** Page background; `inverse` for hero screens that paint their own header. */
+  background?: string;
   contentStyle?: StyleProp<ViewStyle>;
 }
 
@@ -22,6 +26,11 @@ export interface ScreenProps {
  * The page wrapper every screen uses. Applies the safe-area, an optional
  * scroll view, and — crucially on web — a centred max-width column so the
  * layout is not "the mobile UI, but stretched".
+ *
+ * The sticky `footer` is where a screen's committing action lives. It is
+ * separated from the content by a hairline and the faintest upward shadow,
+ * which is the honest amount: a heavy drop shadow on a bottom bar casts light
+ * from below, which nothing in the physical world does and the eye notices.
  */
 export function Screen({
   children,
@@ -31,22 +40,33 @@ export function Screen({
   onRefresh,
   refreshing = false,
   footer,
+  tabBarInset = false,
+  background = colors.background,
   contentStyle,
 }: ScreenProps) {
   const inner: StyleProp<ViewStyle> = [
     { width: '100%', maxWidth: layout.contentMaxWidth, alignSelf: 'center', flexGrow: 1 },
-    padded && { paddingHorizontal: spacing.xl, paddingVertical: spacing.lg },
+    padded && { paddingHorizontal: layout.gutter, paddingVertical: spacing.lg },
+    tabBarInset && { paddingBottom: layout.tabBarInset },
     contentStyle,
   ];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={edges}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: background }} edges={edges}>
       {scroll ? (
         <ScrollView
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
           contentContainerStyle={{ flexGrow: 1, alignItems: 'stretch' }}
           refreshControl={
-            onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> : undefined
+            onRefresh ? (
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.accent}
+                colors={[colors.accent]}
+              />
+            ) : undefined
           }
         >
           <View style={inner}>{children}</View>
@@ -54,15 +74,21 @@ export function Screen({
       ) : (
         <View style={[{ flex: 1 }, inner]}>{children}</View>
       )}
+
       {footer ? (
         <View
           style={{
+            backgroundColor: colors.surface,
             borderTopWidth: 1,
             borderTopColor: colors.border,
-            backgroundColor: colors.surface,
-            paddingHorizontal: spacing.xl,
+            paddingHorizontal: layout.gutter,
             paddingTop: spacing.md,
             paddingBottom: spacing.lg,
+            shadowColor: palette.ink,
+            shadowOpacity: 0.05,
+            shadowRadius: 10,
+            shadowOffset: { width: 0, height: -2 },
+            elevation: 8,
           }}
         >
           <View style={{ width: '100%', maxWidth: layout.contentMaxWidth, alignSelf: 'center' }}>

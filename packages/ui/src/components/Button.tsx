@@ -1,22 +1,37 @@
-import { type ReactNode, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  type PressableProps,
-  type StyleProp,
-  StyleSheet,
-  View,
-  type ViewStyle,
-} from 'react-native';
+import { type ReactNode } from 'react';
+import { ActivityIndicator, type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 
-import { colors, radii, spacing, type typography } from '../tokens';
+import { colors, radii, shadows, spacing, type typography } from '../tokens';
 
+import { Press, type PressProps } from './Press';
 import { Text } from './Text';
 
-type Variant = 'primary' | 'need' | 'secondary' | 'ghost' | 'danger';
+/**
+ * Button roles. Each exists for one reason, and a screen should be readable
+ * as a hierarchy: at most one `primary`, everything else stepping down.
+ *
+ *   primary    the single most likely next action on the screen
+ *   need       the equivalent primary on an "I NEED" surface
+ *   match      the primary on a reciprocal-match surface
+ *   secondary  a real alternative, equal in weight but not the default
+ *   tertiary   a low-commitment action that still needs a target (filled grey)
+ *   ghost      an action that should recede until wanted — text plus a hairline
+ *   quiet      text only, no chrome; for "Cancel" and inline links
+ *   danger     destructive and irreversible
+ */
+type Variant =
+  | 'primary'
+  | 'need'
+  | 'match'
+  | 'secondary'
+  | 'tertiary'
+  | 'ghost'
+  | 'quiet'
+  | 'danger'
+  | 'inverse';
 type Size = 'sm' | 'md' | 'lg';
 
-export interface ButtonProps extends Omit<PressableProps, 'style' | 'children'> {
+export interface ButtonProps extends Omit<PressProps, 'children' | 'style' | 'states'> {
   label: string;
   variant?: Variant;
   size?: Size;
@@ -24,27 +39,111 @@ export interface ButtonProps extends Omit<PressableProps, 'style' | 'children'> 
   fullWidth?: boolean;
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
+  /**
+   * Kept for compatibility with call sites that asked for a flat button.
+   * Every button is flat now — filled variants no longer carry a glow — so
+   * this is a no-op, retained rather than churning 30 screens.
+   */
+  flat?: boolean;
   style?: StyleProp<ViewStyle>;
 }
 
-const BG: Record<Variant, string> = {
-  primary: colors.accent,
-  need: colors.need,
-  secondary: colors.surfaceMuted,
-  ghost: 'transparent',
-  danger: colors.danger,
+interface Spec {
+  bg: string;
+  /** Background when hovered (web) — a half-step, never a different colour. */
+  bgHover: string;
+  /** Background while pressed. Deeper than hover so the two are distinct. */
+  bgActive: string;
+  fg: string;
+  border?: string;
+  borderHover?: string;
+  /** Only the match variant lifts; a flat product needs a flat button. */
+  elevated?: boolean;
+}
+
+/**
+ * Solid fills, not gradients.
+ *
+ * A gradient on every filled button is the single fastest way to make an
+ * interface look generated, and it fights the one place PANDAM genuinely
+ * wants spectacle — the reciprocal match. So `primary` is one confident
+ * emerald, and `match` keeps a lift as the exception.
+ */
+const SPEC: Record<Variant, Spec> = {
+  primary: {
+    bg: colors.accent,
+    bgHover: colors.accentStrong,
+    bgActive: colors.accentStrong,
+    fg: colors.textInverse,
+  },
+  need: {
+    bg: colors.need,
+    bgHover: colors.needStrong,
+    bgActive: colors.needStrong,
+    fg: colors.textInverse,
+  },
+  match: {
+    bg: colors.match,
+    bgHover: colors.matchStrong,
+    bgActive: colors.matchStrong,
+    fg: colors.textInverse,
+    elevated: true,
+  },
+  secondary: {
+    bg: colors.surface,
+    bgHover: colors.surfaceHover,
+    bgActive: colors.surfaceMuted,
+    fg: colors.textPrimary,
+    border: colors.border,
+    borderHover: colors.borderStrong,
+  },
+  tertiary: {
+    bg: colors.surfaceMuted,
+    bgHover: colors.surfaceHover,
+    bgActive: '#E8E9E6',
+    fg: colors.textPrimary,
+  },
+  ghost: {
+    bg: 'transparent',
+    bgHover: colors.accentSoft,
+    bgActive: colors.accentSoft,
+    fg: colors.accentText,
+    border: colors.accentBorder,
+    borderHover: colors.accent,
+  },
+  quiet: {
+    bg: 'transparent',
+    bgHover: colors.surfaceMuted,
+    bgActive: colors.surfaceHover,
+    fg: colors.textSecondary,
+  },
+  danger: {
+    bg: colors.danger,
+    bgHover: colors.dangerStrong,
+    bgActive: colors.dangerStrong,
+    fg: colors.textInverse,
+  },
+  inverse: {
+    bg: colors.surface,
+    bgHover: colors.accentSoft,
+    bgActive: colors.accentSoft,
+    fg: colors.accentText,
+  },
 };
-const FG: Record<Variant, 'inverse' | 'primary' | 'accent'> = {
-  primary: 'inverse',
-  need: 'inverse',
-  secondary: 'primary',
-  ghost: 'accent',
-  danger: 'inverse',
-};
-const PAD: Record<Size, { py: number; px: number; font: keyof typeof typography }> = {
-  sm: { py: spacing.sm, px: spacing.md, font: 'label' },
-  md: { py: spacing.md, px: spacing.lg, font: 'bodyStrong' },
-  lg: { py: spacing.lg, px: spacing.xl, font: 'bodyStrong' },
+
+/**
+ * Sizes.
+ *
+ * `md` (44) is exactly the minimum comfortable tap target, so it is the
+ * default and needs no justification at a call site. `lg` (52) is for the one
+ * committing action on a screen — the old 58 was tall enough to look like a
+ * banner. `sm` (34) is for actions inside a row or card, where a full-size
+ * button would out-weigh the content it belongs to.
+ */
+const PAD: Record<Size, { h: number; px: number; gap: number; font: keyof typeof typography }> = {
+  sm: { h: 34, px: spacing.md, gap: spacing.xs, font: 'label' },
+  md: { h: 44, px: spacing.lg, gap: spacing.sm, font: 'bodyStrong' },
+  lg: { h: 52, px: spacing.xl, gap: spacing.sm, font: 'bodyStrong' },
 };
 
 export function Button({
@@ -60,60 +159,70 @@ export function Button({
   ...rest
 }: ButtonProps) {
   const pad = PAD[size];
+  const spec = SPEC[variant];
   const isDisabled = disabled || loading;
-  const [pressed, setPressed] = useState(false);
 
-  // NOTE: `style` is a plain array, never a function. NativeWind's jsx runtime
-  // drops function-form `style` props on native, which would strip every
-  // visual here and make the button invisible.
   return (
-    <Pressable
+    <Press
+      scale="sm"
       accessibilityRole="button"
+      accessibilityLabel={label}
       accessibilityState={{ disabled: !!isDisabled, busy: loading }}
       disabled={isDisabled}
-      hitSlop={8}
-      onPressIn={() => setPressed(true)}
-      onPressOut={() => setPressed(false)}
+      hitSlop={size === 'sm' ? 8 : 4}
       style={[
         styles.base,
         {
-          backgroundColor: BG[variant],
-          paddingVertical: pad.py,
+          height: pad.h,
           paddingHorizontal: pad.px,
-          borderWidth: variant === 'ghost' ? 1 : 0,
-          borderColor: colors.border,
-          opacity: isDisabled ? 0.5 : pressed ? 0.88 : 1,
+          backgroundColor: spec.bg,
+          borderRadius: radii.md,
+          borderWidth: spec.border ? 1 : 0,
+          borderColor: spec.border ?? 'transparent',
           alignSelf: fullWidth ? 'stretch' : 'flex-start',
         },
+        spec.elevated && !isDisabled ? shadows.sm : null,
+        // Disabled reads as "not available now", so it keeps its shape and
+        // loses contrast rather than disappearing.
+        isDisabled && { opacity: 0.42 },
         style,
       ]}
+      states={{
+        hover: {
+          backgroundColor: spec.bgHover,
+          borderColor: spec.borderHover ?? spec.border ?? 'transparent',
+        },
+        pressed: {
+          backgroundColor: spec.bgActive,
+          borderColor: spec.borderHover ?? spec.border ?? 'transparent',
+        },
+      }}
       {...rest}
     >
+      {/*
+        The spinner replaces the label but the frame keeps its measured width,
+        so a button does not jump narrower the moment it is tapped.
+      */}
       {loading ? (
-        <ActivityIndicator
-          color={
-            variant === 'secondary' || variant === 'ghost' ? colors.accent : colors.textInverse
-          }
-        />
+        <ActivityIndicator color={spec.fg} size="small" />
       ) : (
-        <View style={styles.row}>
+        <View style={[styles.row, { gap: pad.gap }]}>
           {leftIcon}
-          <Text variant={pad.font} tone={FG[variant]}>
+          <Text variant={pad.font} style={{ color: spec.fg }} numberOfLines={1}>
             {label}
           </Text>
           {rightIcon}
         </View>
       )}
-    </Pressable>
+    </Press>
   );
 }
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 44,
-    borderRadius: radii.md,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  row: { flexDirection: 'row', alignItems: 'center' },
 });

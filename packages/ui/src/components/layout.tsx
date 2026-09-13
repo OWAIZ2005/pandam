@@ -37,8 +37,30 @@ export function Row({ children, gap = 'sm', align = 'center', justify, style }: 
   );
 }
 
-export function Divider({ style }: { style?: StyleProp<ViewStyle> }) {
+export interface DividerProps {
+  /**
+   * `soft` for a rule inside an already-bordered container, where the full
+   * border colour would read as a second edge.
+   */
+  tone?: 'default' | 'soft';
+  /** Inset from the leading edge, to align a rule with text rather than the
+   *  container — the detail that makes a settings list look typeset. */
+  inset?: number;
+  style?: StyleProp<ViewStyle>;
+}
+
+export function Divider({ tone = 'default', inset = 0, style }: DividerProps) {
   return (
-    <View style={[{ height: 1, backgroundColor: colors.border, alignSelf: 'stretch' }, style]} />
+    <View
+      style={[
+        {
+          height: 1,
+          backgroundColor: tone === 'soft' ? colors.borderSoft : colors.border,
+          alignSelf: 'stretch',
+          marginLeft: inset,
+        },
+        style,
+      ]}
+    />
   );
 }

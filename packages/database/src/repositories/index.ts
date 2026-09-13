@@ -22,7 +22,9 @@ import { messagesRepository } from './messages';
 import { needsRepository } from './needs';
 import { notificationsRepository } from './notifications';
 import { offersRepository } from './offers';
+import { paymentsRepository } from './payments';
 import { profilesRepository } from './profiles';
+import { pushTokensRepository } from './push-tokens';
 import { reportsRepository } from './reports';
 import { reviewsRepository } from './reviews';
 import { sessionsRepository } from './sessions';
@@ -46,8 +48,10 @@ export function createRepositories(db: Database) {
     barterTransactions: barterTransactionsRepository(db),
     reviews: reviewsRepository(db),
     notifications: notificationsRepository(db),
+    pushTokens: pushTokensRepository(db),
     reports: reportsRepository(db),
     disputes: disputesRepository(db),
+    payments: paymentsRepository(db),
   };
 }
 
@@ -64,6 +68,7 @@ export type {
   NeedWithRefs,
   OwnerRef,
   CategoryRef,
+  ImageRef,
   DiscoverFilters,
 } from './market';
 export type { CreateOfferInput } from './offers';
@@ -73,6 +78,9 @@ export type { CreateReviewInput } from './reviews';
 export type { CreateConversationInput } from './conversations';
 export type { CreateMessageInput } from './messages';
 export type { CreateNotificationInput } from './notifications';
+export type { RegisterPushTokenInput } from './push-tokens';
 export type { CreateReportInput } from './reports';
 export type { CreateDisputeInput } from './disputes';
 export type { AddListingImageInput } from './listing-images';
+export { MAX_IMAGES_PER_LISTING } from './listing-images';
+export type { CreatePaymentInput } from './payments';

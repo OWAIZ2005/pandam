@@ -4,7 +4,7 @@
  * oriented as "you ↔ them". The user id comes from the verified session; a
  * caller can never list another user's matches. There is NO score and no AI.
  */
-import { type ListingWithRefs } from '@pandam/database';
+import { type ListingWithRefs, type NeedWithRefs } from '@pandam/database';
 import { type MatchSide, type ReciprocalMatchView } from '@pandam/types';
 import { Hono } from 'hono';
 
@@ -14,6 +14,7 @@ import {
   type ReciprocalMatch,
 } from '../../../domain/matching';
 import { sendOk } from '../../../lib/http';
+import { toOwner } from '../../../lib/serialize';
 import { authMiddleware, getAuth, requireAuth } from '../../../middleware/auth';
 import { type AppEnv } from '../../../types';
 
@@ -23,10 +24,13 @@ matchesRoute.get('/', authMiddleware, requireAuth, async (c) => {
   const { user } = getAuth(c);
   const { repos } = c.get('ctx');
 
-  const [listings, needs] = await Promise.all([
+  const [allListings, needs] = await Promise.all([
     repos.listings.listAllPublished(),
     repos.needs.listAllPublished(),
   ]);
+  // A `sale`-only listing has nothing to trade back — exclude it from
+  // reciprocal matching (it can still be discovered and bought for money).
+  const listings = allListings.filter((l) => l.transactionType !== 'sale');
 
   const toInput = (r: {
     id: string;
@@ -58,13 +62,14 @@ matchesRoute.get('/', authMiddleware, requireAuth, async (c) => {
   return sendOk(c, { items });
 });
 
-type ItemMap = Map<string, ListingWithRefs>;
+type ListingMap = Map<string, ListingWithRefs>;
+type NeedMap = Map<string, NeedWithRefs>;
 
 function buildView(
   m: ReciprocalMatch,
   meId: string,
-  listingMap: ItemMap,
-  needMap: ItemMap,
+  listingMap: ListingMap,
+  needMap: NeedMap,
 ): ReciprocalMatchView | null {
   const aListing = listingMap.get(m.aListingId);
   const bListing = listingMap.get(m.bListingId);
@@ -73,7 +78,7 @@ function buildView(
   if (!aListing || !bListing || !aNeed || !bNeed) return null;
 
   const sideA: MatchSide = {
-    user: aListing.owner,
+    user: toOwner(aListing.owner),
     have: {
       id: aListing.id,
       title: aListing.title,
@@ -83,7 +88,7 @@ function buildView(
     need: { id: aNeed.id, title: aNeed.title, type: aNeed.type, category: aNeed.category },
   };
   const sideB: MatchSide = {
-    user: bListing.owner,
+    user: toOwner(bListing.owner),
     have: {
       id: bListing.id,
       title: bListing.title,

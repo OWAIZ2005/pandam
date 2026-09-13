@@ -1,4 +1,4 @@
-import { and, eq, gt, isNull } from 'drizzle-orm';
+import { and, desc, eq, gt, isNull } from 'drizzle-orm';
 
 import { newId } from '../id';
 import { type SessionRow, sessions } from '../schema/sessions';
@@ -58,6 +58,19 @@ export function sessionsRepository(db: Database) {
       const last = session.lastUsedAt ?? session.createdAt;
       if (now() - last < thresholdMs) return;
       await db.update(sessions).set({ lastUsedAt: now() }).where(eq(sessions.id, id));
+    },
+
+    /**
+     * Every session for a user, newest first, including expired and revoked
+     * ones — the account screen shows history, and hiding revoked rows would
+     * make "was I signed out?" unanswerable.
+     */
+    async listForUser(userId: string): Promise<SessionRow[]> {
+      return db
+        .select()
+        .from(sessions)
+        .where(eq(sessions.userId, userId))
+        .orderBy(desc(sessions.createdAt));
     },
 
     async revoke(id: string): Promise<void> {

@@ -22,6 +22,20 @@
       "when": 1789038189173,
       "tag": "0002_auth_credentials_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1789187825124,
+      "tag": "0003_watery_blade",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1789226990671,
+      "tag": "0004_swift_wildside",
+      "breakpoints": true
     }
   ]
 }

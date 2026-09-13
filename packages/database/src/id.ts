@@ -26,8 +26,10 @@ export const ID_PREFIXES = {
   barterTransaction: 'btx',
   review: 'rvw',
   notification: 'ntf',
+  pushToken: 'pth',
   report: 'rpt',
   dispute: 'dsp',
+  payment: 'pay',
 } as const;
 
 export type EntityName = keyof typeof ID_PREFIXES;

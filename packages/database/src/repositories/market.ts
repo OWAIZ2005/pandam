@@ -2,11 +2,17 @@
  * Read model for discovery. Cross-entity JOIN queries (listing/need + owner +
  * category) live here so the plain `listings` / `needs` repos stay simple CRUD.
  * Every result carries only the *public* slice of the owner.
+ *
+ * Listings additionally carry `pricing` (transaction type + price); needs never
+ * do — a need is a request, never itself for sale. That asymmetry is real, so
+ * listings and needs use separate select shapes rather than forcing one
+ * generic shape to fit both.
  */
-import { and, desc, eq, inArray, lt, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, lt, or, sql } from 'drizzle-orm';
 
-import { type ItemType, type PublicationStatus } from '../enums';
+import { type ItemType, type PublicationStatus, type TransactionType } from '../enums';
 import { categories } from '../schema/categories';
+import { listingImages } from '../schema/listing-images';
 import { listings } from '../schema/listings';
 import { needs } from '../schema/needs';
 import { profiles } from '../schema/profiles';
@@ -17,11 +23,26 @@ export interface OwnerRef {
   id: string;
   displayName: string;
   username: string | null;
+  /** Coarse city from the owner's profile; `null` when they have not set one. */
+  locationCity: string | null;
+  /** R2 key of their avatar; the Worker turns this into a URL. */
+  avatarKey: string | null;
 }
 export interface CategoryRef {
   id: string;
   name: string;
   slug: string;
+}
+/** One photo attached to a listing. The URL is built by the Worker. */
+export interface ImageRef {
+  id: string;
+  objectKey: string;
+  sortOrder: number;
+}
+export interface PricingRef {
+  transactionType: TransactionType;
+  priceAmount: number | null;
+  priceCurrency: string;
 }
 
 export interface ListingWithRefs {
@@ -36,8 +57,24 @@ export interface ListingWithRefs {
   updatedAt: number;
   owner: OwnerRef;
   category: CategoryRef;
+  pricing: PricingRef;
+  /** Ordered photos; empty when the owner has not uploaded any. */
+  images: ImageRef[];
 }
-export type NeedWithRefs = ListingWithRefs;
+
+export interface NeedWithRefs {
+  id: string;
+  ownerId: string;
+  categoryId: string;
+  type: ItemType;
+  title: string;
+  description: string;
+  status: PublicationStatus;
+  createdAt: number;
+  updatedAt: number;
+  owner: OwnerRef;
+  category: CategoryRef;
+}
 
 export interface DiscoverFilters {
   categoryId?: string;
@@ -46,6 +83,13 @@ export interface DiscoverFilters {
   ownerId?: string;
   limit: number;
   cursor?: { createdAt: number; id: string } | undefined;
+  /** Listings only: exclude `sale`-only rows (used by reciprocal matching — a
+   *  sale-only listing has nothing to trade back). */
+  barterableOnly?: boolean;
+  /** Coarse location filter, matched case-insensitively against the owner's
+   *  profile city. Barter means meeting in person, so "near me" is a city
+   *  match rather than a radius — no coordinates are stored anywhere. */
+  city?: string;
 }
 
 /** Escape LIKE wildcards in user input; used with `ESCAPE '\'`. */
@@ -56,25 +100,29 @@ function likeArg(q: string): string {
     .replace(/[\\%_]/g, (m) => `\\${m}`)}%`;
 }
 
-function selectShape(table: typeof listings | typeof needs) {
-  return {
-    id: table.id,
-    ownerId: table.ownerId,
-    categoryId: table.categoryId,
-    type: table.type,
-    title: table.title,
-    description: table.description,
-    status: table.status,
-    createdAt: table.createdAt,
-    updatedAt: table.updatedAt,
-    ownerDisplayName: profiles.displayName,
-    ownerUsername: profiles.username,
-    categoryName: categories.name,
-    categorySlug: categories.slug,
-  };
-}
+/* -------------------------------------------------------------------------- */
+/* Needs — no pricing                                                         */
+/* -------------------------------------------------------------------------- */
 
-type Flat = {
+const needSelectShape = {
+  id: needs.id,
+  ownerId: needs.ownerId,
+  categoryId: needs.categoryId,
+  type: needs.type,
+  title: needs.title,
+  description: needs.description,
+  status: needs.status,
+  createdAt: needs.createdAt,
+  updatedAt: needs.updatedAt,
+  ownerDisplayName: profiles.displayName,
+  ownerUsername: profiles.username,
+  ownerLocationCity: profiles.locationCity,
+  ownerAvatarKey: profiles.avatarKey,
+  categoryName: categories.name,
+  categorySlug: categories.slug,
+};
+
+type NeedFlat = {
   id: string;
   ownerId: string;
   categoryId: string;
@@ -86,11 +134,13 @@ type Flat = {
   updatedAt: number;
   ownerDisplayName: string;
   ownerUsername: string | null;
+  ownerLocationCity: string | null;
+  ownerAvatarKey: string | null;
   categoryName: string;
   categorySlug: string;
 };
 
-function inflate(r: Flat): ListingWithRefs {
+function inflateNeed(r: NeedFlat): NeedWithRefs {
   return {
     id: r.id,
     ownerId: r.ownerId,
@@ -101,95 +151,253 @@ function inflate(r: Flat): ListingWithRefs {
     status: r.status,
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
-    owner: { id: r.ownerId, displayName: r.ownerDisplayName, username: r.ownerUsername },
+    owner: {
+      id: r.ownerId,
+      displayName: r.ownerDisplayName,
+      username: r.ownerUsername,
+      locationCity: r.ownerLocationCity,
+      avatarKey: r.ownerAvatarKey,
+    },
     category: { id: r.categoryId, name: r.categoryName, slug: r.categorySlug },
   };
 }
 
+/* -------------------------------------------------------------------------- */
+/* Listings — with pricing                                                    */
+/* -------------------------------------------------------------------------- */
+
+const listingSelectShape = {
+  id: listings.id,
+  ownerId: listings.ownerId,
+  categoryId: listings.categoryId,
+  type: listings.type,
+  title: listings.title,
+  description: listings.description,
+  status: listings.status,
+  transactionType: listings.transactionType,
+  priceAmount: listings.priceAmount,
+  priceCurrency: listings.priceCurrency,
+  createdAt: listings.createdAt,
+  updatedAt: listings.updatedAt,
+  ownerDisplayName: profiles.displayName,
+  ownerUsername: profiles.username,
+  ownerLocationCity: profiles.locationCity,
+  ownerAvatarKey: profiles.avatarKey,
+  categoryName: categories.name,
+  categorySlug: categories.slug,
+};
+
+type ListingFlat = NeedFlat & {
+  transactionType: TransactionType;
+  priceAmount: number | null;
+  priceCurrency: string;
+};
+
+function inflateListing(r: ListingFlat, images: ImageRef[] = []): ListingWithRefs {
+  return {
+    ...inflateNeed(r),
+    pricing: {
+      transactionType: r.transactionType,
+      priceAmount: r.priceAmount,
+      priceCurrency: r.priceCurrency,
+    },
+    images,
+  };
+}
+
 export function marketRepository(db: Database) {
-  function discover(table: typeof listings | typeof needs) {
-    return async (f: DiscoverFilters): Promise<ListingWithRefs[]> => {
-      const where = [eq(table.status, 'published')];
-      if (f.categoryId) where.push(eq(table.categoryId, f.categoryId));
-      if (f.type) where.push(eq(table.type, f.type));
-      if (f.ownerId) where.push(eq(table.ownerId, f.ownerId));
+  /**
+   * Photos for a page of listings in one query, so the feed costs two
+   * round-trips regardless of how many cards it returns.
+   */
+  async function imagesFor(listingIds: string[]): Promise<Map<string, ImageRef[]>> {
+    const map = new Map<string, ImageRef[]>();
+    if (listingIds.length === 0) return map;
+    const rows = await db
+      .select({
+        id: listingImages.id,
+        listingId: listingImages.listingId,
+        objectKey: listingImages.objectKey,
+        sortOrder: listingImages.sortOrder,
+      })
+      .from(listingImages)
+      .where(inArray(listingImages.listingId, listingIds))
+      .orderBy(asc(listingImages.sortOrder), asc(listingImages.id));
+    for (const r of rows) {
+      const ref: ImageRef = { id: r.id, objectKey: r.objectKey, sortOrder: r.sortOrder };
+      const list = map.get(r.listingId);
+      if (list) list.push(ref);
+      else map.set(r.listingId, [ref]);
+    }
+    return map;
+  }
+
+  /** Inflate listing rows with their photos attached. */
+  async function withImages(rows: ListingFlat[]): Promise<ListingWithRefs[]> {
+    const byListing = await imagesFor(rows.map((r) => r.id));
+    return rows.map((r) => inflateListing(r, byListing.get(r.id) ?? []));
+  }
+
+  return {
+    async discoverListings(f: DiscoverFilters): Promise<ListingWithRefs[]> {
+      const where = [eq(listings.status, 'published')];
+      if (f.categoryId) where.push(eq(listings.categoryId, f.categoryId));
+      if (f.type) where.push(eq(listings.type, f.type));
+      if (f.ownerId) where.push(eq(listings.ownerId, f.ownerId));
+      if (f.barterableOnly) where.push(sql`${listings.transactionType} <> 'sale'`);
+      if (f.city && f.city.trim()) {
+        where.push(sql`lower(${profiles.locationCity}) = ${f.city.trim().toLowerCase()}`);
+      }
       if (f.q && f.q.trim()) {
         const arg = likeArg(f.q);
         where.push(
-          sql`(lower(${table.title}) like ${arg} escape '\\' or lower(${table.description}) like ${arg} escape '\\')`,
+          sql`(lower(${listings.title}) like ${arg} escape '\\' or lower(${listings.description}) like ${arg} escape '\\')`,
         );
       }
       if (f.cursor) {
         where.push(
           or(
-            lt(table.createdAt, f.cursor.createdAt),
-            and(eq(table.createdAt, f.cursor.createdAt), lt(table.id, f.cursor.id)),
+            lt(listings.createdAt, f.cursor.createdAt),
+            and(eq(listings.createdAt, f.cursor.createdAt), lt(listings.id, f.cursor.id)),
           )!,
         );
       }
       const rows = (await db
-        .select(selectShape(table))
-        .from(table)
-        .innerJoin(profiles, eq(profiles.userId, table.ownerId))
-        .innerJoin(categories, eq(categories.id, table.categoryId))
+        .select(listingSelectShape)
+        .from(listings)
+        .innerJoin(profiles, eq(profiles.userId, listings.ownerId))
+        .innerJoin(categories, eq(categories.id, listings.categoryId))
         .where(and(...where))
-        .orderBy(desc(table.createdAt), desc(table.id))
-        .limit(f.limit)) as Flat[];
-      return rows.map(inflate);
-    };
-  }
+        .orderBy(desc(listings.createdAt), desc(listings.id))
+        .limit(f.limit)) as ListingFlat[];
+      return withImages(rows);
+    },
 
-  function ownerList(table: typeof listings | typeof needs) {
-    return async (ownerId: string): Promise<ListingWithRefs[]> => {
+    async discoverNeeds(f: DiscoverFilters): Promise<NeedWithRefs[]> {
+      const where = [eq(needs.status, 'published')];
+      if (f.categoryId) where.push(eq(needs.categoryId, f.categoryId));
+      if (f.type) where.push(eq(needs.type, f.type));
+      if (f.ownerId) where.push(eq(needs.ownerId, f.ownerId));
+      if (f.city && f.city.trim()) {
+        where.push(sql`lower(${profiles.locationCity}) = ${f.city.trim().toLowerCase()}`);
+      }
+      if (f.q && f.q.trim()) {
+        const arg = likeArg(f.q);
+        where.push(
+          sql`(lower(${needs.title}) like ${arg} escape '\\' or lower(${needs.description}) like ${arg} escape '\\')`,
+        );
+      }
+      if (f.cursor) {
+        where.push(
+          or(
+            lt(needs.createdAt, f.cursor.createdAt),
+            and(eq(needs.createdAt, f.cursor.createdAt), lt(needs.id, f.cursor.id)),
+          )!,
+        );
+      }
       const rows = (await db
-        .select(selectShape(table))
-        .from(table)
-        .innerJoin(profiles, eq(profiles.userId, table.ownerId))
-        .innerJoin(categories, eq(categories.id, table.categoryId))
-        .where(eq(table.ownerId, ownerId))
-        .orderBy(desc(table.createdAt), desc(table.id))) as Flat[];
-      return rows.map(inflate);
-    };
-  }
+        .select(needSelectShape)
+        .from(needs)
+        .innerJoin(profiles, eq(profiles.userId, needs.ownerId))
+        .innerJoin(categories, eq(categories.id, needs.categoryId))
+        .where(and(...where))
+        .orderBy(desc(needs.createdAt), desc(needs.id))
+        .limit(f.limit)) as NeedFlat[];
+      return rows.map(inflateNeed);
+    },
 
-  function getOne(table: typeof listings | typeof needs) {
-    return async (id: string): Promise<ListingWithRefs | null> => {
+    async listOwnerListings(ownerId: string): Promise<ListingWithRefs[]> {
       const rows = (await db
-        .select(selectShape(table))
-        .from(table)
-        .innerJoin(profiles, eq(profiles.userId, table.ownerId))
-        .innerJoin(categories, eq(categories.id, table.categoryId))
-        .where(eq(table.id, id))
-        .limit(1)) as Flat[];
+        .select(listingSelectShape)
+        .from(listings)
+        .innerJoin(profiles, eq(profiles.userId, listings.ownerId))
+        .innerJoin(categories, eq(categories.id, listings.categoryId))
+        .where(eq(listings.ownerId, ownerId))
+        .orderBy(desc(listings.createdAt), desc(listings.id))) as ListingFlat[];
+      return withImages(rows);
+    },
+
+    async listOwnerNeeds(ownerId: string): Promise<NeedWithRefs[]> {
+      const rows = (await db
+        .select(needSelectShape)
+        .from(needs)
+        .innerJoin(profiles, eq(profiles.userId, needs.ownerId))
+        .innerJoin(categories, eq(categories.id, needs.categoryId))
+        .where(eq(needs.ownerId, ownerId))
+        .orderBy(desc(needs.createdAt), desc(needs.id))) as NeedFlat[];
+      return rows.map(inflateNeed);
+    },
+
+    async getListing(id: string): Promise<ListingWithRefs | null> {
+      const rows = (await db
+        .select(listingSelectShape)
+        .from(listings)
+        .innerJoin(profiles, eq(profiles.userId, listings.ownerId))
+        .innerJoin(categories, eq(categories.id, listings.categoryId))
+        .where(eq(listings.id, id))
+        .limit(1)) as ListingFlat[];
       const row = firstOrNull(rows);
-      return row ? inflate(row) : null;
-    };
-  }
+      if (!row) return null;
+      const [withRefs] = await withImages([row]);
+      return withRefs ?? null;
+    },
 
-  function byIds(table: typeof listings | typeof needs) {
-    return async (ids: string[]): Promise<Map<string, ListingWithRefs>> => {
+    async getNeed(id: string): Promise<NeedWithRefs | null> {
+      const rows = (await db
+        .select(needSelectShape)
+        .from(needs)
+        .innerJoin(profiles, eq(profiles.userId, needs.ownerId))
+        .innerJoin(categories, eq(categories.id, needs.categoryId))
+        .where(eq(needs.id, id))
+        .limit(1)) as NeedFlat[];
+      const row = firstOrNull(rows);
+      return row ? inflateNeed(row) : null;
+    },
+
+    async listingsByIds(ids: string[]): Promise<Map<string, ListingWithRefs>> {
       const map = new Map<string, ListingWithRefs>();
       if (ids.length === 0) return map;
       const rows = (await db
-        .select(selectShape(table))
-        .from(table)
-        .innerJoin(profiles, eq(profiles.userId, table.ownerId))
-        .innerJoin(categories, eq(categories.id, table.categoryId))
-        .where(inArray(table.id, ids))) as Flat[];
-      for (const r of rows) map.set(r.id, inflate(r));
+        .select(listingSelectShape)
+        .from(listings)
+        .innerJoin(profiles, eq(profiles.userId, listings.ownerId))
+        .innerJoin(categories, eq(categories.id, listings.categoryId))
+        .where(inArray(listings.id, ids))) as ListingFlat[];
+      for (const r of await withImages(rows)) map.set(r.id, r);
       return map;
-    };
-  }
+    },
 
-  return {
-    discoverListings: discover(listings),
-    discoverNeeds: discover(needs),
-    listOwnerListings: ownerList(listings),
-    listOwnerNeeds: ownerList(needs),
-    getListing: getOne(listings),
-    getNeed: getOne(needs),
-    listingsByIds: byIds(listings),
-    needsByIds: byIds(needs),
+    async needsByIds(ids: string[]): Promise<Map<string, NeedWithRefs>> {
+      const map = new Map<string, NeedWithRefs>();
+      if (ids.length === 0) return map;
+      const rows = (await db
+        .select(needSelectShape)
+        .from(needs)
+        .innerJoin(profiles, eq(profiles.userId, needs.ownerId))
+        .innerJoin(categories, eq(categories.id, needs.categoryId))
+        .where(inArray(needs.id, ids))) as NeedFlat[];
+      for (const r of rows) map.set(r.id, inflateNeed(r));
+      return map;
+    },
+
+    /**
+     * Cities that currently have published listings, most-stocked first —
+     * the source for the discover screen's location filter, so it can only
+     * ever offer places that actually have something in them.
+     */
+    async citiesWithListings(limit = 40): Promise<{ city: string; count: number }[]> {
+      const rows = await db
+        .select({ city: profiles.locationCity, n: sql<number>`count(*)` })
+        .from(listings)
+        .innerJoin(profiles, eq(profiles.userId, listings.ownerId))
+        .where(and(eq(listings.status, 'published'), sql`${profiles.locationCity} is not null`))
+        .groupBy(profiles.locationCity)
+        .orderBy(sql`count(*) desc`)
+        .limit(limit);
+      return rows
+        .filter((r): r is { city: string; n: number } => !!r.city)
+        .map((r) => ({ city: r.city, count: Number(r.n) }));
+    },
 
     /** Published-item counts for a user (home / profile headers). */
     async ownerCounts(ownerId: string): Promise<{ listings: number; needs: number }> {

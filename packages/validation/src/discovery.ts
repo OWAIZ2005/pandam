@@ -6,6 +6,8 @@ export const discoverQuerySchema = z.object({
   type: itemTypeSchema.optional(),
   q: z.string().trim().min(1).max(80).optional(),
   owner: idSchema('usr').optional(),
+  /** Coarse city match against the owner's profile — barter happens in person. */
+  city: z.string().trim().min(1).max(120).optional(),
   cursor: z.string().min(1).max(200).optional(),
   limit: z.coerce.number().int().min(1).max(50).default(20),
 });

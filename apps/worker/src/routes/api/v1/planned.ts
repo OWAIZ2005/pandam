@@ -18,48 +18,12 @@ export interface PlannedGroup {
   endpoints: string[];
 }
 
-export const PLANNED_GROUPS: PlannedGroup[] = [
-  {
-    name: 'users',
-    summary: 'Account management (email change, delete account, session list)',
-    endpoints: ['DELETE /me', 'GET /me/sessions', 'POST /me/change-password'],
-  },
-  {
-    name: 'offers',
-    summary: 'Barter proposals between two users',
-    endpoints: ['GET /incoming', 'GET /outgoing', 'POST /', 'GET /:id', 'POST /:id/respond'],
-  },
-  {
-    name: 'conversations',
-    summary: 'Negotiation threads (realtime delivery is a later phase)',
-    endpoints: ['GET /', 'GET /:id', 'POST /:id/read'],
-  },
-  {
-    name: 'messages',
-    summary: 'Messages within a conversation',
-    endpoints: ['GET /conversations/:id/messages', 'POST /conversations/:id/messages'],
-  },
-  {
-    name: 'transactions',
-    summary: 'Barter transactions (non-monetary) created from accepted offers',
-    endpoints: ['GET /', 'GET /:id', 'POST /:id/status'],
-  },
-  {
-    name: 'reviews',
-    summary: 'Reviews left after a completed barter',
-    endpoints: ['GET /users/:userId/reviews', 'POST /'],
-  },
-  {
-    name: 'notifications',
-    summary: 'Per-user notification feed',
-    endpoints: ['GET /', 'POST /:id/read'],
-  },
-  {
-    name: 'reports',
-    summary: 'Abuse reports and transaction disputes',
-    endpoints: ['POST /', 'POST /disputes'],
-  },
-];
+/**
+ * Empty: every V1 resource group now has a real handler. The machinery is
+ * kept because it is how the next phase's routes get mounted and documented
+ * before they work, rather than 404-ing with no explanation.
+ */
+export const PLANNED_GROUPS: PlannedGroup[] = [];
 
 export function plannedGroupRouter(group: PlannedGroup) {
   const router = new Hono<AppEnv>();

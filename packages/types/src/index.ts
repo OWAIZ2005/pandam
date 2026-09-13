@@ -33,6 +33,8 @@ import type {
   NotificationType,
   OfferRow,
   OfferStatus,
+  PaymentRow,
+  PaymentStatus,
   ProfileRow,
   PublicationStatus,
   ReportReason,
@@ -41,6 +43,7 @@ import type {
   ReportSubjectType,
   ReviewRow,
   SessionRow,
+  TransactionType,
   UserRow,
   UserStatus,
 } from '@pandam/database/schema';
@@ -61,6 +64,7 @@ export type SessionId = Id<'session'>;
 export type ProfileId = Id<'profile'>;
 export type CategoryId = Id<'category'>;
 export type ListingId = Id<'listing'>;
+export type PaymentId = Id<'payment'>;
 export type ListingImageId = Id<'listingImage'>;
 export type NeedId = Id<'need'>;
 export type MatchId = Id<'match'>;
@@ -95,6 +99,7 @@ export type Review = ReviewRow;
 export type Notification = NotificationRow;
 export type Report = ReportRow;
 export type Dispute = DisputeRow;
+export type Payment = PaymentRow;
 
 /* -------------------------------------------------------------------------- */
 /* Enum unions (derived from the DB schema)                                    */
@@ -109,10 +114,12 @@ export type {
   MatchStatus,
   NotificationType,
   OfferStatus,
+  PaymentStatus,
   PublicationStatus,
   ReportReason,
   ReportStatus,
   ReportSubjectType,
+  TransactionType,
   UserStatus,
 };
 
@@ -171,7 +178,11 @@ export type PublicProfile = Pick<
   | 'locationCountry'
   | 'createdAt'
   | 'updatedAt'
->;
+> & {
+  /** Ready-to-fetch URL for `avatarKey`, or `null`. Clients use this rather
+   *  than building a media path themselves. */
+  avatarUrl: string | null;
+};
 
 /** `GET /api/v1/auth/me` payload. */
 export interface AuthenticatedUser {
@@ -198,12 +209,27 @@ export interface OwnerRef {
   id: string;
   displayName: string;
   username: string | null;
+  /** Coarse city, for "where would we meet?" — never finer than a city name. */
+  locationCity: string | null;
+  /** Their avatar, ready to fetch, or `null` when they have not set one. */
+  avatarUrl: string | null;
 }
 
 export interface CategoryRef {
   id: string;
   name: string;
   slug: string;
+}
+
+/**
+ * How a listing may be acquired, plus its price when money is involved.
+ * `priceAmount` is the minor currency unit (paise for INR) — an exact integer,
+ * never a float. Absent (undefined) on a `need`, which is never for sale.
+ */
+export interface Pricing {
+  transactionType: TransactionType;
+  priceAmount: number | null;
+  priceCurrency: string;
 }
 
 /** A listing ("I HAVE") or need ("I NEED") as returned by the API. */
@@ -219,6 +245,17 @@ export interface MarketItem {
   updatedAt: number;
   owner: OwnerRef;
   category: CategoryRef;
+  /** Only present on listings — a need is never itself for sale. */
+  pricing?: Pricing;
+  /** Ordered photos; only present on listings, and empty until one is added. */
+  images?: ItemImage[];
+}
+
+/** One uploaded listing photo. `url` is relative to the API origin. */
+export interface ItemImage {
+  id: string;
+  url: string;
+  sortOrder: number;
 }
 
 export type ListingSummary = MarketItem & { kind: 'listing' };
@@ -239,4 +276,134 @@ export interface ReciprocalMatchView {
   key: string;
   you: MatchSide;
   them: MatchSide;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Offers — barter proposals between two users                                */
+/* -------------------------------------------------------------------------- */
+
+/** A slice of a listing small enough to show inline on an offer/transaction. */
+export interface ItemRef {
+  id: string;
+  title: string;
+  type: ItemType;
+  category: CategoryRef;
+}
+
+/** `GET /api/v1/offers/*` and `POST /api/v1/offers` item, hydrated for display. */
+export interface OfferView {
+  id: string;
+  status: OfferStatus;
+  /** Always the caller's perspective: true if the caller sent it. */
+  isMine: boolean;
+  fromUser: OwnerRef;
+  toUser: OwnerRef;
+  /** The `fromUser`'s HAVE being offered. */
+  offered: ItemRef;
+  /** The `toUser`'s HAVE being requested. */
+  requested: ItemRef;
+  message: string | null;
+  matchId: string | null;
+  expiresAt: number | null;
+  respondedAt: number | null;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Conversations & messages                                                    */
+/* -------------------------------------------------------------------------- */
+
+export interface ConversationView {
+  id: string;
+  status: ConversationStatus;
+  offerId: string | null;
+  /** The other participant(s) — never includes the caller. */
+  participants: OwnerRef[];
+  lastMessage: MessageView | null;
+  /** True if the caller has unread messages in this conversation. */
+  unread: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface MessageView {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  /** True if the caller sent this message. */
+  isMine: boolean;
+  body: string;
+  createdAt: number;
+  editedAt: number | null;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Barter transactions (non-monetary) & reviews                               */
+/* -------------------------------------------------------------------------- */
+
+/** `GET /api/v1/transactions/*` item — a completed offer, in progress. */
+export interface BarterTransactionView {
+  id: string;
+  status: BarterTransactionStatus;
+  offerId: string;
+  /** The caller's counterpart in this trade. */
+  counterparty: OwnerRef;
+  /** What the caller gave and got, oriented to the caller regardless of who
+   *  initiated. */
+  youGave: ItemRef;
+  youGot: ItemRef;
+  /** Whether the caller has already reviewed this transaction. */
+  reviewedByMe: boolean;
+  completedAt: number | null;
+  cancelledAt: number | null;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ReviewView {
+  id: string;
+  transactionId: string;
+  reviewer: OwnerRef;
+  revieweeId: string;
+  rating: number;
+  comment: string | null;
+  createdAt: number;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Notifications                                                              */
+/* -------------------------------------------------------------------------- */
+
+export interface NotificationView {
+  id: string;
+  type: NotificationType;
+  /** Related ids (offerId, transactionId, ...), parsed from the stored JSON. */
+  data: Record<string, string>;
+  read: boolean;
+  createdAt: number;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Payments — real money, via Razorpay Payment Links                          */
+/* -------------------------------------------------------------------------- */
+
+/** `POST /api/v1/payments` and `GET /api/v1/payments/*` item. */
+export interface PaymentView {
+  id: string;
+  status: PaymentStatus;
+  listing: ItemRef;
+  buyer: OwnerRef;
+  seller: OwnerRef;
+  /** Minor currency unit (paise for INR). */
+  amount: number;
+  currency: string;
+  /** Razorpay-hosted checkout page — open this to pay. Only present while `created`. */
+  checkoutUrl: string | null;
+  expiresAt: number | null;
+  paidAt: number | null;
+  cancelledAt: number | null;
+  refundedAt: number | null;
+  createdAt: number;
+  updatedAt: number;
 }

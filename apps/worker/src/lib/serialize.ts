@@ -3,14 +3,21 @@
  * secrets (password hashes, token hashes) can never leak by accident: these
  * functions simply do not copy those fields.
  */
-import { type ListingWithRefs } from '@pandam/database';
+import {
+  type ListingWithRefs,
+  type NeedWithRefs,
+  type OwnerRef as DbOwnerRef,
+} from '@pandam/database';
 import {
   type MarketItem,
+  type OwnerRef,
   type Profile,
   type PublicProfile,
   type SafeUser,
   type User,
 } from '@pandam/types';
+
+import { mediaUrl } from './media';
 
 export function toSafeUser(user: User): SafeUser {
   return {
@@ -22,6 +29,29 @@ export function toSafeUser(user: User): SafeUser {
   };
 }
 
+/**
+ * The public slice of a user, built from their profile. Used by every view
+ * that shows "who" (offers, chats, transactions, reviews) so a missing
+ * profile degrades the same way everywhere instead of per route.
+ */
+export function toOwnerRef(
+  userId: string,
+  profile: Pick<Profile, 'displayName' | 'username' | 'locationCity' | 'avatarKey'> | null,
+): OwnerRef {
+  return {
+    id: userId,
+    displayName: profile?.displayName ?? 'PANDAM user',
+    username: profile?.username ?? null,
+    locationCity: profile?.locationCity ?? null,
+    avatarUrl: toMediaUrl(profile?.avatarKey ?? null),
+  };
+}
+
+/** Public URL for a stored object, or `null` when there is no object. */
+export function toMediaUrl(objectKey: string | null): string | null {
+  return objectKey ? mediaUrl(objectKey) : null;
+}
+
 export function toPublicProfile(profile: Profile | null): PublicProfile | null {
   if (!profile) return null;
   return {
@@ -29,6 +59,7 @@ export function toPublicProfile(profile: Profile | null): PublicProfile | null {
     username: profile.username,
     bio: profile.bio,
     avatarKey: profile.avatarKey,
+    avatarUrl: toMediaUrl(profile.avatarKey),
     locationCity: profile.locationCity,
     locationRegion: profile.locationRegion,
     locationCountry: profile.locationCountry,
@@ -37,7 +68,24 @@ export function toPublicProfile(profile: Profile | null): PublicProfile | null {
   };
 }
 
-export function toMarketItem(row: ListingWithRefs, kind: 'listing' | 'need'): MarketItem {
+/**
+ * The read model hands back the owner's avatar KEY; the API only ever exposes
+ * a URL. That swap happens here, so no screen ever sees a storage key.
+ */
+export function toOwner(owner: DbOwnerRef): OwnerRef {
+  return {
+    id: owner.id,
+    displayName: owner.displayName,
+    username: owner.username,
+    locationCity: owner.locationCity,
+    avatarUrl: toMediaUrl(owner.avatarKey),
+  };
+}
+
+export function toMarketItem(
+  row: ListingWithRefs | NeedWithRefs,
+  kind: 'listing' | 'need',
+): MarketItem {
   return {
     id: row.id,
     kind,
@@ -48,7 +96,19 @@ export function toMarketItem(row: ListingWithRefs, kind: 'listing' | 'need'): Ma
     status: row.status,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
-    owner: row.owner,
+    owner: toOwner(row.owner),
     category: row.category,
+    // Only a listing carries pricing and photos — a need is a request, so it
+    // is never itself for sale and has nothing of its own to photograph.
+    ...('pricing' in row ? { pricing: row.pricing } : {}),
+    ...('images' in row
+      ? {
+          images: row.images.map((img) => ({
+            id: img.id,
+            url: mediaUrl(img.objectKey),
+            sortOrder: img.sortOrder,
+          })),
+        }
+      : {}),
   };
 }

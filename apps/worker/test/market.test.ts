@@ -80,8 +80,14 @@ describe('POST /api/v1/listings', () => {
     expect(data.item.owner.displayName).toBe('Ada');
     expect(data.item.category.slug).toBe('web-design');
     expect(data.item.kind).toBe('listing');
-    // no money words
-    expect(JSON.stringify(data)).not.toMatch(/price|amount|currency|checkout/i);
+    // A barter listing (the default) carries pricing metadata but no actual
+    // charge — the shape exists so `sale`/`both` listings can reuse it, but a
+    // barter listing must never have a price attached.
+    expect(data.item.pricing).toEqual({
+      transactionType: 'barter',
+      priceAmount: null,
+      priceCurrency: 'INR',
+    });
   });
 
   it('rejects invalid input (422)', async () => {
@@ -91,14 +97,143 @@ describe('POST /api/v1/listings', () => {
     expect(res.status).toBe(422);
     expect((await json<Err>(res)).error.code).toBe('validation_error');
   });
+
+  it('creates a `sale` listing with a price', async () => {
+    const app = ctx.makeApp();
+    const me = await newUser(app);
+    const res = await createListing(app, me.token, {
+      transactionType: 'sale',
+      priceAmount: 250000,
+    });
+    expect(res.status).toBe(201);
+    const { data } = await json<Ok<{ item: MarketItem }>>(res);
+    expect(data.item.pricing).toEqual({
+      transactionType: 'sale',
+      priceAmount: 250000,
+      priceCurrency: 'INR',
+    });
+  });
+
+  it('rejects a `sale` listing with no price (422)', async () => {
+    const app = ctx.makeApp();
+    const me = await newUser(app);
+    const res = await createListing(app, me.token, { transactionType: 'sale' });
+    expect(res.status).toBe(422);
+  });
+
+  it('rejects a `barter` listing that carries a price (422)', async () => {
+    const app = ctx.makeApp();
+    const me = await newUser(app);
+    const res = await createListing(app, me.token, {
+      transactionType: 'barter',
+      priceAmount: 500,
+    });
+    expect(res.status).toBe(422);
+  });
+
+  it('rejects a non-positive or fractional-looking price (422)', async () => {
+    const app = ctx.makeApp();
+    const me = await newUser(app);
+    const res = await createListing(app, me.token, { transactionType: 'sale', priceAmount: 0 });
+    expect(res.status).toBe(422);
+  });
+});
+
+describe('PATCH /api/v1/listings/:id (pricing transitions)', () => {
+  it('switching to `sale` without a price is rejected (422)', async () => {
+    const app = ctx.makeApp();
+    const me = await newUser(app);
+    const created = await json<Ok<{ item: MarketItem }>>(await createListing(app, me.token));
+    const res = await app.request(
+      `/api/v1/listings/${created.data.item.id}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...bearer(me.token) },
+        body: JSON.stringify({ transactionType: 'sale' }),
+      },
+      testEnv,
+    );
+    expect(res.status).toBe(422);
+  });
+
+  it('switching to `sale` with a price in the same request succeeds', async () => {
+    const app = ctx.makeApp();
+    const me = await newUser(app);
+    const created = await json<Ok<{ item: MarketItem }>>(await createListing(app, me.token));
+    const res = await app.request(
+      `/api/v1/listings/${created.data.item.id}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...bearer(me.token) },
+        body: JSON.stringify({ transactionType: 'both', priceAmount: 999900 }),
+      },
+      testEnv,
+    );
+    expect(res.status).toBe(200);
+    const { data } = await json<Ok<{ item: MarketItem }>>(res);
+    expect(data.item.pricing).toEqual({
+      transactionType: 'both',
+      priceAmount: 999900,
+      priceCurrency: 'INR',
+    });
+  });
+
+  it('switching back to `barter` clears the price, even without saying so', async () => {
+    const app = ctx.makeApp();
+    const me = await newUser(app);
+    const created = await json<Ok<{ item: MarketItem }>>(
+      await createListing(app, me.token, { transactionType: 'sale', priceAmount: 4200 }),
+    );
+    const res = await app.request(
+      `/api/v1/listings/${created.data.item.id}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...bearer(me.token) },
+        body: JSON.stringify({ transactionType: 'barter' }),
+      },
+      testEnv,
+    );
+    expect(res.status).toBe(200);
+    const { data } = await json<Ok<{ item: MarketItem }>>(res);
+    expect(data.item.pricing?.priceAmount).toBeNull();
+  });
+
+  it('updating only the price on an existing `sale` listing keeps working', async () => {
+    const app = ctx.makeApp();
+    const me = await newUser(app);
+    const created = await json<Ok<{ item: MarketItem }>>(
+      await createListing(app, me.token, { transactionType: 'sale', priceAmount: 1000 }),
+    );
+    const res = await app.request(
+      `/api/v1/listings/${created.data.item.id}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...bearer(me.token) },
+        body: JSON.stringify({ priceAmount: 1500 }),
+      },
+      testEnv,
+    );
+    expect(res.status).toBe(200);
+    const { data } = await json<Ok<{ item: MarketItem }>>(res);
+    expect(data.item.pricing).toEqual({
+      transactionType: 'sale',
+      priceAmount: 1500,
+      priceCurrency: 'INR',
+    });
+  });
 });
 
 describe('GET /api/v1/listings (discovery)', () => {
   it('returns only published items, newest first, with a cursor', async () => {
     const app = ctx.makeApp();
     const a = await newUser(app);
+    // `createdAt` has millisecond resolution and ties break on a random id, so
+    // two inserts in the same millisecond would make "newest first" flaky —
+    // space them out like real usage (nobody creates two listings in <1ms).
     await createListing(app, a.token, { title: 'Alpha site work' });
+    await new Promise((r) => setTimeout(r, 2));
     await createListing(app, a.token, { title: 'Bravo site work' });
+    await new Promise((r) => setTimeout(r, 2));
     await createListing(app, a.token, { title: 'Charlie draft', status: 'draft' });
 
     const res = await app.request('/api/v1/listings?limit=1', {}, testEnv);
@@ -245,5 +380,73 @@ describe('needs mirror listings', () => {
       await app.request('/api/v1/needs', {}, testEnv),
     );
     expect(list.data.items.map((i) => i.title)).toEqual(['Need product photos']);
+  });
+});
+
+describe('discovery by city', () => {
+  /** Set the coarse city on a user's profile, the way the app's editor does. */
+  const setCity = (app: ReturnType<TestDb['makeApp']>, token: string, city: string) =>
+    app.request(
+      '/api/v1/profiles/me',
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...bearer(token) },
+        body: JSON.stringify({ locationCity: city }),
+      },
+      testEnv,
+    );
+
+  it('filters listings to one city and reports the owner city on each card', async () => {
+    const app = ctx.makeApp();
+    const local = await newUser(app, 'Local');
+    const distant = await newUser(app, 'Distant');
+    await setCity(app, local.token, 'Kochi');
+    await setCity(app, distant.token, 'Mumbai');
+
+    await createListing(app, local.token, { title: 'Bike in Kochi' });
+    await createListing(app, distant.token, { title: 'Bike in Mumbai' });
+
+    const res = await app.request('/api/v1/listings?city=kochi', {}, testEnv);
+    const items = (await json<Ok<{ items: MarketItem[] }>>(res)).data.items;
+    // Matched case-insensitively, since the city is free text the user typed.
+    expect(items.map((i) => i.title)).toEqual(['Bike in Kochi']);
+    expect(items[0]!.owner.locationCity).toBe('Kochi');
+  });
+
+  it('leaves out owners who have set no city at all', async () => {
+    const app = ctx.makeApp();
+    const placeless = await newUser(app, 'Placeless');
+    await createListing(app, placeless.token, { title: 'Bike from nowhere' });
+
+    const filtered = await app.request('/api/v1/listings?city=Kochi', {}, testEnv);
+    expect((await json<Ok<{ items: MarketItem[] }>>(filtered)).data.items).toEqual([]);
+
+    // Unfiltered discovery still shows it — a missing city hides nothing.
+    const all = await app.request('/api/v1/listings', {}, testEnv);
+    expect((await json<Ok<{ items: MarketItem[] }>>(all)).data.items).toHaveLength(1);
+  });
+
+  it('offers only cities that actually have published listings', async () => {
+    const app = ctx.makeApp();
+    const a = await newUser(app, 'A');
+    const b = await newUser(app, 'B');
+    const draftOnly = await newUser(app, 'C');
+    await setCity(app, a.token, 'Kochi');
+    await setCity(app, b.token, 'Kochi');
+    await setCity(app, draftOnly.token, 'Ghost Town');
+
+    await createListing(app, a.token, { title: 'One' });
+    await createListing(app, b.token, { title: 'Two' });
+    await createListing(app, draftOnly.token, { title: 'Unpublished', status: 'draft' });
+
+    const res = await app.request('/api/v1/listings/cities', {}, testEnv);
+    const items = (await json<Ok<{ items: { city: string; count: number }[] }>>(res)).data.items;
+    expect(items).toEqual([{ city: 'Kochi', count: 2 }]);
+  });
+
+  it('rejects an over-long city value rather than running the query', async () => {
+    const app = ctx.makeApp();
+    const res = await app.request(`/api/v1/listings?city=${'x'.repeat(200)}`, {}, testEnv);
+    expect(res.status).toBe(422);
   });
 });

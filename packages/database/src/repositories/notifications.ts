@@ -31,6 +31,11 @@ export function notificationsRepository(db: Database) {
       return one(rows, 'notifications.create');
     },
 
+    async findById(id: string): Promise<NotificationRow | null> {
+      const rows = await db.select().from(notifications).where(eq(notifications.id, id)).limit(1);
+      return firstOrNull(rows);
+    },
+
     async listForUser(userId: string, unreadOnly = false): Promise<NotificationRow[]> {
       const where = unreadOnly
         ? and(eq(notifications.userId, userId), isNull(notifications.readAt))

@@ -8,6 +8,7 @@
  */
 export * from './common';
 export * from './auth';
+export * from './account';
 export * from './profile';
 export * from './discovery';
 export * from './listing';
@@ -15,4 +16,6 @@ export * from './need';
 export * from './offer';
 export * from './message';
 export * from './review';
+export * from './notification';
 export * from './report';
+export * from './payment';

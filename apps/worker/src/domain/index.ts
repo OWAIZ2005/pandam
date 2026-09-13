@@ -6,3 +6,4 @@ export * from './matching';
 export * from './offers';
 export * from './barter';
 export * from './reviews';
+export * from './payment';

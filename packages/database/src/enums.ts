@@ -56,6 +56,16 @@ export const NOTIFICATION_TYPE = [
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPE)[number];
 
+/**
+ * Photos allowed per listing. Enforced by the upload route and used by the
+ * form to stop offering an "add" tile that would be rejected. Lives here
+ * because this module is the dependency-free leaf both sides can import.
+ */
+export const MAX_LISTING_IMAGES = 6;
+
+export const PUSH_PLATFORM = ['ios', 'android', 'web'] as const;
+export type PushPlatform = (typeof PUSH_PLATFORM)[number];
+
 export const REPORT_SUBJECT_TYPE = ['user', 'listing', 'need', 'message', 'transaction'] as const;
 export type ReportSubjectType = (typeof REPORT_SUBJECT_TYPE)[number];
 
@@ -67,3 +77,26 @@ export type ReportStatus = (typeof REPORT_STATUS)[number];
 
 export const DISPUTE_STATUS = ['open', 'reviewing', 'resolved', 'rejected'] as const;
 export type DisputeStatus = (typeof DISPUTE_STATUS)[number];
+
+/**
+ * How a listing ("I HAVE") may be acquired. `barter` is the V1 default and the
+ * only mode `needs` matching considers; `sale` and `both` opt a listing into
+ * real-money checkout via Razorpay. This is additive — nothing about the
+ * existing barter/offer/match machinery changes for a `barter` listing.
+ */
+export const TRANSACTION_TYPE = ['barter', 'sale', 'both'] as const;
+export type TransactionType = (typeof TRANSACTION_TYPE)[number];
+
+/**
+ * Lifecycle of a real-money payment for a listing, backed by a Razorpay
+ * Payment Link (see `apps/worker/src/lib/razorpay.ts`). This is fully separate
+ * from `barter_transactions` — a good/service exchanged for money never
+ * touches the barter tables, and a barter never touches this one.
+ *
+ *   created ─▶ paid          (webhook: payment_link.paid)
+ *      │  └──▶ expired       (webhook: payment_link.expired, or past expiry)
+ *      └────▶ cancelled      (buyer/seller cancels before paying)
+ *   paid  ─▶ refunded        (seller-initiated refund via Razorpay)
+ */
+export const PAYMENT_STATUS = ['created', 'paid', 'expired', 'cancelled', 'refunded'] as const;
+export type PaymentStatus = (typeof PAYMENT_STATUS)[number];

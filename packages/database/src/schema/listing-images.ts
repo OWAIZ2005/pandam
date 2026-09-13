@@ -5,8 +5,10 @@ import { listings } from './listings';
 
 /**
  * Metadata for an image attached to a listing. The binary lives in Cloudflare
- * R2; this row only stores the object key and ordering. Uploading to R2 is a
- * later phase — nothing here touches object storage.
+ * R2 and this row only stores the object key and ordering — nothing here
+ * touches object storage. The Worker writes the object first and the row
+ * second (see the listing image routes), so a row always points at bytes that
+ * exist.
  */
 export const listingImages = sqliteTable(
   'listing_images',

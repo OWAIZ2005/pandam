@@ -7,7 +7,7 @@ import { users } from './users';
 /**
  * A message inside a conversation. `editedAt` / `deletedAt` are soft markers so
  * history is preserved. Realtime delivery (WebSockets / Durable Objects) is a
- * later phase; this is storage only.
+ * later phase; this is storage only — the app polls for new messages.
  */
 export const messages = sqliteTable(
   'messages',

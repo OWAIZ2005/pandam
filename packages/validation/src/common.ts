@@ -6,13 +6,18 @@
  */
 import {
   ITEM_TYPE,
+  MAX_LISTING_IMAGES,
   PUBLICATION_STATUS,
   REPORT_REASON,
   REPORT_SUBJECT_TYPE,
+  TRANSACTION_TYPE,
 } from '@pandam/database/enums';
 import { z } from 'zod';
 
 export { z };
+
+/** Photos allowed per listing — same number the upload route enforces. */
+export { MAX_LISTING_IMAGES };
 export type { ZodError, ZodIssue, ZodSchema, ZodTypeAny } from 'zod';
 
 /** Cursor pagination shared by every list endpoint. */
@@ -49,3 +54,17 @@ export const reportSubjectTypeSchema = z.enum(REPORT_SUBJECT_TYPE);
 
 /** Fields the client may set for a listing/need's publication state. */
 export const publishableStatusSchema = z.enum(['draft', 'published', 'paused', 'archived']);
+
+export const transactionTypeSchema = z.enum(TRANSACTION_TYPE);
+
+/**
+ * A price in minor currency units (paise for INR) — always a positive integer,
+ * never a float, so ₹19.99 is impossible to represent by construction (it must
+ * be sent as 1999). ISO 4217 3-letter currency code, INR by default.
+ */
+export const priceAmountSchema = z.number().int().positive().max(100_000_000);
+export const currencySchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .regex(/^[A-Z]{3}$/, 'must be a 3-letter ISO 4217 currency code');

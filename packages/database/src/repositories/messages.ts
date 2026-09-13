@@ -21,6 +21,11 @@ export function messagesRepository(db: Database) {
       return one(rows, 'messages.create');
     },
 
+    async findById(id: string): Promise<MessageRow | null> {
+      const rows = await db.select().from(messages).where(eq(messages.id, id)).limit(1);
+      return firstOrNull(rows);
+    },
+
     async listByConversation(conversationId: string): Promise<MessageRow[]> {
       return db
         .select()

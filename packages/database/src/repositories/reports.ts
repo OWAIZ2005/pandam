@@ -17,6 +17,15 @@ export function reportsRepository(db: Database) {
       return one(rows, 'reports.create');
     },
 
+    /** Reports this user has filed — shown back to them on the account screen. */
+    async listByReporter(reporterId: string): Promise<ReportRow[]> {
+      return db
+        .select()
+        .from(reports)
+        .where(eq(reports.reporterId, reporterId))
+        .orderBy(desc(reports.createdAt));
+    },
+
     async listBySubject(
       subjectType: ReportRow['subjectType'],
       subjectId: string,

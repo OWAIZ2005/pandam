@@ -13,3 +13,20 @@
 SENTRY_DSN=
 POSTHOG_KEY=
 POSTHOG_HOST=https://us.i.posthog.com
+
+# Razorpay (real-money purchases of `sale`/`both` listings — optional).
+# Get test-mode keys from https://dashboard.razorpay.com/app/keys (Test Mode).
+# Without these, POST /api/v1/payments returns a clear "not configured" error
+# instead of pretending to create a working checkout link.
+RAZORPAY_KEY_ID=
+RAZORPAY_KEY_SECRET=
+# From the webhook you register at Settings -> Webhooks -> add
+# {API_URL}/api/v1/payments/webhook, subscribed to payment_link.paid and
+# payment_link.expired. This is a signing secret, not an API key.
+RAZORPAY_WEBHOOK_SECRET=
+
+# Expo push (optional). Only needed once "enhanced push security" is enabled
+# for the Expo project; without it, sends to exp.host are unauthenticated and
+# still delivered. A notification is always stored in the database first, so a
+# missing token here costs the interruption, never the notification.
+EXPO_ACCESS_TOKEN=

@@ -44,16 +44,22 @@
   ],
 
   // ---------------------------------------------------------------------------
-  // R2 (object storage for listing images). App -> Worker -> R2.
-  // Create with:  wrangler r2 bucket create pandam-media
+  // R2 (object storage for listing photos and avatars). App -> Worker -> R2;
+  // the app never talks to R2 directly and never sees a bucket credential.
+  // Create the buckets once with:
+  //   wrangler r2 bucket create pandam-media
+  //   wrangler r2 bucket create pandam-media-preview
+  // Local `wrangler dev` simulates the bucket on disk, so uploads work without
+  // creating anything. Without this binding the upload routes return a clear
+  // 503 rather than failing halfway through.
   // ---------------------------------------------------------------------------
-  // "r2_buckets": [
-  //   {
-  //     "binding": "MEDIA",
-  //     "bucket_name": "pandam-media",
-  //     "preview_bucket_name": "pandam-media-preview"
-  //   }
-  // ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "pandam-media",
+      "preview_bucket_name": "pandam-media-preview"
+    }
+  ],
 
   // ---------------------------------------------------------------------------
   // Durable Objects (realtime: presence, conversation sockets). App -> Worker

@@ -12,7 +12,16 @@ export type CreateListingInput = Omit<
 > & { status?: PublicationStatus };
 
 export type UpdateListingInput = Partial<
-  Pick<NewListingRow, 'categoryId' | 'type' | 'title' | 'description'>
+  Pick<
+    NewListingRow,
+    | 'categoryId'
+    | 'type'
+    | 'title'
+    | 'description'
+    | 'transactionType'
+    | 'priceAmount'
+    | 'priceCurrency'
+  >
 >;
 
 export function listingsRepository(db: Database) {

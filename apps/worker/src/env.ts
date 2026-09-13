@@ -21,6 +21,27 @@ export interface Env {
   POSTHOG_KEY?: string;
   POSTHOG_HOST?: string;
 
+  /**
+   * Razorpay (real-money payments for `sale`/`both` listings — see
+   * `lib/razorpay.ts` and `routes/api/v1/payments.ts`). All three are
+   * secrets; absent in dev until a Razorpay account is connected, in which
+   * case `/api/v1/payments` returns `503 db_unavailable`-style errors rather
+   * than silently pretending to charge anyone.
+   *  - KEY_ID / KEY_SECRET: HTTP Basic auth for the Payment Links API.
+   *  - WEBHOOK_SECRET: HMAC-SHA256 key Razorpay signs webhook bodies with —
+   *    the ONLY thing that is ever trusted to mark a payment `paid`.
+   */
+  RAZORPAY_KEY_ID?: string;
+  RAZORPAY_KEY_SECRET?: string;
+  RAZORPAY_WEBHOOK_SECRET?: string;
+
+  /**
+   * Expo push access token. Optional: Expo only requires it once "enhanced
+   * push security" is switched on for the project. Without it, sends are
+   * unauthenticated and still delivered. See `lib/push.ts`.
+   */
+  EXPO_ACCESS_TOKEN?: string;
+
   /** D1 — enabled once the d1_databases binding is uncommented. */
   DB?: D1Database;
   /** R2 — enabled once the r2_buckets binding is uncommented. */

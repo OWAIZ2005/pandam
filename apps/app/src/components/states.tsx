@@ -4,42 +4,74 @@
  */
 import { Ionicons } from '@expo/vector-icons';
 import { type ReactNode } from 'react';
-import { View } from 'react-native';
 
-import { Button, EmptyState, SkeletonList, Text, colors, spacing } from '@pandam/ui';
+import { EmptyState, SkeletonList } from '@pandam/ui';
+import { colors } from '@pandam/ui';
 
 import { ApiError } from '@/lib/api/client';
 
+/**
+ * The failure state for a query.
+ *
+ * Every branch here answers two questions — what happened, and what can I do
+ * about it. "Something went wrong" on its own is the worst possible error
+ * message: it tells the reader they are stuck without telling them whether to
+ * wait, retry, or give up. So an offline error says to check the connection,
+ * a 5xx says it is our fault and worth retrying, a 404 says the thing is gone
+ * and retrying will not help, and only a genuinely unknown failure falls back
+ * to the generic line.
+ */
 export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
-  const network = error instanceof ApiError && error.status === 0;
-  const forbidden = error instanceof ApiError && (error.status === 401 || error.status === 403);
-  const title = network
-    ? 'You appear to be offline'
+  const api = error instanceof ApiError ? error : null;
+  const network = api?.status === 0;
+  const forbidden = api?.status === 401 || api?.status === 403;
+  const missing = api?.status === 404;
+  const server = (api?.status ?? 0) >= 500;
+
+  // Retrying a 404 or a permission failure just fails again, so the button is
+  // withheld rather than offering an action that cannot work.
+  const retryable = !missing && !forbidden;
+
+  const { icon, title, body } = network
+    ? {
+        icon: 'cloud-offline-outline' as const,
+        title: 'You appear to be offline',
+        body: 'Check your connection — nothing has been lost, and this will load as soon as you are back.',
+      }
     : forbidden
-      ? 'You don’t have access to this'
-      : 'Something went wrong';
-  const body = network
-    ? 'Check your connection and try again.'
-    : error instanceof ApiError && error.status >= 500
-      ? 'The PANDAM service had a hiccup. Please try again.'
-      : error instanceof ApiError
-        ? error.message
-        : 'An unexpected error occurred.';
+      ? {
+          icon: 'lock-closed-outline' as const,
+          title: 'You do not have access to this',
+          body: 'It may belong to someone else, or your session may have ended. Try signing in again.',
+        }
+      : missing
+        ? {
+            icon: 'help-circle-outline' as const,
+            title: 'This is no longer here',
+            body: 'It was probably removed or traded away. The link may also be out of date.',
+          }
+        : server
+          ? {
+              icon: 'alert-circle-outline' as const,
+              title: 'PANDAM had a problem',
+              body: 'This one is on us, not you. Trying again usually works.',
+            }
+          : {
+              icon: 'alert-circle-outline' as const,
+              title: 'Something went wrong',
+              body: api?.message ?? 'An unexpected error occurred. Try again in a moment.',
+            };
+
   return (
-    <View style={{ alignItems: 'center', gap: spacing.md, paddingVertical: spacing['3xl'] }}>
-      <Ionicons name="cloud-offline-outline" size={40} color={colors.textMuted} />
-      <Text variant="h3" style={{ textAlign: 'center' }}>
-        {title}
-      </Text>
-      <Text tone="secondary" style={{ textAlign: 'center', maxWidth: 320 }}>
-        {body}
-      </Text>
-      {onRetry ? (
-        <View style={{ marginTop: spacing.xs }}>
-          <Button label="Try again" variant="secondary" onPress={onRetry} />
-        </View>
-      ) : null}
-    </View>
+    <EmptyState
+      tone="neutral"
+      icon={<Ionicons name={icon} size={22} color={colors.textSecondary} />}
+      title={title}
+      body={body}
+      actionLabel={onRetry && retryable ? 'Try again' : undefined}
+      onAction={retryable ? onRetry : undefined}
+      actionVariant="secondary"
+    />
   );
 }
 

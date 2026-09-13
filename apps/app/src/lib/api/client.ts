@@ -31,7 +31,12 @@ type ApiEnvelope<T> =
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = sessionToken.get();
   const headers = new Headers(init.headers);
-  if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+  // FormData must set its own Content-Type: the multipart boundary is part of
+  // the header value, so overriding it makes the body unparseable server-side.
+  const isForm = typeof FormData !== 'undefined' && init.body instanceof FormData;
+  if (init.body && !isForm && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
   if (token) headers.set('Authorization', `Bearer ${token}`);
 
   let res: Response;
@@ -62,6 +67,13 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
 
 export const api = {
   get: <T>(path: string) => apiFetch<T>(path),
+  delete: <T>(path: string, data?: unknown) =>
+    apiFetch<T>(path, {
+      method: 'DELETE',
+      body: data === undefined ? undefined : JSON.stringify(data),
+    }),
+  /** Multipart upload (images). The caller builds the `FormData`. */
+  upload: <T>(path: string, form: FormData) => apiFetch<T>(path, { method: 'POST', body: form }),
   post: <T>(path: string, data?: unknown) =>
     apiFetch<T>(path, {
       method: 'POST',

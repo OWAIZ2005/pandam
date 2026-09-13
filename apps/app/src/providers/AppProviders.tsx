@@ -1,12 +1,20 @@
 /**
  * Composes every app-wide provider in one place so the router layout stays
  * declarative. Order: gesture handler → safe-area → query cache → analytics →
- * auth bootstrap (loads the native session token before anything renders).
+ * auth bootstrap (loads the native session token before anything renders) →
+ * toasts.
+ *
+ * Toasts sit INSIDE the safe-area provider (they read the bottom inset to
+ * clear the home indicator) but outside the router, so a toast survives a
+ * navigation — "your offer was sent" should still be readable on the screen
+ * you land on afterwards.
  */
 import { QueryClientProvider } from '@tanstack/react-query';
 import { type ReactNode, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+import { ToastProvider } from '@pandam/ui';
 
 import { AnalyticsProvider } from '@/lib/analytics';
 import { AuthBootstrap } from '@/lib/auth/AuthBootstrap';
@@ -21,7 +29,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <AnalyticsProvider>
-            <AuthBootstrap>{children}</AuthBootstrap>
+            <ToastProvider>
+              <AuthBootstrap>{children}</AuthBootstrap>
+            </ToastProvider>
           </AnalyticsProvider>
         </QueryClientProvider>
       </SafeAreaProvider>

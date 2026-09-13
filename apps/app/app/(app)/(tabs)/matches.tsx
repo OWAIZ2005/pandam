@@ -2,7 +2,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { FlatList, View } from 'react-native';
 
-import { EmptyState, Screen, SkeletonList, Text, colors, spacing } from '@pandam/ui';
+import {
+  Badge,
+  EmptyState,
+  Notice,
+  Screen,
+  SkeletonList,
+  colors,
+  layout,
+  spacing,
+} from '@pandam/ui';
 
 import { AppHeader } from '@/components/AppHeader';
 import { MatchCard } from '@/components/MatchCard';
@@ -12,23 +21,29 @@ import { useMatches } from '@/lib/hooks/useMatches';
 export default function MatchesScreen() {
   const router = useRouter();
   const matches = useMatches();
+  const count = matches.data?.length ?? 0;
 
   return (
     <Screen padded={false}>
-      <View style={{ paddingHorizontal: spacing.xl, paddingTop: spacing.lg }}>
+      <View style={{ paddingHorizontal: layout.gutter, paddingTop: spacing.lg }}>
         <AppHeader
           title="Matches"
-          subtitle="Reciprocal barters — you have what they need, they have what you need."
+          subtitle="You have what they need, they have what you need."
+          right={
+            count > 0 ? <Badge label={`${count} live`} kind="match" variant="solid" dot /> : null
+          }
         />
       </View>
+
       <FlatList
         data={matches.data ?? []}
         keyExtractor={(m) => m.key}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{
-          paddingHorizontal: spacing.xl,
-          paddingTop: spacing.md,
-          paddingBottom: spacing['4xl'],
-          gap: spacing.md,
+          paddingHorizontal: layout.gutter,
+          paddingTop: spacing.sm,
+          paddingBottom: layout.tabBarInset,
+          gap: spacing.lg,
           flexGrow: 1,
         }}
         refreshing={matches.isRefetching}
@@ -46,24 +61,34 @@ export default function MatchesScreen() {
             <ErrorState error={matches.error} onRetry={() => void matches.refetch()} />
           ) : (
             <EmptyState
-              title="We haven’t found a barter match yet"
+              tone="match"
+              icon={<Ionicons name="sparkles" size={24} color={colors.match} />}
+              title="No barter match yet"
               body="Add what you have and what you need. When someone is the mirror of you, they appear here — no money, just a fair swap."
-              icon={<Ionicons name="sparkles-outline" size={40} color={colors.textMuted} />}
               actionLabel="Explore what others have"
+              actionVariant="match"
               onAction={() => router.push('/(app)/(tabs)/discover')}
+              secondaryLabel="Add something I have"
+              onSecondary={() => router.push('/(app)/new-listing')}
             />
           )
         }
         ListFooterComponent={
-          (matches.data?.length ?? 0) > 0 ? (
-            <Text
-              variant="caption"
-              tone="muted"
-              style={{ textAlign: 'center', paddingTop: spacing.md }}
+          /*
+            Worth saying plainly: people distrust a feed that decides things
+            for them. Stating the rule — same category, same kind, both ways —
+            is what makes a match feel like a fact rather than a suggestion.
+          */
+          count > 0 ? (
+            <Notice
+              kind="neutral"
+              icon={
+                <Ionicons name="information-circle-outline" size={15} color={colors.textMuted} />
+              }
             >
-              Matches are found by an exact, explainable rule — same category and kind on both
-              sides.
-            </Text>
+              Matches follow one exact rule: the same category and kind on both sides, in both
+              directions. No black-box scoring.
+            </Notice>
           ) : null
         }
       />

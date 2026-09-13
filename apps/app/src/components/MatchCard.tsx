@@ -2,33 +2,80 @@ import { Ionicons } from '@expo/vector-icons';
 import { View } from 'react-native';
 
 import { type ReciprocalMatchView } from '@pandam/types';
-import { Avatar, Badge, Card, Row, Stack, Text, colors, radii, spacing } from '@pandam/ui';
+import {
+  Avatar,
+  Badge,
+  Gradient,
+  Press,
+  Row,
+  Text,
+  colors,
+  radii,
+  shadows,
+  spacing,
+} from '@pandam/ui';
 
-function Cell({ label, value, tone }: { label: string; value: string; tone: 'have' | 'need' }) {
+import { mediaSrc } from '@/lib/api/media';
+import { categoryIcon } from '@/lib/icons';
+
+/** One leg of the trade: what moves in a single direction. */
+function Leg({
+  direction,
+  title,
+  categoryName,
+  categorySlug,
+  mirrors,
+}: {
+  direction: 'give' | 'get';
+  title: string;
+  categoryName: string;
+  categorySlug: string;
+  /** The other side's record this leg satisfies. */
+  mirrors: string;
+}) {
+  const give = direction === 'give';
+  const tint = give ? colors.accent : colors.need;
+  const soft = give ? colors.accentSoft : colors.needSoft;
+  const strong = give ? colors.accentStrong : colors.needStrong;
+
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: tone === 'have' ? colors.accentSoft : colors.needSoft,
-        borderRadius: radii.md,
-        padding: spacing.md,
-        gap: spacing.xxs,
-        minWidth: 0,
-      }}
-    >
-      <Text
-        variant="caption"
+    <Row gap="md" align="center">
+      <View
         style={{
-          color: tone === 'have' ? colors.accentStrong : colors.needStrong,
-          fontWeight: '700',
+          width: 44,
+          height: 44,
+          borderRadius: radii.md,
+          backgroundColor: soft,
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
-        {label}
-      </Text>
-      <Text variant="bodySm" numberOfLines={2} style={{ fontWeight: '600' }}>
-        {value}
-      </Text>
-    </View>
+        <Ionicons name={categoryIcon(categorySlug)} size={20} color={tint} />
+      </View>
+
+      <View style={{ flex: 1, minWidth: 0, gap: 1 }}>
+        <Row gap="xs">
+          <Ionicons
+            name={give ? 'arrow-up-circle' : 'arrow-down-circle'}
+            size={12}
+            color={strong}
+          />
+          <Text variant="overline" caps style={{ color: strong }}>
+            {give ? 'You give' : 'You get'}
+          </Text>
+        </Row>
+        <Text variant="bodyStrong" numberOfLines={1}>
+          {title}
+        </Text>
+        {/*
+          The reason this leg works, in the fewest possible words. Without it
+          the card is two item titles; with it, it is an argument.
+        */}
+        <Text variant="caption" tone="muted" numberOfLines={1}>
+          {categoryName} · {give ? 'they need' : 'you need'} “{mirrors}”
+        </Text>
+      </View>
+    </Row>
   );
 }
 
@@ -38,43 +85,114 @@ export interface MatchCardProps {
 }
 
 /**
- * Makes the reciprocal barter obvious: a 2×2 grid where each row is one item
- * the two sides swap. "You have X, they need X — they have Y, you need Y."
+ * Makes the reciprocal barter obvious. The API returns four records, but they
+ * are only two legs of one trade — showing "you give / you get" instead of all
+ * four titles is what turns a data dump into something a person can act on.
+ *
+ * This is the one component in PANDAM allowed to use a gradient and to sit at
+ * a larger radius than everything else. That is the whole point of having
+ * reserved them: a match is the moment the product exists for, and it can only
+ * feel like an event if nothing else on the screen is shouting too.
  */
 export function MatchCard({ match, onPress }: MatchCardProps) {
   const them = match.them.user.displayName;
+
   return (
-    <Card onPress={onPress} elevated accessibilityLabel={`Barter match with ${them}`}>
-      <Stack gap="md">
-        <Row justify="space-between">
-          <Badge label="Barter match" kind="success" />
-          <Row gap="xs">
-            <Avatar name={them} size={22} />
-            <Text variant="caption" tone="muted">
-              with {them}
-            </Text>
-          </Row>
+    <Press
+      scale="sm"
+      accessibilityLabel={`Barter match with ${them}`}
+      onPress={onPress}
+      style={[
+        {
+          backgroundColor: colors.surface,
+          borderRadius: radii.lg,
+          borderWidth: 1,
+          borderColor: colors.matchBorder,
+          overflow: 'hidden',
+        },
+        shadows.sm,
+      ]}
+      states={{ hover: { borderColor: colors.match, ...shadows.md } }}
+    >
+      <Gradient
+        token="match"
+        direction="horizontal"
+        style={{
+          paddingHorizontal: spacing.lg,
+          paddingVertical: spacing.md,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: spacing.sm,
+        }}
+      >
+        <Row gap="xs">
+          <Ionicons name="sparkles" size={14} color={colors.textInverse} />
+          <Text variant="overline" caps tone="inverse">
+            Barter match
+          </Text>
+        </Row>
+        <Row gap="xs">
+          <Avatar name={them} size={22} ring uri={mediaSrc(match.them.user.avatarUrl)} />
+          <Text variant="caption" tone="inverse" numberOfLines={1}>
+            {them}
+          </Text>
+        </Row>
+      </Gradient>
+
+      <View style={{ padding: spacing.lg, gap: spacing.md }}>
+        <Leg
+          direction="give"
+          title={match.you.have.title}
+          categoryName={match.you.have.category.name}
+          categorySlug={match.you.have.category.slug}
+          mirrors={match.them.need.title}
+        />
+
+        <Row gap="sm" align="center">
+          <View style={{ flex: 1, height: 1, backgroundColor: colors.borderSoft }} />
+          <View
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: radii.pill,
+              backgroundColor: colors.matchSoft,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Ionicons name="swap-vertical" size={15} color={colors.match} />
+          </View>
+          <View style={{ flex: 1, height: 1, backgroundColor: colors.borderSoft }} />
         </Row>
 
-        <Row gap="sm" align="stretch">
-          <Cell label="YOU HAVE" value={match.you.have.title} tone="have" />
-          <View style={{ justifyContent: 'center' }}>
-            <Ionicons name="swap-horizontal" size={18} color={colors.textMuted} />
-          </View>
-          <Cell label="THEY NEED" value={match.them.need.title} tone="need" />
-        </Row>
-        <Row gap="sm" align="stretch">
-          <Cell label="YOU NEED" value={match.you.need.title} tone="need" />
-          <View style={{ justifyContent: 'center' }}>
-            <Ionicons name="swap-horizontal" size={18} color={colors.textMuted} />
-          </View>
-          <Cell label="THEY HAVE" value={match.them.have.title} tone="have" />
-        </Row>
+        <Leg
+          direction="get"
+          title={match.them.have.title}
+          categoryName={match.them.have.category.name}
+          categorySlug={match.them.have.category.slug}
+          mirrors={match.you.need.title}
+        />
+      </View>
 
-        <Text variant="caption" tone="muted">
-          You each have what the other is looking for.
-        </Text>
-      </Stack>
-    </Card>
+      <Row
+        justify="space-between"
+        style={{
+          paddingHorizontal: spacing.lg,
+          paddingVertical: spacing.md,
+          borderTopWidth: 1,
+          borderTopColor: colors.borderSoft,
+          backgroundColor: colors.matchSoft,
+        }}
+      >
+        <Badge label="Even trade" kind="match" dot />
+        <Row gap="xs">
+          <Text variant="label" tone="match">
+            View match
+          </Text>
+          <Ionicons name="chevron-forward" size={13} color={colors.matchText} />
+        </Row>
+      </Row>
+    </Press>
   );
 }

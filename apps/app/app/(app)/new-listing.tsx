@@ -1,26 +1,47 @@
 import { useRouter } from 'expo-router';
+import { View } from 'react-native';
 
-import { Screen } from '@pandam/ui';
+import { Screen, layout, spacing } from '@pandam/ui';
 
 import { AppHeader } from '@/components/AppHeader';
 import { ItemForm } from '@/components/ItemForm';
+import { useUploadListingImages } from '@/lib/hooks/useMedia';
 import { useCreateItem } from '@/lib/hooks/useMarket';
 
 export default function NewListingScreen() {
   const router = useRouter();
   const create = useCreateItem('listing');
+  const uploadImages = useUploadListingImages();
 
   return (
     <Screen padded={false} edges={['top', 'bottom']}>
-      <AppHeader title="Add something I have" back />
+      <View style={{ paddingHorizontal: layout.gutter, paddingTop: spacing.lg }}>
+        <AppHeader
+          title="Something I have"
+          subtitle="A product, a service, or a skill you can put on the table."
+          back
+        />
+      </View>
+
       <ItemForm
         kind="listing"
         mode="create"
-        submitting={create.isPending}
+        submitting={create.isPending || uploadImages.isPending}
         error={create.error}
-        onSubmit={(values) =>
+        onSubmit={({ photos, ...values }) =>
           create.mutate(values, {
-            onSuccess: (res) => router.replace(`/(app)/listing/${res.item.id}`),
+            onSuccess: async (res) => {
+              // Photos can only be attached once the listing has an id, so they
+              // upload here rather than inside the form. A failed upload still
+              // lands on the listing: the item itself was created, and the
+              // detail screen is where the owner can retry adding photos.
+              if (photos?.length) {
+                await uploadImages
+                  .mutateAsync({ listingId: res.item.id, uris: photos })
+                  .catch(() => undefined);
+              }
+              router.replace(`/(app)/listing/${res.item.id}`);
+            },
           })
         }
       />

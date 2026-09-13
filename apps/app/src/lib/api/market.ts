@@ -29,6 +29,7 @@ function toQuery(params: DiscoverParams): string {
   if (params.type) q.set('type', params.type);
   if (params.q) q.set('q', params.q);
   if (params.owner) q.set('owner', params.owner);
+  if (params.city) q.set('city', params.city);
   if (params.limit) q.set('limit', String(params.limit));
   if (params.cursor) q.set('cursor', params.cursor);
   const s = q.toString();
@@ -40,6 +41,9 @@ export const marketApi = {
     api.get<Paginated<MarketItem>>(`${base(kind)}${toQuery(params)}`),
 
   mine: (kind: MarketKind) => api.get<{ items: MarketItem[] }>(`${base(kind)}/mine`),
+
+  /** Cities that currently have published listings, most-stocked first. */
+  cities: () => api.get<{ items: { city: string; count: number }[] }>('/api/v1/listings/cities'),
 
   get: (kind: MarketKind, id: string) => api.get<{ item: MarketItem }>(`${base(kind)}/${id}`),
 

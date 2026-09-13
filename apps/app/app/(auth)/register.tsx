@@ -1,11 +1,26 @@
+import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema, usernameSchema, z, type RegisterInput } from '@pandam/validation';
 import { Link, useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 
-import { Button, Field, Row, Screen, Stack, Text } from '@pandam/ui';
+import {
+  Button,
+  Field,
+  Notice,
+  PasswordField,
+  Row,
+  Screen,
+  Stack,
+  Text,
+  colors,
+  layout,
+  spacing,
+} from '@pandam/ui';
 
+import { AuthHero } from '@/components/AuthHero';
+import { PasswordRequirements } from '@/components/PasswordRequirements';
 import { ApiError } from '@/lib/api/client';
 import { useRegister } from '@/lib/auth/hooks';
 
@@ -25,7 +40,7 @@ type RegisterFormValues = z.infer<typeof registerFormSchema>;
 export default function RegisterScreen() {
   const router = useRouter();
   const register = useRegister();
-  const { control, handleSubmit, formState } = useForm<RegisterFormValues>({
+  const { control, handleSubmit, formState, watch } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerFormSchema),
     defaultValues: { email: '', password: '', displayName: '', username: '' },
   });
@@ -40,123 +55,166 @@ export default function RegisterScreen() {
     register.mutate(payload, { onSuccess: () => router.replace('/(app)/(tabs)') });
   });
 
+  const password = watch('password');
+
   const formError =
     register.error instanceof ApiError
       ? register.error.message
       : register.error
-        ? 'Something went wrong.'
+        ? 'We could not reach PANDAM. Check your connection and try again.'
         : null;
 
   return (
-    <Screen padded={false} edges={['top', 'bottom']}>
+    <Screen padded={false} edges={['bottom']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}
+          contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}
         >
-          <Stack gap="xl">
-            <View>
-              <Text variant="display" tone="accent">
-                PANDAM
-              </Text>
-              <Text variant="h3" style={{ marginTop: 4 }}>
-                Create your account
-              </Text>
-              <Text tone="secondary">Barter, not buy — list what you have and what you need.</Text>
-            </View>
+          <AuthHero />
 
-            <Stack gap="lg">
-              <Controller
-                control={control}
-                name="displayName"
-                render={({ field, fieldState }) => (
-                  <Field
-                    label="Display name"
-                    autoCapitalize="words"
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    onBlur={field.onBlur}
-                    error={fieldState.error?.message}
-                  />
-                )}
-              />
-              <Controller
-                control={control}
-                name="username"
-                render={({ field, fieldState }) => (
-                  <Field
-                    label="Username"
-                    hint="Optional — a handle others can find you by."
-                    autoCapitalize="none"
-                    value={field.value ?? ''}
-                    onChangeText={field.onChange}
-                    onBlur={field.onBlur}
-                    error={fieldState.error?.message}
-                  />
-                )}
-              />
-              <Controller
-                control={control}
-                name="email"
-                render={({ field, fieldState }) => (
-                  <Field
-                    label="Email"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    textContentType="emailAddress"
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    onBlur={field.onBlur}
-                    error={fieldState.error?.message}
-                  />
-                )}
-              />
-              <Controller
-                control={control}
-                name="password"
-                render={({ field, fieldState }) => (
-                  <Field
-                    label="Password"
-                    hint="At least 10 characters, with letters and numbers."
-                    secureTextEntry
-                    textContentType="newPassword"
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    onBlur={field.onBlur}
-                    error={fieldState.error?.message}
-                  />
-                )}
-              />
-
-              {formError ? (
-                <Text variant="bodySm" tone="danger">
-                  {formError}
+          {/* ---------------------------------------------------------- form */}
+          <View
+            style={{
+              width: '100%',
+              maxWidth: layout.contentMaxWidth,
+              alignSelf: 'center',
+              paddingHorizontal: layout.gutter,
+              paddingTop: spacing['2xl'],
+              paddingBottom: spacing['3xl'],
+            }}
+          >
+            <Stack gap="2xl">
+              <View style={{ gap: spacing.xxs }}>
+                <Text variant="h1">Create your account</Text>
+                <Text variant="bodySm" tone="secondary">
+                  Takes about a minute. You can list your first item straight after.
                 </Text>
-              ) : null}
+              </View>
 
-              <Button
-                label={register.isPending ? 'Creating…' : 'Create account'}
-                fullWidth
-                loading={register.isPending}
-                disabled={formState.isSubmitting}
-                onPress={onSubmit}
-              />
+              <Stack gap="lg">
+                <Controller
+                  control={control}
+                  name="displayName"
+                  render={({ field, fieldState }) => (
+                    <Field
+                      label="Display name"
+                      placeholder="Maya Rao"
+                      autoCapitalize="words"
+                      leftIcon={
+                        <Ionicons name="person-outline" size={17} color={colors.textMuted} />
+                      }
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      onBlur={field.onBlur}
+                      error={fieldState.error?.message}
+                    />
+                  )}
+                />
+                <Controller
+                  control={control}
+                  name="username"
+                  render={({ field, fieldState }) => (
+                    <Field
+                      label="Username"
+                      placeholder="mayarao"
+                      optional
+                      hint="A handle others can find you by."
+                      autoCapitalize="none"
+                      leftIcon={<Ionicons name="at" size={17} color={colors.textMuted} />}
+                      value={field.value ?? ''}
+                      onChangeText={field.onChange}
+                      onBlur={field.onBlur}
+                      error={fieldState.error?.message}
+                    />
+                  )}
+                />
+                <Controller
+                  control={control}
+                  name="email"
+                  render={({ field, fieldState }) => (
+                    <Field
+                      label="Email"
+                      placeholder="you@example.com"
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoComplete="email"
+                      textContentType="emailAddress"
+                      leftIcon={<Ionicons name="mail-outline" size={17} color={colors.textMuted} />}
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      onBlur={field.onBlur}
+                      error={fieldState.error?.message}
+                    />
+                  )}
+                />
+                <Controller
+                  control={control}
+                  name="password"
+                  render={({ field, fieldState }) => (
+                    <View style={{ gap: spacing.sm }}>
+                      <PasswordField
+                        label="Password"
+                        placeholder="At least 10 characters"
+                        hint={field.value ? undefined : 'At least 10 characters, with a number.'}
+                        autoComplete="new-password"
+                        textContentType="newPassword"
+                        leftIcon={
+                          <Ionicons name="lock-closed-outline" size={17} color={colors.textMuted} />
+                        }
+                        revealIcon={
+                          <Ionicons name="eye-outline" size={18} color={colors.textMuted} />
+                        }
+                        hideIcon={
+                          <Ionicons name="eye-off-outline" size={18} color={colors.textMuted} />
+                        }
+                        value={field.value}
+                        onChangeText={field.onChange}
+                        onBlur={field.onBlur}
+                        error={fieldState.error?.message}
+                      />
+                      <PasswordRequirements value={password ?? ''} />
+                    </View>
+                  )}
+                />
+
+                {formError ? (
+                  <Notice
+                    kind="danger"
+                    icon={<Ionicons name="alert-circle" size={16} color={colors.danger} />}
+                  >
+                    {formError}
+                  </Notice>
+                ) : null}
+
+                <Button
+                  label={register.isPending ? 'Creating…' : 'Create account'}
+                  size="lg"
+                  fullWidth
+                  loading={register.isPending}
+                  disabled={formState.isSubmitting}
+                  onPress={onSubmit}
+                />
+              </Stack>
+
+              <Row gap="xs" justify="center">
+                <Text variant="bodySm" tone="secondary">
+                  Already have an account?
+                </Text>
+                <Link href="/(auth)/login">
+                  <Text variant="label" tone="accent">
+                    Sign in
+                  </Text>
+                </Link>
+              </Row>
             </Stack>
-
-            <Row gap="xs" justify="center">
-              <Text tone="secondary">Already have an account?</Text>
-              <Link href="/(auth)/login">
-                <Text tone="accent" style={{ fontWeight: '600' }}>
-                  Sign in
-                </Text>
-              </Link>
-            </Row>
-          </Stack>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>

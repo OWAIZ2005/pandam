@@ -16,6 +16,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { authApi } from '@/lib/api/auth';
 import { ApiError } from '@/lib/api/client';
+import { unregisterPushToken } from '@/lib/push/token';
 import { sessionToken } from '@/lib/session/storage';
 
 export const authKeys = { me: ['auth', 'me'] as const };
@@ -71,7 +72,13 @@ export function useRegister() {
 export function useLogout() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => authApi.logout(),
+    mutationFn: async () => {
+      // Unregister first, while the session is still valid — afterwards the
+      // request would be rejected and this phone would keep getting pushes
+      // meant for the account that just signed out.
+      await unregisterPushToken();
+      return authApi.logout();
+    },
     onSettled: async () => {
       await sessionToken.clear();
       qc.setQueryData(authKeys.me, null);

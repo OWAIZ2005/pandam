@@ -1,16 +1,33 @@
+import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { boundedString, usernameSchema, z, type PatchProfileInput } from '@pandam/validation';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { ScrollView } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Alert, ScrollView, View } from 'react-native';
 
-import { Button, Field, Screen, Stack, Text } from '@pandam/ui';
+import {
+  Avatar,
+  Button,
+  Field,
+  Notice,
+  Row,
+  Screen,
+  Stack,
+  Text,
+  colors,
+  layout,
+  spacing,
+  useToast,
+} from '@pandam/ui';
 
 import { AppHeader } from '@/components/AppHeader';
 import { ApiError } from '@/lib/api/client';
 import { useSession } from '@/lib/auth/hooks';
 import { useUpdateProfile } from '@/lib/auth/profile';
+import { mediaSrc } from '@/lib/api/media';
+import { useUploadAvatar } from '@/lib/hooks/useMedia';
 
 // Blank inputs are allowed and mean "clear this field"; non-empty values are
 // checked against the shared rules, then mapped to the strict PatchProfileInput.
@@ -33,6 +50,32 @@ export default function EditProfileScreen() {
   const router = useRouter();
   const { profile } = useSession();
   const update = useUpdateProfile();
+  const uploadAvatar = useUploadAvatar();
+  const toast = useToast();
+
+  /**
+   * Avatars upload straight away rather than on save: the picker already made
+   * the choice explicit, and a photo that only appears after "Save changes"
+   * reads as the tap having failed.
+   */
+  const pickAvatar = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.85,
+    });
+    const uri = res.canceled ? null : res.assets[0]?.uri;
+    if (!uri) return;
+    uploadAvatar.mutate(uri, {
+      onSuccess: () => toast.success('Photo updated.'),
+      onError: () =>
+        Alert.alert(
+          'Upload failed',
+          'That photo could not be uploaded. Check your connection and try again.',
+        ),
+    });
+  };
 
   const { control, handleSubmit, reset, formState } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -59,7 +102,12 @@ export default function EditProfileScreen() {
       bio: values.bio?.trim() ? values.bio.trim() : null,
       locationCity: values.locationCity?.trim() ? values.locationCity.trim() : null,
     };
-    update.mutate(payload, { onSuccess: back });
+    update.mutate(payload, {
+      onSuccess: () => {
+        toast.success('Profile updated.');
+        back();
+      },
+    });
   });
 
   const formError =
@@ -70,10 +118,63 @@ export default function EditProfileScreen() {
         : null;
 
   return (
-    <Screen padded={false} edges={['top', 'bottom']}>
-      <AppHeader title="Edit profile" back />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 56 }}>
+    <Screen
+      padded={false}
+      edges={['top', 'bottom']}
+      footer={
+        <Stack gap="sm">
+          <Button
+            label={update.isPending ? 'Saving…' : 'Save changes'}
+            size="lg"
+            fullWidth
+            loading={update.isPending}
+            disabled={formState.isSubmitting}
+            onPress={onSubmit}
+          />
+          <Button label="Cancel" variant="ghost" fullWidth onPress={back} />
+        </Stack>
+      }
+    >
+      <View style={{ paddingHorizontal: layout.gutter, paddingTop: spacing.lg }}>
+        <AppHeader title="Edit profile" back />
+      </View>
+
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: layout.gutter,
+          paddingBottom: spacing['3xl'],
+        }}
+      >
         <Stack gap="lg">
+          <Row gap="lg" style={{ marginBottom: spacing.xs }}>
+            <Avatar
+              name={profile?.displayName ?? 'You'}
+              size={60}
+              uri={mediaSrc(profile?.avatarUrl)}
+            />
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text variant="bodyStrong">Your photo</Text>
+              <Text variant="caption" tone="muted">
+                {uploadAvatar.isPending
+                  ? 'Uploading…'
+                  : profile?.avatarUrl
+                    ? 'Tap to change it.'
+                    : 'Optional — otherwise your initials are used.'}
+              </Text>
+              <Row gap="md" style={{ marginTop: spacing.xs }}>
+                <Text
+                  variant="label"
+                  tone="accent"
+                  onPress={uploadAvatar.isPending ? undefined : () => void pickAvatar()}
+                >
+                  {profile?.avatarUrl ? 'Change photo' : 'Add a photo'}
+                </Text>
+              </Row>
+            </View>
+          </Row>
+
           <Controller
             control={control}
             name="displayName"
@@ -81,6 +182,7 @@ export default function EditProfileScreen() {
               <Field
                 label="Display name"
                 autoCapitalize="words"
+                leftIcon={<Ionicons name="person-outline" size={17} color={colors.textMuted} />}
                 value={field.value ?? ''}
                 onChangeText={field.onChange}
                 onBlur={field.onBlur}
@@ -96,6 +198,7 @@ export default function EditProfileScreen() {
                 label="Username"
                 hint="Others can find you by this handle."
                 autoCapitalize="none"
+                leftIcon={<Ionicons name="at" size={17} color={colors.textMuted} />}
                 value={field.value ?? ''}
                 onChangeText={field.onChange}
                 onBlur={field.onBlur}
@@ -109,6 +212,8 @@ export default function EditProfileScreen() {
             render={({ field, fieldState }) => (
               <Field
                 label="Bio"
+                optional
+                hint="A line or two about what you make, do, or collect."
                 multiline
                 value={field.value ?? ''}
                 onChangeText={field.onChange}
@@ -123,8 +228,10 @@ export default function EditProfileScreen() {
             render={({ field, fieldState }) => (
               <Field
                 label="City"
-                hint="Coarse location only — no exact address."
+                optional
+                hint="Used to show your items to people nearby. City only — never an address."
                 autoCapitalize="words"
+                leftIcon={<Ionicons name="location-outline" size={17} color={colors.textMuted} />}
                 value={field.value ?? ''}
                 onChangeText={field.onChange}
                 onBlur={field.onBlur}
@@ -134,21 +241,13 @@ export default function EditProfileScreen() {
           />
 
           {formError ? (
-            <Text variant="bodySm" tone="danger">
+            <Notice
+              kind="danger"
+              icon={<Ionicons name="alert-circle" size={16} color={colors.danger} />}
+            >
               {formError}
-            </Text>
+            </Notice>
           ) : null}
-
-          <Stack gap="sm">
-            <Button
-              label={update.isPending ? 'Saving…' : 'Save'}
-              fullWidth
-              loading={update.isPending}
-              disabled={formState.isSubmitting}
-              onPress={onSubmit}
-            />
-            <Button label="Cancel" variant="ghost" fullWidth onPress={back} />
-          </Stack>
         </Stack>
       </ScrollView>
     </Screen>

@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "worker",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@pandam/worker", "dev"],
+      "port": 8787
+    },
+    {
+      "name": "app",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@pandam/app", "dev:web"],
+      "port": 3000
+    }
+  ]
+}

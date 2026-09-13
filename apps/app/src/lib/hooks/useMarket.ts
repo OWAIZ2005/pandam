@@ -18,6 +18,8 @@ export type DiscoverParams = {
   type?: MarketItem['type'];
   q?: string;
   owner?: string;
+  /** Coarse city match against the owner's profile. */
+  city?: string;
   limit?: number;
 };
 
@@ -28,6 +30,18 @@ export function useDiscover(kind: MarketKind, params: DiscoverParams) {
     queryFn: ({ pageParam }) => marketApi.discover(kind, { ...params, cursor: pageParam ?? null }),
     getNextPageParam: (last) => last.nextCursor ?? undefined,
     staleTime: 20_000,
+  });
+}
+
+/**
+ * Cities with published listings, for the discover filter. Cached for a while:
+ * the set of cities changes far more slowly than the listings in them.
+ */
+export function useListingCities() {
+  return useQuery({
+    queryKey: qk.market.cities,
+    queryFn: async () => (await marketApi.cities()).items,
+    staleTime: 5 * 60_000,
   });
 }
 

@@ -11,5 +11,38 @@ export const qk = {
       ['market', kind, 'discover', params] as const,
     mine: (kind: MarketKind) => ['market', kind, 'mine'] as const,
     detail: (kind: MarketKind, id: string) => ['market', kind, 'detail', id] as const,
+    cities: ['market', 'cities'] as const,
+  },
+  offers: {
+    all: ['offers'] as const,
+    incoming: (status?: string) => ['offers', 'incoming', status ?? 'all'] as const,
+    outgoing: (status?: string) => ['offers', 'outgoing', status ?? 'all'] as const,
+    detail: (id: string) => ['offers', 'detail', id] as const,
+  },
+  conversations: {
+    all: ['conversations'] as const,
+    detail: (id: string) => ['conversations', 'detail', id] as const,
+    messages: (id: string) => ['conversations', id, 'messages'] as const,
+  },
+  transactions: {
+    all: ['transactions'] as const,
+    detail: (id: string) => ['transactions', 'detail', id] as const,
+  },
+  reviews: {
+    forUser: (userId: string) => ['reviews', 'user', userId] as const,
+  },
+  notifications: {
+    all: (unreadOnly = false) => ['notifications', unreadOnly] as const,
+  },
+  account: {
+    sessions: ['account', 'sessions'] as const,
+  },
+  reports: {
+    mine: ['reports', 'mine'] as const,
+    disputes: (transactionId: string) => ['reports', 'disputes', transactionId] as const,
+  },
+  payments: {
+    all: ['payments'] as const,
+    detail: (id: string) => ['payments', 'detail', id] as const,
   },
 };

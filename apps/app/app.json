@@ -15,7 +15,8 @@
       "package": "com.pandam.app",
       "adaptiveIcon": {
         "backgroundColor": "#1E7A4C"
-      }
+      },
+      "permissions": ["android.permission.POST_NOTIFICATIONS"]
     },
     "web": {
       "bundler": "metro",
@@ -27,7 +28,14 @@
       "expo-image",
       "expo-localization",
       "expo-status-bar",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "color": "#079455"
+        }
+      ],
+      "expo-image-picker"
     ],
     "experiments": {
       "typedRoutes": true

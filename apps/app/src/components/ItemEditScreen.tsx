@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
+import { View } from 'react-native';
 
-import { Screen, SkeletonList } from '@pandam/ui';
+import { Screen, SkeletonList, layout, spacing } from '@pandam/ui';
 
 import { AppHeader } from '@/components/AppHeader';
 import { ItemForm } from '@/components/ItemForm';
@@ -13,15 +14,20 @@ export function ItemEditScreen({ kind, id }: { kind: MarketKind; id: string }) {
   const item = useItem(kind, id);
   const update = useUpdateItem(kind);
   const setStatus = useSetItemStatus(kind);
+  const isHave = kind === 'listing';
 
-  const back = () =>
-    router.replace(kind === 'listing' ? `/(app)/listing/${id}` : `/(app)/need/${id}`);
+  const back = () => router.replace(isHave ? `/(app)/listing/${id}` : `/(app)/need/${id}`);
 
   return (
     <Screen padded={false} edges={['top', 'bottom']}>
-      <AppHeader title={kind === 'listing' ? 'Edit — I have' : 'Edit — I need'} back />
+      <View style={{ paddingHorizontal: layout.gutter, paddingTop: spacing.lg }}>
+        <AppHeader title={isHave ? 'Edit what I have' : 'Edit what I need'} back />
+      </View>
+
       {item.isPending ? (
-        <SkeletonList count={2} />
+        <View style={{ paddingHorizontal: layout.gutter }}>
+          <SkeletonList count={2} />
+        </View>
       ) : item.isError ? (
         <ErrorState error={item.error} onRetry={() => void item.refetch()} />
       ) : !item.data ? null : (
@@ -41,6 +47,20 @@ export function ItemEditScreen({ kind, id }: { kind: MarketKind; id: string }) {
                   type: values.type,
                   title: values.title,
                   description: values.description,
+                  // Pricing only exists on listings, and the server clears the
+                  // price itself when the type goes back to `barter` — so the
+                  // patch sends the type and lets it resolve the pair.
+                  ...(isHave
+                    ? {
+                        transactionType: values.transactionType,
+                        ...(values.priceAmount === undefined
+                          ? {}
+                          : {
+                              priceAmount: values.priceAmount,
+                              priceCurrency: values.priceCurrency,
+                            }),
+                      }
+                    : {}),
                 },
               },
               {

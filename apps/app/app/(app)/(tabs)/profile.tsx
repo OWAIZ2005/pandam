@@ -1,29 +1,38 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { type MarketItem } from '@pandam/types';
 import {
   Avatar,
+  Badge,
   Button,
   Card,
   Divider,
   EmptyState,
+  IconFrame,
+  ListRow,
+  Rail,
   Row,
   Screen,
+  SectionHeader,
   SkeletonList,
   Stack,
   Text,
   colors,
+  layout,
+  radii,
   spacing,
 } from '@pandam/ui';
 
 import { AppHeader } from '@/components/AppHeader';
 import { ItemCard } from '@/components/ItemCard';
 import { ErrorState } from '@/components/states';
-import { useLogout, useSession } from '@/lib/auth/hooks';
 import { type MarketKind } from '@/lib/api/market';
+import { mediaSrc } from '@/lib/api/media';
+import { useLogout, useSession } from '@/lib/auth/hooks';
 import { useMyItems } from '@/lib/hooks/useMarket';
+import { useUnreadNotificationCount } from '@/lib/hooks/useNotifications';
 
 function MyItemsSection({
   kind,
@@ -36,52 +45,84 @@ function MyItemsSection({
 }) {
   const q = useMyItems(kind);
   const isHave = kind === 'listing';
+  const items = q.data ?? [];
+  const live = items.filter((i) => i.status === 'published').length;
+
   return (
     <View>
-      <Row justify="space-between" style={{ marginBottom: spacing.sm }}>
-        <Text variant="h3">{isHave ? 'Things I have' : 'Things I need'}</Text>
-        <Pressable onPress={onAdd} accessibilityRole="button" hitSlop={8}>
-          <Row gap="xxs">
-            <Ionicons name="add" size={16} color={colors.accent} />
-            <Text variant="label" tone="accent">
-              Add
-            </Text>
-          </Row>
-        </Pressable>
-      </Row>
+      <SectionHeader
+        title={isHave ? 'Things I have' : 'Things I need'}
+        subtitle={items.length > 0 ? `${live} live of ${items.length}` : undefined}
+        actionLabel="Add"
+        onAction={onAdd}
+      />
+
       {q.isPending ? (
-        <SkeletonList count={2} />
+        <SkeletonList count={1} />
       ) : q.isError ? (
         <ErrorState error={q.error} onRetry={() => void q.refetch()} />
-      ) : (q.data?.length ?? 0) === 0 ? (
-        <Card padded>
-          <Stack gap="sm">
-            <Text tone="secondary">
-              {isHave
-                ? 'You haven’t added anything you have yet.'
-                : 'What are you looking for? Add something you need.'}
-            </Text>
-            <Button
-              label={isHave ? 'Add something I have' : 'Add something I need'}
-              variant={isHave ? 'primary' : 'need'}
-              size="sm"
-              onPress={onAdd}
+      ) : items.length === 0 ? (
+        <EmptyState
+          size="inline"
+          tone={isHave ? 'accent' : 'need'}
+          icon={
+            <Ionicons
+              name={isHave ? 'cube-outline' : 'search-outline'}
+              size={20}
+              color={isHave ? colors.accent : colors.need}
             />
-          </Stack>
-        </Card>
+          }
+          title={isHave ? 'Nothing listed yet' : 'Nothing requested yet'}
+          body={
+            isHave
+              ? 'List something and people can start offering trades for it.'
+              : 'Say what you are after — it is half of every match.'
+          }
+          actionLabel={isHave ? 'Add something I have' : 'Add something I need'}
+          actionVariant={isHave ? 'primary' : 'need'}
+          onAction={onAdd}
+        />
       ) : (
-        <Stack gap="md">
-          {q.data!.map((it) => (
+        <Rail>
+          {items.map((item) => (
             <ItemCard
-              key={it.id}
-              item={it}
+              key={item.id}
+              item={item}
+              variant="rail"
               showOwner={false}
               showStatus
-              onPress={() => onOpen(it)}
+              onPress={() => onOpen(item)}
             />
           ))}
-        </Stack>
+        </Rail>
       )}
+    </View>
+  );
+}
+
+/**
+ * The unread count on a settings row.
+ *
+ * Tangerine rather than emerald: emerald means "I HAVE" everywhere else in
+ * the product, and a green count here would read as a quantity of something
+ * rather than as something needing attention.
+ */
+function CountBadge({ count }: { count: number }) {
+  return (
+    <View
+      style={{
+        minWidth: 20,
+        height: 20,
+        paddingHorizontal: 6,
+        borderRadius: radii.pill,
+        backgroundColor: colors.need,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Text variant="caption" numeric tone="inverse" style={{ fontWeight: '600' }}>
+        {count > 9 ? '9+' : count}
+      </Text>
     </View>
   );
 }
@@ -90,13 +131,14 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { user, profile } = useSession();
   const logout = useLogout();
+  const unread = useUnreadNotificationCount();
 
   const open = (item: MarketItem) =>
     router.push(item.kind === 'listing' ? `/(app)/listing/${item.id}` : `/(app)/need/${item.id}`);
 
   if (!profile) {
     return (
-      <Screen scroll>
+      <Screen scroll tabBarInset>
         <AppHeader title="Profile" />
         <EmptyState title="Profile unavailable" body="Try again in a moment." />
       </Screen>
@@ -107,60 +149,209 @@ export default function ProfileScreen() {
     .filter(Boolean)
     .join(', ');
 
+  const chevron = <Ionicons name="chevron-forward" size={16} color={colors.textFaint} />;
+
   return (
-    <Screen scroll>
-      <AppHeader title="Profile" />
-      <Stack gap="2xl">
-        <Card padded elevated>
-          <Stack gap="md">
-            <Row gap="md">
-              <Avatar name={profile.displayName} size={56} />
-              <View style={{ flex: 1 }}>
-                <Text variant="h2">{profile.displayName}</Text>
-                {profile.username ? (
-                  <Text tone="muted">@{profile.username}</Text>
-                ) : (
-                  <Text tone="muted">{user?.email}</Text>
-                )}
-              </View>
-            </Row>
-            {profile.bio ? <Text tone="secondary">{profile.bio}</Text> : null}
-            {location ? (
-              <Row gap="xxs">
-                <Ionicons name="location-outline" size={14} color={colors.textMuted} />
-                <Text variant="caption" tone="muted">
-                  {location}
-                </Text>
-              </Row>
-            ) : null}
-            <Divider />
+    <Screen scroll padded={false} tabBarInset>
+      <View
+        style={{
+          width: '100%',
+          maxWidth: layout.contentMaxWidth,
+          alignSelf: 'center',
+          paddingHorizontal: layout.gutter,
+          paddingTop: spacing.lg,
+        }}
+      >
+        {/* ---------------------------------------------------------- you -- */}
+        {/*
+          No gradient banner. A coloured slab behind your own name and photo
+          made the profile look like a membership card; on the page background
+          the avatar and the name are the strongest things on screen, which is
+          what a profile should lead with.
+        */}
+        <Stack gap="2xl">
+          <Row gap="lg" align="flex-start">
+            <Avatar name={profile.displayName} size={64} uri={mediaSrc(profile.avatarUrl)} />
+
+            <View style={{ flex: 1, minWidth: 0, gap: 2, paddingTop: spacing.xs }}>
+              <Text variant="h1" numberOfLines={1}>
+                {profile.displayName}
+              </Text>
+              <Text variant="bodySm" tone="muted" numberOfLines={1}>
+                {profile.username ? `@${profile.username}` : user?.email}
+              </Text>
+              {location ? (
+                <Row gap="xs" style={{ marginTop: 2 }}>
+                  <Ionicons name="location-outline" size={12} color={colors.textMuted} />
+                  <Text variant="caption" tone="muted" numberOfLines={1}>
+                    {location}
+                  </Text>
+                </Row>
+              ) : null}
+            </View>
+
             <Button
-              label="Edit profile"
+              label="Edit"
               variant="secondary"
               size="sm"
               onPress={() => router.push('/(app)/edit-profile')}
-              leftIcon={<Ionicons name="create-outline" size={16} color={colors.textPrimary} />}
             />
-          </Stack>
-        </Card>
+          </Row>
 
-        <MyItemsSection
-          kind="listing"
-          onOpen={open}
-          onAdd={() => router.push('/(app)/new-listing')}
-        />
-        <MyItemsSection kind="need" onOpen={open} onAdd={() => router.push('/(app)/new-need')} />
+          {profile.bio ? (
+            <Text variant="body" tone="secondary" style={{ maxWidth: layout.proseMaxWidth }}>
+              {profile.bio}
+            </Text>
+          ) : null}
+        </Stack>
+      </View>
 
-        <Button
-          label={logout.isPending ? 'Signing out…' : 'Sign out'}
-          variant="ghost"
-          fullWidth
-          disabled={logout.isPending}
-          onPress={() =>
-            logout.mutate(undefined, { onSettled: () => router.replace('/(auth)/login') })
-          }
-        />
-      </Stack>
+      {/* --------------------------------------------------------- body --- */}
+      <View
+        style={{
+          width: '100%',
+          maxWidth: layout.contentMaxWidth,
+          alignSelf: 'center',
+          paddingHorizontal: layout.gutter,
+          paddingTop: spacing['3xl'],
+        }}
+      >
+        <Stack gap="3xl">
+          <MyItemsSection
+            kind="listing"
+            onOpen={open}
+            onAdd={() => router.push('/(app)/new-listing')}
+          />
+          <MyItemsSection kind="need" onOpen={open} onAdd={() => router.push('/(app)/new-need')} />
+
+          {/*
+            Two groups, not one list of nine. The first is the trading you are
+            actually doing; the second is account housekeeping. Splitting them
+            means "Sign out" is nowhere near "Messages", which is worth the
+            extra heading.
+          */}
+          <View>
+            <SectionHeader title="Your trading" />
+            <Card padded={false}>
+              <ListRow
+                leading={
+                  <IconFrame tone="match">
+                    <Ionicons name="sparkles-outline" size={17} color={colors.match} />
+                  </IconFrame>
+                }
+                title="Matches"
+                subtitle="Reciprocal barters found for you"
+                chevron={chevron}
+                onPress={() => router.push('/(app)/(tabs)/matches')}
+              />
+              <Divider tone="soft" inset={spacing.lg + 38 + spacing.md} />
+              <ListRow
+                leading={
+                  <IconFrame tone="accent">
+                    <Ionicons name="paper-plane-outline" size={17} color={colors.accent} />
+                  </IconFrame>
+                }
+                title="Offers"
+                subtitle="Proposals you have sent and received"
+                chevron={chevron}
+                onPress={() => router.push('/(app)/offers')}
+              />
+              <Divider tone="soft" inset={spacing.lg + 38 + spacing.md} />
+              <ListRow
+                leading={
+                  <IconFrame tone="accent">
+                    <Ionicons name="chatbubbles-outline" size={17} color={colors.accent} />
+                  </IconFrame>
+                }
+                title="Messages"
+                subtitle="Chats for trades you have agreed"
+                chevron={chevron}
+                onPress={() => router.push('/(app)/messages')}
+              />
+              <Divider tone="soft" inset={spacing.lg + 38 + spacing.md} />
+              <ListRow
+                leading={
+                  <IconFrame tone="accent">
+                    <Ionicons name="repeat-outline" size={17} color={colors.accent} />
+                  </IconFrame>
+                }
+                title="Transactions"
+                subtitle="Track and complete your trades"
+                chevron={chevron}
+                onPress={() => router.push('/(app)/transactions')}
+              />
+              <Divider tone="soft" inset={spacing.lg + 38 + spacing.md} />
+              <ListRow
+                leading={
+                  <IconFrame tone={unread > 0 ? 'need' : 'neutral'}>
+                    <Ionicons
+                      name="notifications-outline"
+                      size={17}
+                      color={unread > 0 ? colors.need : colors.textSecondary}
+                    />
+                  </IconFrame>
+                }
+                title="Notifications"
+                subtitle={unread > 0 ? `${unread} unread` : 'Offers, messages and trade updates'}
+                emphasis={unread > 0}
+                trailing={unread > 0 ? <CountBadge count={unread} /> : undefined}
+                chevron={chevron}
+                onPress={() => router.push('/(app)/notifications')}
+              />
+            </Card>
+          </View>
+
+          <View>
+            <SectionHeader title="Account" />
+            <Card padded={false}>
+              <ListRow
+                leading={
+                  <IconFrame>
+                    <Ionicons name="person-outline" size={17} color={colors.textSecondary} />
+                  </IconFrame>
+                }
+                title="Edit profile"
+                subtitle="Name, username, bio, photo and city"
+                chevron={chevron}
+                onPress={() => router.push('/(app)/edit-profile')}
+              />
+              <Divider tone="soft" inset={spacing.lg + 38 + spacing.md} />
+              <ListRow
+                leading={
+                  <IconFrame>
+                    <Ionicons
+                      name="shield-checkmark-outline"
+                      size={17}
+                      color={colors.textSecondary}
+                    />
+                  </IconFrame>
+                }
+                title="Security"
+                subtitle="Devices, password, delete account"
+                chevron={chevron}
+                onPress={() => router.push('/(app)/account')}
+              />
+              <Divider tone="soft" inset={spacing.lg + 38 + spacing.md} />
+              <ListRow
+                leading={
+                  <IconFrame tone="danger">
+                    <Ionicons name="log-out-outline" size={17} color={colors.danger} />
+                  </IconFrame>
+                }
+                title={logout.isPending ? 'Signing out…' : 'Sign out'}
+                danger
+                onPress={() =>
+                  logout.mutate(undefined, { onSettled: () => router.replace('/(auth)/login') })
+                }
+              />
+            </Card>
+          </View>
+
+          <Row justify="center" gap="xs" style={{ paddingBottom: spacing.lg }}>
+            <Badge label="Goods for goods, no money" kind="neutral" />
+          </Row>
+        </Stack>
+      </View>
     </Screen>
   );
 }

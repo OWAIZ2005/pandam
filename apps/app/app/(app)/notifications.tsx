@@ -1,0 +1,258 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { View } from 'react-native';
+
+import { type NotificationType, type NotificationView } from '@pandam/types';
+import {
+  Button,
+  EmptyState,
+  GroupedList,
+  IconFrame,
+  ListRow,
+  Notice,
+  Screen,
+  SkeletonList,
+  Text,
+  colors,
+  layout,
+  spacing,
+} from '@pandam/ui';
+
+import { AppHeader } from '@/components/AppHeader';
+import { ErrorState } from '@/components/states';
+import { timeAgo } from '@/lib/format';
+import {
+  useMarkAllNotificationsRead,
+  useMarkNotificationRead,
+  useNotifications,
+} from '@/lib/hooks/useNotifications';
+import { hasPushPermission, pushSupported, requestPushPermission } from '@/lib/push/token';
+
+type Tone = 'accent' | 'need' | 'match' | 'neutral';
+
+/**
+ * What each notification type says and looks like.
+ *
+ * The tone is the semantic one — an offer is emerald because it is about
+ * something you have, a review is neutral, a match would be violet. That
+ * keeps the colour language consistent all the way down to a list row.
+ */
+const COPY: Record<
+  NotificationType,
+  { icon: keyof typeof Ionicons.glyphMap; label: string; tone: Tone }
+> = {
+  offer_received: { icon: 'paper-plane-outline', label: 'New barter offer', tone: 'accent' },
+  offer_accepted: { icon: 'checkmark-circle-outline', label: 'Offer accepted', tone: 'accent' },
+  offer_rejected: { icon: 'close-circle-outline', label: 'Offer declined', tone: 'neutral' },
+  offer_cancelled: { icon: 'close-circle-outline', label: 'Offer withdrawn', tone: 'neutral' },
+  offer_expired: { icon: 'time-outline', label: 'Offer expired', tone: 'neutral' },
+  message_received: { icon: 'chatbubble-outline', label: 'New message', tone: 'accent' },
+  transaction_updated: { icon: 'repeat-outline', label: 'Trade updated', tone: 'need' },
+  review_reminder: { icon: 'star-outline', label: 'Leave a review', tone: 'need' },
+  review_received: { icon: 'star-outline', label: 'New review', tone: 'match' },
+};
+
+/** Where a notification takes you, or null when it has no specific target. */
+function target(n: NotificationView): string | null {
+  if (n.data.conversationId) return `/(app)/chat/${n.data.conversationId}`;
+  if (n.data.offerId) return `/(app)/offer/${n.data.offerId}`;
+  if (n.data.transactionId) return `/(app)/transaction/${n.data.transactionId}`;
+  if (n.data.paymentId) return `/(app)/payment/${n.data.paymentId}`;
+  return null;
+}
+
+/**
+ * The push opt-in.
+ *
+ * Shown only once there is something in the feed, and only on a device that
+ * could actually receive a push. iOS asks for notification permission exactly
+ * once per install, so the prompt is spent here — where the reader has just
+ * seen what they would be notified about — rather than on a cold first launch
+ * where it gets denied out of reflex.
+ */
+function PushOptIn() {
+  // `pushSupported()` reads only the platform and device kind, so it is
+  // resolved in the initial state rather than in the effect — on a simulator
+  // or on web this component then never renders or schedules anything.
+  const [state, setState] = useState<'checking' | 'off' | 'on' | 'denied' | 'unsupported'>(() =>
+    pushSupported() ? 'checking' : 'unsupported',
+  );
+
+  useEffect(() => {
+    if (state !== 'checking') return;
+    let cancelled = false;
+    void hasPushPermission().then((granted) => {
+      if (!cancelled) setState(granted ? 'on' : 'off');
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [state]);
+
+  if (state === 'on' || state === 'checking' || state === 'unsupported') return null;
+
+  const denied = state === 'denied';
+
+  return (
+    <Notice
+      kind={denied ? 'neutral' : 'info'}
+      title={denied ? 'Notifications are blocked' : 'Get told about new offers'}
+      icon={
+        <Ionicons
+          name={denied ? 'notifications-off-outline' : 'notifications-outline'}
+          size={16}
+          color={denied ? colors.textMuted : colors.info}
+        />
+      }
+      action={
+        denied ? undefined : (
+          <Button
+            label="Turn on"
+            variant="secondary"
+            size="sm"
+            onPress={() =>
+              void requestPushPermission().then((granted) => setState(granted ? 'on' : 'denied'))
+            }
+          />
+        )
+      }
+    >
+      {denied
+        ? 'Turn them back on in your device settings for PANDAM.'
+        : 'A trade falls through when nobody replies. We only notify you about your own trades.'}
+    </Notice>
+  );
+}
+
+export default function NotificationsScreen() {
+  const router = useRouter();
+  const notifications = useNotifications();
+  const markRead = useMarkNotificationRead();
+  const markAllRead = useMarkAllNotificationsRead();
+  const items = notifications.data ?? [];
+  const unread = items.filter((n) => !n.read).length;
+
+  return (
+    <Screen padded={false}>
+      <View
+        style={{
+          width: '100%',
+          maxWidth: layout.contentMaxWidth,
+          alignSelf: 'center',
+          paddingHorizontal: layout.gutter,
+          paddingTop: spacing.lg,
+        }}
+      >
+        <AppHeader
+          title="Notifications"
+          subtitle={unread > 0 ? `${unread} unread` : undefined}
+          back
+          right={
+            unread > 0 ? (
+              <Button
+                label="Mark all read"
+                variant="quiet"
+                size="sm"
+                loading={markAllRead.isPending}
+                onPress={() => markAllRead.mutate()}
+              />
+            ) : null
+          }
+        />
+      </View>
+
+      <GroupedList
+        data={items}
+        keyExtractor={(n) => n.id}
+        showsVerticalScrollIndicator={false}
+        separatorInset={spacing.lg + 38 + spacing.md}
+        contentContainerStyle={{
+          width: '100%',
+          maxWidth: layout.contentMaxWidth,
+          alignSelf: 'center',
+          paddingHorizontal: layout.gutter,
+          paddingTop: spacing.md,
+          paddingBottom: layout.tabBarInset,
+          flexGrow: 1,
+        }}
+        ListHeaderComponent={
+          items.length > 0 ? (
+            <View style={{ marginBottom: spacing.lg }}>
+              <PushOptIn />
+            </View>
+          ) : null
+        }
+        renderItem={({ item }) => {
+          const copy = COPY[item.type];
+          return (
+            <ListRow
+              leading={
+                <IconFrame tone={item.read ? 'neutral' : copy.tone}>
+                  <Ionicons
+                    name={copy.icon}
+                    size={17}
+                    color={
+                      item.read
+                        ? colors.textMuted
+                        : copy.tone === 'accent'
+                          ? colors.accent
+                          : copy.tone === 'need'
+                            ? colors.need
+                            : copy.tone === 'match'
+                              ? colors.match
+                              : colors.textSecondary
+                    }
+                  />
+                </IconFrame>
+              }
+              title={copy.label}
+              meta={timeAgo(item.createdAt)}
+              emphasis={!item.read}
+              chevron={
+                target(item) ? (
+                  <Ionicons name="chevron-forward" size={16} color={colors.textFaint} />
+                ) : undefined
+              }
+              onPress={() => {
+                if (!item.read) markRead.mutate(item.id);
+                const to = target(item);
+                if (to) router.push(to as never);
+              }}
+            />
+          );
+        }}
+        ListEmptyComponent={
+          notifications.isPending ? (
+            <SkeletonList count={4} />
+          ) : notifications.isError ? (
+            <ErrorState error={notifications.error} onRetry={() => void notifications.refetch()} />
+          ) : (
+            <View style={{ gap: spacing.lg }}>
+              <EmptyState
+                icon={
+                  <Ionicons name="notifications-outline" size={22} color={colors.textSecondary} />
+                }
+                title="You are all caught up"
+                body="Offers, messages and trade updates land here."
+              />
+              <PushOptIn />
+            </View>
+          )
+        }
+        ListFooterComponent={
+          items.length > 0 ? (
+            <Text
+              variant="caption"
+              tone="faint"
+              center
+              style={{ paddingTop: spacing.xl, paddingBottom: spacing.lg }}
+            >
+              Only your own trades are ever notified.
+            </Text>
+          ) : null
+        }
+      />
+    </Screen>
+  );
+}

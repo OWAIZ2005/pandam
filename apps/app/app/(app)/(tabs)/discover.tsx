@@ -1,91 +1,225 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { FlatList, View } from 'react-native';
+import { FlatList, ScrollView, View, useWindowDimensions } from 'react-native';
 
 import {
-  Button,
   Chip,
   EmptyState,
   Row,
   Screen,
   SearchInput,
-  SkeletonList,
+  SegmentedControl,
+  Skeleton,
+  SkeletonGrid,
   Stack,
+  Text,
   colors,
+  layout,
+  radii,
   spacing,
 } from '@pandam/ui';
 
-import { AppHeader } from '@/components/AppHeader';
 import { CategoryFilter } from '@/components/CategoryFilter';
 import { ItemCard } from '@/components/ItemCard';
 import { ErrorState } from '@/components/states';
 import { type MarketKind } from '@/lib/api/market';
 import { useCategories } from '@/lib/hooks/useCategories';
 import { useDebounced } from '@/lib/hooks/useDebounced';
-import { useDiscover } from '@/lib/hooks/useMarket';
+import { useDiscover, useListingCities } from '@/lib/hooks/useMarket';
+
+const KIND_OPTIONS = [
+  { value: 'listing' as const, label: 'I HAVE', tone: 'accent' as const },
+  { value: 'need' as const, label: 'I NEED', tone: 'need' as const },
+];
 
 export default function DiscoverScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ category?: string }>();
+  const params = useLocalSearchParams<{ category?: string; owner?: string; city?: string }>();
   const [kind, setKind] = useState<MarketKind>('listing');
   const [rawQuery, setRawQuery] = useState('');
   const [categoryId, setCategoryId] = useState<string | null>(params.category ?? null);
+  const [city, setCity] = useState<string | null>(params.city ?? null);
   const q = useDebounced(rawQuery.trim(), 350);
 
   const categories = useCategories();
+  const cities = useListingCities();
   const filters = useMemo(
-    () => ({ category: categoryId ?? undefined, q: q || undefined, limit: 12 }),
-    [categoryId, q],
+    () => ({
+      category: categoryId ?? undefined,
+      q: q || undefined,
+      owner: params.owner || undefined,
+      city: city ?? undefined,
+      limit: 12,
+    }),
+    [categoryId, q, params.owner, city],
   );
   const discover = useDiscover(kind, filters);
   const items = discover.data?.pages.flatMap((p) => p.items) ?? [];
 
+  /*
+   * Column count follows the WIDTH, not the platform. Two columns inside a
+   * 720pt reading column gives 340pt cards, which on a laptop are absurdly
+   * large for a thumbnail and a two-line title. Three is the right density
+   * once there is room for it — the grid gets denser on a bigger screen
+   * rather than just wider.
+   */
+  const { width } = useWindowDimensions();
+  const columns = width >= 620 ? 3 : 2;
+
+  const isHave = kind === 'listing';
+  const tone = isHave ? 'accent' : 'need';
+  const activeFilters = [!!q, !!categoryId, !!city].filter(Boolean).length;
+  const clearFilters = () => {
+    setRawQuery('');
+    setCategoryId(null);
+    setCity(null);
+  };
+
+  /*
+   * The search box and the HAVE/NEED switch stay pinned; the taxonomy filters
+   * and the result count scroll away with the grid.
+   *
+   * Before, all five controls were pinned, which on a 375pt screen left less
+   * than half the viewport for results — you had to scroll past the filters
+   * to see whether the filters had found anything. Search and the kind switch
+   * are the two you reach for repeatedly, so those are the two that stay.
+   */
+  const pinned = (
+    // The rule spans the full width; the controls inside it stay in the same
+    // centred column as the grid, so nothing is left hanging on a wide screen.
+    <View
+      style={{
+        backgroundColor: colors.background,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+      }}
+    >
+      <View
+        style={{
+          width: '100%',
+          maxWidth: layout.contentMaxWidth,
+          alignSelf: 'center',
+          paddingHorizontal: layout.gutter,
+          paddingTop: spacing.md,
+          paddingBottom: spacing.md,
+          gap: spacing.md,
+        }}
+      >
+        <SearchInput
+          icon={<Ionicons name="search" size={17} color={colors.textMuted} />}
+          placeholder={isHave ? 'Search what people have' : 'Search what people need'}
+          value={rawQuery}
+          onChangeText={setRawQuery}
+          autoCapitalize="none"
+          onClear={() => setRawQuery('')}
+          clearIcon={<Ionicons name="close-circle" size={17} color={colors.textMuted} />}
+        />
+        <SegmentedControl options={KIND_OPTIONS} value={kind} onChange={setKind} />
+      </View>
+    </View>
+  );
+
+  const scrollingHeader = (
+    <Stack gap="lg" style={{ paddingBottom: spacing.lg }}>
+      {categories.data ? (
+        <CategoryFilter
+          categories={categories.data}
+          selectedId={categoryId}
+          onSelect={setCategoryId}
+          tone={tone}
+        />
+      ) : (
+        <Row gap="sm">
+          <Skeleton width={64} height={36} radius={radii.pill} />
+          <Skeleton width={92} height={36} radius={radii.pill} />
+          <Skeleton width={78} height={36} radius={radii.pill} />
+        </Row>
+      )}
+
+      {/*
+        Barter means meeting in person, so where something is matters as much
+        as what it is. Only cities that actually have listings are offered, and
+        the row is hidden entirely when nobody has set one.
+      */}
+      {cities.data && cities.data.length > 0 ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ marginHorizontal: -layout.gutter }}
+          contentContainerStyle={{ gap: spacing.sm, paddingHorizontal: layout.gutter }}
+        >
+          <Chip
+            label="Anywhere"
+            icon={<Ionicons name="earth-outline" size={13} color={colors.textMuted} />}
+            selected={!city}
+            tone={tone}
+            onPress={() => setCity(null)}
+          />
+          {cities.data.map((c) => (
+            <Chip
+              key={c.city}
+              label={c.city}
+              count={c.count}
+              icon={
+                <Ionicons
+                  name="location-outline"
+                  size={13}
+                  color={city === c.city ? colors.textInverse : colors.textMuted}
+                />
+              }
+              selected={city === c.city}
+              tone={tone}
+              onPress={() => setCity(city === c.city ? null : c.city)}
+            />
+          ))}
+        </ScrollView>
+      ) : null}
+
+      {items.length > 0 ? (
+        <Row justify="space-between">
+          <Text variant="caption" tone="muted" numeric>
+            {items.length} {items.length === 1 ? 'result' : 'results'}
+            {activeFilters > 0 ? ` · ${activeFilters} filter${activeFilters === 1 ? '' : 's'}` : ''}
+          </Text>
+          {activeFilters > 0 ? (
+            <Text variant="label" tone={tone} onPress={clearFilters}>
+              Clear
+            </Text>
+          ) : null}
+        </Row>
+      ) : null}
+    </Stack>
+  );
+
   return (
     <Screen padded={false}>
-      <View style={{ paddingHorizontal: spacing.xl, paddingTop: spacing.lg }}>
-        <AppHeader title="Discover" />
-        <Stack gap="md">
-          <SearchInput
-            icon={<Ionicons name="search" size={16} color={colors.textMuted} />}
-            placeholder={
-              kind === 'listing' ? 'Search things people have' : 'Search things people need'
-            }
-            value={rawQuery}
-            onChangeText={setRawQuery}
-            autoCapitalize="none"
-          />
-          <Row gap="sm">
-            <Chip label="I HAVE" selected={kind === 'listing'} onPress={() => setKind('listing')} />
-            <Chip label="I NEED" selected={kind === 'need'} onPress={() => setKind('need')} />
-          </Row>
-          {categories.data ? (
-            <CategoryFilter
-              categories={categories.data}
-              selectedId={categoryId}
-              onSelect={setCategoryId}
-            />
-          ) : null}
-        </Stack>
-      </View>
+      {pinned}
 
       <FlatList
         data={items}
+        key={`${kind}-${columns}`}
         keyExtractor={(it) => it.id}
+        numColumns={columns}
+        columnWrapperStyle={{ gap: spacing.md }}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{
-          paddingHorizontal: spacing.xl,
-          paddingTop: spacing.md,
-          paddingBottom: spacing['4xl'],
+          width: '100%',
+          maxWidth: layout.contentMaxWidth,
+          alignSelf: 'center',
+          paddingHorizontal: layout.gutter,
+          paddingTop: spacing.lg,
+          paddingBottom: layout.tabBarInset,
           gap: spacing.md,
           flexGrow: 1,
         }}
+        ListHeaderComponent={scrollingHeader}
         renderItem={({ item }) => (
           <ItemCard
             item={item}
+            variant="grid"
             onPress={() =>
-              router.push(
-                kind === 'listing' ? `/(app)/listing/${item.id}` : `/(app)/need/${item.id}`,
-              )
+              router.push(isHave ? `/(app)/listing/${item.id}` : `/(app)/need/${item.id}`)
             }
           />
         )}
@@ -95,44 +229,58 @@ export default function DiscoverScreen() {
         }}
         ListEmptyComponent={
           discover.isPending ? (
-            <SkeletonList count={4} />
+            <SkeletonGrid count={6} />
           ) : discover.isError ? (
             <ErrorState error={discover.error} onRetry={() => void discover.refetch()} />
           ) : (
             <EmptyState
-              title={q || categoryId ? 'No results' : 'Nothing here yet'}
-              body={
-                q || categoryId
-                  ? 'Try a different search or category.'
-                  : `No one has published something they ${kind === 'listing' ? 'have' : 'need'} yet.`
+              tone={tone}
+              icon={
+                <Ionicons
+                  name={
+                    activeFilters > 0
+                      ? 'search-outline'
+                      : isHave
+                        ? 'cube-outline'
+                        : 'hand-left-outline'
+                  }
+                  size={24}
+                  color={isHave ? colors.accent : colors.need}
+                />
               }
-              actionLabel={q || categoryId ? 'Clear filters' : undefined}
+              title={activeFilters > 0 ? 'Nothing matches those filters' : 'Nothing here yet'}
+              body={
+                activeFilters > 0
+                  ? 'Try a broader search, another category, or widen the location.'
+                  : `No one has published something they ${isHave ? 'have' : 'need'} yet. Be the first.`
+              }
+              actionLabel={
+                activeFilters > 0
+                  ? 'Clear filters'
+                  : isHave
+                    ? 'Add what you have'
+                    : 'Add what you need'
+              }
+              actionVariant={isHave ? 'primary' : 'need'}
               onAction={
-                q || categoryId
-                  ? () => {
-                      setRawQuery('');
-                      setCategoryId(null);
-                    }
-                  : undefined
+                activeFilters > 0
+                  ? clearFilters
+                  : () => router.push(isHave ? '/(app)/new-listing' : '/(app)/new-need')
               }
             />
           )
         }
         ListFooterComponent={
           discover.isFetchingNextPage ? (
-            <View style={{ paddingVertical: spacing.lg }}>
-              <SkeletonList count={1} />
+            <View style={{ paddingTop: spacing.md }}>
+              <SkeletonGrid count={2} />
             </View>
           ) : items.length > 0 && !discover.hasNextPage ? (
-            <View style={{ alignItems: 'center', paddingVertical: spacing.lg }}>
-              <Button
-                label="You're all caught up"
-                variant="ghost"
-                size="sm"
-                onPress={() => {}}
-                disabled
-              />
-            </View>
+            <Row justify="center" gap="xs" style={{ paddingVertical: spacing['2xl'] }}>
+              <Text variant="caption" tone="faint">
+                That is everything
+              </Text>
+            </Row>
           ) : null
         }
       />

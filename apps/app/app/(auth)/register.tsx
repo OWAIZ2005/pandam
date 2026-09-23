@@ -19,7 +19,7 @@ import {
   spacing,
 } from '@pandam/ui';
 
-import { AuthHero } from '@/components/AuthHero';
+import { AuthShell } from '@/components/brand/AuthShell';
 import { PasswordRequirements } from '@/components/PasswordRequirements';
 import { ApiError } from '@/lib/api/client';
 import { useRegister } from '@/lib/auth/hooks';
@@ -65,7 +65,7 @@ export default function RegisterScreen() {
         : null;
 
   return (
-    <Screen padded={false} edges={['bottom']}>
+    <Screen padded={false} edges={['top', 'bottom']} contentStyle={{ maxWidth: '100%' }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -77,27 +77,11 @@ export default function RegisterScreen() {
           keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
         >
-          <AuthHero />
-
-          {/* ---------------------------------------------------------- form */}
-          <View
-            style={{
-              width: '100%',
-              maxWidth: layout.contentMaxWidth,
-              alignSelf: 'center',
-              paddingHorizontal: layout.gutter,
-              paddingTop: spacing['2xl'],
-              paddingBottom: spacing['3xl'],
-            }}
+          <AuthShell
+            title="Create your account"
+            subtitle="Join PANDAM and start trading what you have for what you need."
           >
             <Stack gap="2xl">
-              <View style={{ gap: spacing.xxs }}>
-                <Text variant="h1">Create your account</Text>
-                <Text variant="bodySm" tone="secondary">
-                  Takes about a minute. You can list your first item straight after.
-                </Text>
-              </View>
-
               <Stack gap="lg">
                 <Controller
                   control={control}
@@ -214,7 +198,7 @@ export default function RegisterScreen() {
                 </Link>
               </Row>
             </Stack>
-          </View>
+          </AuthShell>
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>

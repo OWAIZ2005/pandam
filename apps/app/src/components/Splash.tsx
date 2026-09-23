@@ -1,110 +1,40 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
-import { Animated, Easing, View } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 
-import { FloatingObject, Gradient, Text, colors, radii, shadows, spacing } from '@pandam/ui';
+import { colors } from '@pandam/ui';
+
+import { ProductComposition } from '@/components/brand/ProductComposition';
+import { Wordmark } from '@/components/brand/Wordmark';
 
 /**
- * Full-screen brand loader shown while auth state is resolving.
+ * Brand splash, shown while auth resolves.
  *
- * This is the one screen that is allowed to be purely brand — it exists for
- * the second before the app knows who you are. It stays quiet about it: the
- * wordmark, one line, and a pulse. The pulse is a LOADING indicator, so it is
- * the thing that animates; everything else simply fades in once.
+ * Entering PANDAM should feel like walking into a well-lit shop, not waiting
+ * on a loader: the wordmark reveals at the centre (mark springs and turns,
+ * letters open, tagline rises) while real marketplace objects drift in from
+ * the corners at different depths and keep floating. Static under reduced
+ * motion — the composition simply rests.
  */
 export function Splash() {
-  // Lazy state, not a ref: reading `ref.current` during render is what the
-  // react-hooks/refs rule forbids, and these values are read while rendering.
-  const [enter] = useState(() => new Animated.Value(0));
-  const [pulse] = useState(() => new Animated.Value(0));
-
-  useEffect(() => {
-    Animated.timing(enter, {
-      toValue: 1,
-      duration: 420,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, {
-          toValue: 1,
-          duration: 900,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulse, {
-          toValue: 0,
-          duration: 900,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [enter, pulse]);
-
+  const { width, height } = useWindowDimensions();
+  const h = Math.min(height, 760);
   return (
-    <Gradient token="hero" direction="vertical" style={{ flex: 1 }}>
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.xl }}>
-        <Animated.View
-          style={{
-            opacity: enter,
-            transform: [
-              { scale: enter.interpolate({ inputRange: [0, 1], outputRange: [0.86, 1] }) },
-            ],
-            alignItems: 'center',
-            gap: spacing.lg,
-          }}
-        >
-          <FloatingObject amplitude={6} rotate={5}>
-            <View
-              style={{
-                width: 76,
-                height: 76,
-                borderRadius: radii.xl,
-                backgroundColor: colors.surface,
-                alignItems: 'center',
-                justifyContent: 'center',
-                ...shadows.lg,
-              }}
-            >
-              <Ionicons name="swap-horizontal" size={34} color={colors.accent} />
-            </View>
-          </FloatingObject>
-
-          <View style={{ alignItems: 'center', gap: spacing.xs }}>
-            <Text variant="display" tone="inverse">
-              Pandam
-            </Text>
-            <Text variant="bodySm" style={{ color: 'rgba(255,255,255,0.72)' }}>
-              Trade what you have for what you need
-            </Text>
+    <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center' }}>
+      <View style={{ width: '100%', maxWidth: 900, alignSelf: 'center', height: h }}>
+        <ProductComposition layout="scatter" height={h} exchange={false}>
+          <View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 6,
+            }}
+          >
+            <Wordmark size={width < 500 ? 'lg' : 'xl'} tagline reveal align="center" />
           </View>
-        </Animated.View>
-
-        <Animated.View
-          style={{
-            flexDirection: 'row',
-            gap: spacing.sm,
-            opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.35, 1] }),
-          }}
-        >
-          {[0, 1, 2].map((i) => (
-            <View
-              key={i}
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: radii.pill,
-                backgroundColor: 'rgba(255,255,255,0.85)',
-              }}
-            />
-          ))}
-        </Animated.View>
+        </ProductComposition>
       </View>
-    </Gradient>
+    </View>
   );
 }

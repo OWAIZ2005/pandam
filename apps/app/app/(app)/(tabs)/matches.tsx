@@ -16,6 +16,7 @@ import {
 } from '@pandam/ui';
 
 import { AppHeader } from '@/components/AppHeader';
+import { ObjectCluster } from '@/components/brand/ObjectCluster';
 import { MatchCard } from '@/components/MatchCard';
 import { ErrorState } from '@/components/states';
 import { demoMatches, demoQuery } from '@/dummy';
@@ -77,6 +78,7 @@ export default function MatchesScreen() {
             <ErrorState error={matches.error} onRetry={() => void matches.refetch()} />
           ) : (
             <EmptyState
+              art={<ObjectCluster left="camera" right="laptop" icon="sparkles" />}
               tone="match"
               icon={
                 <FloatingObject>

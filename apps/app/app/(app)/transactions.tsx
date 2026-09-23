@@ -17,6 +17,7 @@ import {
 } from '@pandam/ui';
 
 import { AppHeader } from '@/components/AppHeader';
+import { ObjectCluster } from '@/components/brand/ObjectCluster';
 import { ErrorState } from '@/components/states';
 import { mediaSrc } from '@/lib/api/media';
 import { timeAgo } from '@/lib/format';
@@ -116,6 +117,7 @@ export default function TransactionsScreen() {
             <ErrorState error={transactions.error} onRetry={() => void transactions.refetch()} />
           ) : (
             <EmptyState
+              art={<ObjectCluster left="guitar" right="watch" icon="repeat" />}
               icon={<Ionicons name="repeat-outline" size={22} color={colors.textSecondary} />}
               title="No trades yet"
               body="A transaction is created the moment an offer is accepted — this is where you track it through to done."

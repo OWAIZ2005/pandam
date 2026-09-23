@@ -18,6 +18,7 @@ import {
 
 import { demoConversations, demoQuery } from '@/dummy';
 import { AppHeader } from '@/components/AppHeader';
+import { ObjectCluster } from '@/components/brand/ObjectCluster';
 import { ErrorState } from '@/components/states';
 import { mediaSrc } from '@/lib/api/media';
 import { timeAgo } from '@/lib/format';
@@ -118,6 +119,7 @@ export default function MessagesScreen() {
             <ErrorState error={conversations.error} onRetry={() => void conversations.refetch()} />
           ) : (
             <EmptyState
+              art={<ObjectCluster left="headphones" right="plant" icon="chatbubble-ellipses" />}
               icon={<Ionicons name="chatbubbles-outline" size={22} color={colors.textSecondary} />}
               title="No conversations yet"
               body="A chat opens by itself the moment you and someone else agree a trade — there is nothing to start here."

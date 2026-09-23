@@ -11,6 +11,8 @@ export interface EmptyStateProps {
   title: string;
   body?: string;
   icon?: ReactNode;
+  /** A full illustration (e.g. a product still life). Replaces the framed icon. */
+  art?: ReactNode;
   actionLabel?: string;
   onAction?: () => void;
   actionVariant?: 'primary' | 'need' | 'match' | 'secondary';
@@ -42,6 +44,7 @@ export function EmptyState({
   title,
   body,
   icon,
+  art,
   actionLabel,
   onAction,
   actionVariant = 'primary',
@@ -62,7 +65,9 @@ export function EmptyState({
         paddingHorizontal: spacing.lg,
       }}
     >
-      {icon ? (
+      {art ? (
+        <View style={{ alignItems: 'center', marginBottom: spacing.md }}>{art}</View>
+      ) : icon ? (
         <View style={{ alignItems: 'center', marginBottom: spacing.md }}>
           {/* The object floats gently above a soft ground shadow — an empty
               state that feels calm and alive rather than broken. Still under

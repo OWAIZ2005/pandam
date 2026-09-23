@@ -58,6 +58,9 @@ export default function DiscoverScreen() {
   );
   const discover = demoQuery(useDiscover(kind, filters), demoDiscover(kind, filters) as never);
   const items = discover.data?.pages.flatMap((p) => p.items) ?? [];
+  // Marketplace rhythm: the freshest item leads as a large feature card.
+  const featured = items.length > 3 ? items[0] : null;
+  const gridItems = featured ? items.slice(1) : items;
 
   /*
    * Column count follows the WIDTH, not the platform. Two columns inside a
@@ -184,6 +187,18 @@ export default function DiscoverScreen() {
         </ScrollView>
       ) : null}
 
+      {featured ? (
+        <Reveal>
+          <ItemCard
+            item={featured}
+            variant="feature"
+            onPress={() =>
+              router.push(isHave ? `/(app)/listing/${featured.id}` : `/(app)/need/${featured.id}`)
+            }
+          />
+        </Reveal>
+      ) : null}
+
       {items.length > 0 ? (
         <Row justify="space-between">
           <Text variant="caption" tone="muted" numeric>
@@ -205,7 +220,7 @@ export default function DiscoverScreen() {
       {pinned}
 
       <FlatList
-        data={items}
+        data={gridItems}
         key={`${kind}-${columns}`}
         keyExtractor={(it) => it.id}
         numColumns={columns}

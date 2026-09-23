@@ -31,6 +31,7 @@ import {
 } from '@pandam/ui';
 import { boundedString, itemTypeSchema, z } from '@pandam/validation';
 
+import { GuideRail } from '@/components/brand/GuideRail';
 import { PhotoPicker } from '@/components/PhotoPicker';
 import { ApiError } from '@/lib/api/client';
 import { TYPE_LABEL } from '@/lib/format';
@@ -165,6 +166,10 @@ export function ItemForm({ kind, mode, initial, submitting, error, onSubmit }: I
   const title = watch('title');
   const description = watch('description');
   const transactionType = watch('transactionType');
+  const categoryId = watch('categoryId');
+  // Guided path progress (visual only): how far down the form the user is.
+  const detailsDone = (title?.trim().length ?? 0) >= 3 && (description?.trim().length ?? 0) >= 10;
+  const guideDone = !categoryId ? 0 : isHave && photos.length === 0 ? 1 : !detailsDone ? 2 : 3;
 
   const submit = handleSubmit((v) => {
     const isBarter = v.transactionType === 'barter';
@@ -202,6 +207,16 @@ export function ItemForm({ kind, mode, initial, submitting, error, onSubmit }: I
       }}
     >
       <Stack gap="2xl">
+        {mode === 'create' ? (
+          <GuideRail
+            steps={
+              isHave
+                ? ['Item', 'Photos', 'Details', 'Want', 'Publish']
+                : ['Need', 'Kind', 'Details', 'Trade', 'Publish']
+            }
+            done={guideDone}
+          />
+        ) : null}
         {/* ------------------------------------------------------- category -- */}
         <View>
           <StepLabel n={1} label="Pick a category" hint="This is what matching keys off." />

@@ -23,6 +23,7 @@ import { ErrorState } from '@/components/states';
 import { mediaSrc } from '@/lib/api/media';
 import { timeAgo } from '@/lib/format';
 import { useConversations } from '@/lib/hooks/useConversations';
+import { PandamBackground } from '@/components/brand/PandamBackground';
 
 export default function MessagesScreen() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function MessagesScreen() {
   const unreadCount = items.filter((c) => c.unread).length;
 
   return (
-    <Screen padded={false}>
+    <Screen padded={false} backdrop={<PandamBackground variant="quiet" />}>
       <View
         style={{
           width: '100%',

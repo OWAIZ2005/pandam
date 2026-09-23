@@ -20,6 +20,11 @@ export interface ScreenProps {
   /** Page background; `inverse` for hero screens that paint their own header. */
   background?: string;
   contentStyle?: StyleProp<ViewStyle>;
+  /**
+   * Decorative layer painted full-bleed behind the content (ambient shapes).
+   * Must be non-interactive; it never affects layout.
+   */
+  backdrop?: ReactNode;
 }
 
 /**
@@ -43,6 +48,7 @@ export function Screen({
   tabBarInset = false,
   background = colors.background,
   contentStyle,
+  backdrop,
 }: ScreenProps) {
   const inner: StyleProp<ViewStyle> = [
     { width: '100%', maxWidth: layout.contentMaxWidth, alignSelf: 'center', flexGrow: 1 },
@@ -53,6 +59,7 @@ export function Screen({
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: background }} edges={edges}>
+      {backdrop}
       {scroll ? (
         <ScrollView
           keyboardShouldPersistTaps="handled"

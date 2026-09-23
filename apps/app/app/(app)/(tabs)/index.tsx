@@ -45,6 +45,7 @@ import { useSession } from '@/lib/auth/hooks';
 import { useCategories } from '@/lib/hooks/useCategories';
 import { useDiscover, useMyItems } from '@/lib/hooks/useMarket';
 import { useMatches } from '@/lib/hooks/useMatches';
+import { PandamBackground } from '@/components/brand/PandamBackground';
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -136,6 +137,7 @@ export default function HomeScreen() {
 
   return (
     <Screen
+      backdrop={<PandamBackground variant="home" />}
       scroll
       padded={false}
       contentStyle={{ maxWidth: '100%' }}

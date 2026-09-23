@@ -29,6 +29,7 @@ import {
   useNotifications,
 } from '@/lib/hooks/useNotifications';
 import { hasPushPermission, pushSupported, requestPushPermission } from '@/lib/push/token';
+import { PandamBackground } from '@/components/brand/PandamBackground';
 
 type Tone = 'accent' | 'need' | 'match' | 'neutral';
 
@@ -135,7 +136,7 @@ export default function NotificationsScreen() {
   const unread = items.filter((n) => !n.read).length;
 
   return (
-    <Screen padded={false}>
+    <Screen padded={false} backdrop={<PandamBackground variant="quiet" />}>
       <View
         style={{
           width: '100%',

@@ -29,6 +29,7 @@ import { type MarketKind } from '@/lib/api/market';
 import { useCategories } from '@/lib/hooks/useCategories';
 import { useDebounced } from '@/lib/hooks/useDebounced';
 import { useDiscover, useListingCities } from '@/lib/hooks/useMarket';
+import { PandamBackground } from '@/components/brand/PandamBackground';
 
 const KIND_OPTIONS = [
   { value: 'listing' as const, label: 'I HAVE', tone: 'accent' as const },
@@ -216,7 +217,7 @@ export default function DiscoverScreen() {
   );
 
   return (
-    <Screen padded={false}>
+    <Screen backdrop={<PandamBackground variant="discover" />} padded={false}>
       {pinned}
 
       <FlatList

@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { useEffect } from 'react';
 import { type ColorValue, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors, radii, shadows, spacing } from '@pandam/ui';
+import { colors, radii, shadows, spacing, useMotionOK } from '@pandam/ui';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -31,25 +33,53 @@ function TabIcon({
   focused: boolean;
   color: ColorValue;
 }) {
+  const motionOK = useMotionOK();
+  const on = useSharedValue(focused ? 1 : 0);
+  useEffect(() => {
+    on.set(
+      motionOK ? withSpring(focused ? 1 : 0, { damping: 14, stiffness: 220 }) : focused ? 1 : 0,
+    );
+  }, [focused, motionOK, on]);
+
+  // The pill springs open behind the glyph and the glyph rises a touch.
+  const pill = useAnimatedStyle(() => ({
+    opacity: on.get(),
+    transform: [{ scaleX: 0.55 + on.get() * 0.45 }, { scaleY: 0.7 + on.get() * 0.3 }],
+  }));
+  const glyph = useAnimatedStyle(() => ({
+    transform: [{ translateY: -on.get() * 2 }, { scale: 1 + on.get() * 0.06 }],
+  }));
+
   return (
     <View
       style={{
         marginTop: spacing.sm,
         width: 52,
         height: 30,
-        borderRadius: radii.pill,
         alignItems: 'center',
         justifyContent: 'center',
-        // A soft terracotta pill behind the active glyph — carries the state
-        // together with the filled glyph and the tinted label.
-        backgroundColor: focused ? colors.accentSoft : 'transparent',
       }}
     >
-      <Ionicons
-        name={focused ? name : (`${name}-outline` as IconName)}
-        size={21}
-        color={color as string}
+      <Animated.View
+        style={[
+          {
+            position: 'absolute',
+            inset: 0,
+            borderRadius: radii.pill,
+            backgroundColor: colors.accentSoft,
+            borderWidth: 1,
+            borderColor: colors.accentBorder,
+          },
+          pill,
+        ]}
       />
+      <Animated.View style={glyph}>
+        <Ionicons
+          name={focused ? name : (`${name}-outline` as IconName)}
+          size={21}
+          color={color as string}
+        />
+      </Animated.View>
     </View>
   );
 }

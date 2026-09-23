@@ -26,7 +26,8 @@ import {
   shadows,
 } from '@pandam/ui';
 
-import { demoMyListings, demoMyNeeds, demoQuery } from '@/dummy';
+import { IS_DEMO_DATA, demoMyListings, demoMyNeeds, demoQuery } from '@/dummy';
+import { useTransactions } from '@/lib/hooks/useTransactions';
 import { AppHeader } from '@/components/AppHeader';
 import { ItemCard } from '@/components/ItemCard';
 import { ErrorState } from '@/components/states';
@@ -134,6 +135,12 @@ export default function ProfileScreen() {
   const { user, profile } = useSession();
   const logout = useLogout();
   const unread = useUnreadNotificationCount();
+  const myHave = demoQuery(useMyItems('listing'), demoMyListings);
+  const myNeed = demoQuery(useMyItems('need'), demoMyNeeds);
+  const trades = useTransactions();
+  const tradeCount = IS_DEMO_DATA
+    ? 4
+    : (trades.data?.filter((t) => t.status === 'completed').length ?? 0);
 
   const open = (item: MarketItem) =>
     router.push(item.kind === 'listing' ? `/(app)/listing/${item.id}` : `/(app)/need/${item.id}`);
@@ -212,6 +219,43 @@ export default function ProfileScreen() {
               size="sm"
               onPress={() => router.push('/(app)/edit-profile')}
             />
+          </Row>
+
+          {/* Marketplace identity: what you bring, what you seek, what you've done. */}
+          <Row style={{ marginHorizontal: -spacing.xs }}>
+            {[
+              { n: myHave.data?.length ?? 0, l: 'Listed', tone: colors.accent },
+              { n: myNeed.data?.length ?? 0, l: 'Wanted', tone: colors.needText },
+              { n: tradeCount, l: 'Trades done', tone: colors.matchText },
+            ].map((st) => (
+              <View
+                key={st.l}
+                style={{
+                  flex: 1,
+                  marginHorizontal: spacing.xs,
+                  paddingVertical: spacing.md,
+                  borderRadius: radii.lg,
+                  backgroundColor: colors.background,
+                  alignItems: 'center',
+                  gap: 2,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 24,
+                    lineHeight: 28,
+                    fontWeight: '800',
+                    letterSpacing: -0.6,
+                    color: st.tone,
+                  }}
+                >
+                  {st.n}
+                </Text>
+                <Text variant="caption" tone="muted">
+                  {st.l}
+                </Text>
+              </View>
+            ))}
           </Row>
 
           {profile.bio ? (

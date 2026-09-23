@@ -181,7 +181,7 @@ export function ItemDetail({ kind, id }: { kind: MarketKind; id: string }) {
             */}
             {canBarter ? (
               <Button
-                label="Offer a trade"
+                label="Propose a trade"
                 size="lg"
                 fullWidth
                 onPress={() => router.push(`/(app)/offer/new?requestedListingId=${item.id}`)}

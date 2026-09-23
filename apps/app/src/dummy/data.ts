@@ -35,12 +35,15 @@ export const demoCategories = {
   technology: { id: 'demo-cat-tech', name: 'Technology', slug: 'technology' },
   electronics: { id: 'demo-cat-elec', name: 'Electronics', slug: 'electronics' },
   photography: { id: 'demo-cat-photo', name: 'Photography', slug: 'photography' },
-  music: { id: 'demo-cat-music', name: 'Music', slug: 'music' },
+  music: { id: 'demo-cat-music', name: 'Musical Instruments', slug: 'music' },
+  gaming: { id: 'demo-cat-gaming', name: 'Gaming', slug: 'gaming' },
+  services: { id: 'demo-cat-services', name: 'Services', slug: 'services' },
+  skills: { id: 'demo-cat-skills', name: 'Skills', slug: 'skills-and-tutoring' },
   books: { id: 'demo-cat-books', name: 'Books', slug: 'books' },
   furniture: { id: 'demo-cat-furn', name: 'Furniture', slug: 'furniture' },
-  home: { id: 'demo-cat-home', name: 'Home & Garden', slug: 'home-and-garden' },
-  sports: { id: 'demo-cat-sports', name: 'Sports & Outdoors', slug: 'sports-and-outdoors' },
-  clothing: { id: 'demo-cat-cloth', name: 'Clothing', slug: 'clothing' },
+  home: { id: 'demo-cat-home', name: 'Home & Living', slug: 'home-and-garden' },
+  sports: { id: 'demo-cat-sports', name: 'Sports', slug: 'sports-and-outdoors' },
+  clothing: { id: 'demo-cat-cloth', name: 'Fashion', slug: 'clothing' },
 } satisfies Record<string, CategoryRef>;
 
 type CatKey = keyof typeof demoCategories;
@@ -237,7 +240,7 @@ export const demoListings: MarketItem[] = [
   listing({
     id: 'demo-l-controller',
     owner: 'sana',
-    cat: 'electronics',
+    cat: 'gaming',
     title: 'PS5 DualSense controller + 2 games',
     description: 'Controller has no drift. Games: Spider-Man: Miles Morales and Ratchet & Clank.',
     img: 'photo-1606144042614-b2417e99c4e3',
@@ -378,7 +381,7 @@ export const demoListings: MarketItem[] = [
   listing({
     id: 'demo-l-controller2',
     owner: 'kishore',
-    cat: 'electronics',
+    cat: 'gaming',
     title: 'Xbox wireless controller',
     description: 'Carbon black, includes rechargeable battery pack.',
     img: 'photo-1486401899868-0e435ed85128',
@@ -387,7 +390,7 @@ export const demoListings: MarketItem[] = [
   listing({
     id: 'demo-l-guitar-lessons',
     owner: 'rahul',
-    cat: 'music',
+    cat: 'skills',
     type: 'skill',
     title: 'Beginner guitar lessons (4 sessions)',
     description: 'Chords, strumming and your first three songs. In person in Pune or on video.',
@@ -397,7 +400,7 @@ export const demoListings: MarketItem[] = [
   listing({
     id: 'demo-l-portraits',
     owner: 'kishore',
-    cat: 'photography',
+    cat: 'services',
     type: 'service',
     title: 'Portrait session, 1 hour, edited photos',
     description: 'Outdoor natural-light portraits, 20 edited images delivered in a week.',
@@ -462,7 +465,7 @@ export const demoNeeds: MarketItem[] = [
   need({
     id: 'demo-n-rahul-controller',
     owner: 'rahul',
-    cat: 'electronics',
+    cat: 'gaming',
     title: 'A game controller for PC',
     description: 'Xbox-style preferred.',
     ageH: 22,
@@ -470,7 +473,7 @@ export const demoNeeds: MarketItem[] = [
   need({
     id: 'demo-n-rahul-portraits',
     owner: 'rahul',
-    cat: 'photography',
+    cat: 'services',
     type: 'service',
     title: 'Portrait photos for my band',
     description: 'Need a few good shots for our first gig poster.',

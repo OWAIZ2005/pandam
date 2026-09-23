@@ -6,19 +6,24 @@ import { View } from 'react-native';
 import {
   Avatar,
   Card,
+  CoverTile,
   Divider,
+  FloatingObject,
   Notice,
   Press,
   Rail,
+  Reveal,
   Row,
   Screen,
   Section,
   SkeletonList,
   Stack,
   Text,
+  TiltCard,
   colors,
   layout,
   radii,
+  shadows,
   spacing,
 } from '@pandam/ui';
 
@@ -26,7 +31,16 @@ import { CategoryGrid } from '@/components/CategoryFilter';
 import { ItemCard } from '@/components/ItemCard';
 import { MatchCard } from '@/components/MatchCard';
 import { ErrorState } from '@/components/states';
-import { mediaSrc } from '@/lib/api/media';
+import {
+  demoCategoryList,
+  demoMatches,
+  demoMyListings,
+  demoMyNeeds,
+  demoOthersListings,
+  demoPages,
+  demoQuery,
+} from '@/dummy';
+import { mediaSrc, primaryImage } from '@/lib/api/media';
 import { useSession } from '@/lib/auth/hooks';
 import { useCategories } from '@/lib/hooks/useCategories';
 import { useDiscover, useMyItems } from '@/lib/hooks/useMarket';
@@ -44,56 +58,131 @@ function greeting(): string {
 /**
  * One of the two ways into the product: offer a thing, or ask for one.
  *
- * These used to be gradient tiles with a large watermarked icon. They are now
- * plain cards carrying a single coloured edge — which is enough to teach the
- * emerald/tangerine language, and leaves the two most important buttons on
- * the home screen looking like part of the same product as everything else.
+ * A rich, tactile card rather than a flat tile — this is the core concept of
+ * Pandam, so it earns depth: a warm tinted surface, a small floating stack of
+ * real item photos, and a gentle 3D tilt toward the pointer / finger. The
+ * whole card is still one button doing exactly what it always did.
  */
-function QuickAction({
-  edge,
-  icon,
+function IntentCard({
+  kind,
   label,
   hint,
+  cta,
+  photos,
+  count,
   onPress,
 }: {
-  edge: 'accent' | 'need';
-  icon: keyof typeof Ionicons.glyphMap;
+  kind: 'have' | 'need';
   label: string;
   hint: string;
+  cta: string;
+  photos: string[];
+  count: number;
   onPress: () => void;
 }) {
-  const color = edge === 'accent' ? colors.accent : colors.need;
-  const tint = edge === 'accent' ? colors.accentSoft : colors.needSoft;
+  const isHave = kind === 'have';
+  const bg = isHave ? colors.accent : colors.needSoft;
+  const fg = isHave ? colors.textInverse : colors.needText;
+  const sub = isHave ? 'rgba(255,253,249,0.78)' : colors.textSecondary;
+  const icon: keyof typeof Ionicons.glyphMap = isHave ? 'cube-outline' : 'search-outline';
 
   return (
-    <Card
-      onPress={onPress}
-      accessibilityLabel={label}
-      edge={edge}
-      padded={false}
-      style={{ flex: 1 }}
-    >
-      <View style={{ padding: spacing.lg, gap: spacing.md }}>
+    <TiltCard style={{ flex: 1, minWidth: 0 }} maxTilt={5}>
+      <Press
+        scale="sm"
+        lift
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        onPress={onPress}
+        style={{
+          minHeight: 212,
+          borderRadius: radii.xl,
+          backgroundColor: bg,
+          borderWidth: 1,
+          borderColor: isHave ? colors.accentStrong : colors.needBorder,
+          padding: spacing.lg,
+          overflow: 'hidden',
+          justifyContent: 'space-between',
+          ...shadows.sm,
+        }}
+      >
+        {/* Floating photo stack — real things, not an icon. */}
         <View
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: radii.sm,
-            backgroundColor: tint,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
+          pointerEvents="none"
+          style={{ position: 'absolute', right: -6, top: 14, width: 104, height: 110 }}
         >
-          <Ionicons name={icon} size={17} color={color} />
+          {photos.slice(0, 2).map((uri, i) => (
+            <FloatingObject
+              key={uri}
+              delay={i * 700}
+              amplitude={5}
+              rotate={2}
+              style={{
+                position: 'absolute',
+                right: i === 0 ? 22 : 0,
+                top: i === 0 ? 0 : 30,
+                transform: [{ rotate: i === 0 ? '-8deg' : '7deg' }],
+              }}
+            >
+              <View
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: radii.md,
+                  borderWidth: 3,
+                  borderColor: colors.surface,
+                  backgroundColor: colors.surface,
+                  overflow: 'hidden',
+                  ...shadows.md,
+                }}
+              >
+                <CoverTile seed={uri} uri={uri} height={58} radius="sm" />
+              </View>
+            </FloatingObject>
+          ))}
+          {photos.length === 0 ? (
+            <FloatingObject style={{ position: 'absolute', right: 20, top: 8 }}>
+              <View
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: radii.lg,
+                  backgroundColor: isHave ? 'rgba(255,253,249,0.16)' : colors.surface,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Ionicons name={icon} size={28} color={isHave ? colors.textInverse : colors.need} />
+              </View>
+            </FloatingObject>
+          ) : null}
         </View>
-        <View style={{ gap: 1 }}>
-          <Text variant="h3">{label}</Text>
-          <Text variant="caption" tone="muted" numberOfLines={2}>
-            {hint}
+
+        <View style={{ gap: spacing.xs, maxWidth: '62%' }}>
+          <Text variant="overline" style={{ color: sub }}>
+            {isHave ? 'I HAVE' : 'I NEED'}
+          </Text>
+          <Text variant="numericLarge" numeric style={{ color: fg }}>
+            {count}
           </Text>
         </View>
-      </View>
-    </Card>
+
+        <View style={{ gap: spacing.xs }}>
+          <Text variant="h2" style={{ color: fg }}>
+            {label}
+          </Text>
+          <Text variant="caption" style={{ color: sub }} numberOfLines={2}>
+            {hint}
+          </Text>
+          <Row gap="xs" style={{ marginTop: spacing.xs }}>
+            <Text variant="label" style={{ color: fg, fontWeight: '600' }}>
+              {cta}
+            </Text>
+            <Ionicons name="arrow-forward" size={13} color={fg} />
+          </Row>
+        </View>
+      </Press>
+    </TiltCard>
   );
 }
 
@@ -144,11 +233,11 @@ export default function HomeScreen() {
   const { profile } = useSession();
   const name = profile?.displayName?.split(' ')[0] ?? 'there';
 
-  const categories = useCategories();
-  const matches = useMatches();
-  const recent = useDiscover('listing', { limit: 8 });
-  const myHave = useMyItems('listing');
-  const myNeed = useMyItems('need');
+  const categories = demoQuery(useCategories(), demoCategoryList as never);
+  const matches = demoQuery(useMatches(), demoMatches);
+  const recent = demoQuery(useDiscover('listing', { limit: 8 }), demoPages(demoOthersListings));
+  const myHave = demoQuery(useMyItems('listing'), demoMyListings);
+  const myNeed = demoQuery(useMyItems('need'), demoMyNeeds);
 
   const goDiscover = useCallback(
     (categoryId?: string) =>
@@ -163,6 +252,15 @@ export default function HomeScreen() {
   const activeNeed = myNeed.data?.filter((i) => i.status === 'published').length ?? 0;
   const matchCount = matches.data?.length ?? 0;
   const hasNothingListed = activeHave === 0 && activeNeed === 0;
+
+  // Photos for the intent cards: your own things first, then the community's.
+  const havePhotos = [...(myHave.data ?? []), ...recentItems]
+    .map((i) => primaryImage(i.images))
+    .filter((u): u is string => !!u);
+  const needPhotos = recentItems
+    .slice(2)
+    .map((i) => primaryImage(i.images))
+    .filter((u): u is string => !!u);
 
   return (
     <Screen
@@ -194,10 +292,10 @@ export default function HomeScreen() {
           */}
           <Row justify="space-between" align="center" gap="md">
             <View style={{ flex: 1, minWidth: 0 }}>
-              <Text variant="caption" tone="muted">
-                {greeting()}
+              <Text variant="label" tone="muted">
+                {greeting()},
               </Text>
-              <Text variant="h1" numberOfLines={1}>
+              <Text variant="display" numberOfLines={1}>
                 {name}
               </Text>
             </View>
@@ -211,7 +309,7 @@ export default function HomeScreen() {
             >
               <Avatar
                 name={profile?.displayName ?? 'You'}
-                size={40}
+                size={44}
                 uri={mediaSrc(profile?.avatarUrl)}
               />
             </Press>
@@ -238,7 +336,8 @@ export default function HomeScreen() {
               borderColor: colors.border,
               borderRadius: radii.pill,
               paddingHorizontal: spacing.lg,
-              height: 46,
+              height: 50,
+              ...shadows.xs,
             }}
             states={{
               hover: { borderColor: colors.borderStrong },
@@ -251,12 +350,37 @@ export default function HomeScreen() {
             </Text>
           </Press>
 
+          {/* ------------------------------------------- I HAVE / I NEED -- */}
+          <Reveal index={1}>
+            <Row gap="md" align="stretch">
+              <IntentCard
+                kind="have"
+                label="List what you have"
+                hint="A product, a service or a skill"
+                cta="Add a listing"
+                count={activeHave}
+                photos={havePhotos}
+                onPress={() => router.push('/(app)/new-listing')}
+              />
+              <IntentCard
+                kind="need"
+                label="Ask for what you need"
+                hint="We watch for someone who mirrors you"
+                cta="Add a need"
+                count={activeNeed}
+                photos={needPhotos}
+                onPress={() => router.push('/(app)/new-need')}
+              />
+            </Row>
+          </Reveal>
+
+<Reveal index={2}>
           {/* ------------------------------------------------------ stats -- */}
-          <Card padded={false}>
+          <Card padded={false} radius="xl">
             <Row style={{ paddingHorizontal: spacing.xs }}>
               <Stat
                 value={activeHave}
-                label="things you have"
+                label="listed"
                 tone="accent"
                 onPress={() => router.push('/(app)/(tabs)/profile')}
               />
@@ -266,7 +390,7 @@ export default function HomeScreen() {
               />
               <Stat
                 value={activeNeed}
-                label="things you need"
+                label="needed"
                 tone="need"
                 onPress={() => router.push('/(app)/(tabs)/profile')}
               />
@@ -276,30 +400,13 @@ export default function HomeScreen() {
               />
               <Stat
                 value={matchCount}
-                label="barter matches"
+                label="matches"
                 tone="match"
                 onPress={() => router.push('/(app)/(tabs)/matches')}
               />
             </Row>
           </Card>
-
-          {/* --------------------------------------------- quick actions -- */}
-          <Row gap="md" align="stretch">
-            <QuickAction
-              edge="accent"
-              icon="cube-outline"
-              label="I have"
-              hint="Offer a product, service or skill"
-              onPress={() => router.push('/(app)/new-listing')}
-            />
-            <QuickAction
-              edge="need"
-              icon="search-outline"
-              label="I need"
-              hint="Ask for what you are looking for"
-              onPress={() => router.push('/(app)/new-need')}
-            />
-          </Row>
+          </Reveal>
         </Stack>
       </View>
 

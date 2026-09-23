@@ -53,3 +53,14 @@ export {
   SkeletonGrid,
   type SkeletonProps,
 } from './components/Skeleton';
+export {
+  useMotionOK,
+  TiltCard,
+  FloatingObject,
+  Reveal,
+  ConnectingPair,
+  type TiltCardProps,
+  type FloatingObjectProps,
+  type RevealProps,
+  type ConnectingPairProps,
+} from './motion';

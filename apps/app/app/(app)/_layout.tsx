@@ -2,7 +2,7 @@ import { Redirect, Stack } from 'expo-router';
 
 import { colors } from '@pandam/ui';
 
-import { Splash } from '@/components/Splash';
+import { Splash, useHoldSplash } from '@/components/Splash';
 import { useSession } from '@/lib/auth/hooks';
 import { useNotificationRouting } from '@/lib/hooks/useNotificationRouting';
 import { usePushRegistration } from '@/lib/hooks/usePushRegistration';
@@ -15,7 +15,8 @@ export default function AppLayout() {
   usePushRegistration();
   useNotificationRouting();
 
-  if (isResolving) return <Splash />;
+  const showSplash = useHoldSplash(isResolving);
+  if (showSplash) return <Splash />;
   if (!isAuthenticated) return <Redirect href="/(auth)/login" />;
 
   return (

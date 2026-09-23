@@ -422,11 +422,12 @@ export const layout = {
   /** Tighter gutter for dense rows inside an already-padded container. */
   gutterTight: spacing.lg,
   /**
-   * Comfortable breathing room under the last item on a scrollable tab
-   * screen. The tab bar is docked (not floating), so React Navigation already
-   * reserves its own space — this is padding, not overlap avoidance.
+   * Bottom padding on every tab screen. The tab bar FLOATS over the content
+   * (see apps/app/src/components/nav/PandamTabBar.tsx: 68 tall, lifted by the
+   * safe-area inset or 12), so the last item needs this much room to scroll
+   * clear of it.
    */
-  tabBarInset: 28,
+  tabBarInset: 116,
   /** Hairline width. One value, so borders never disagree across components. */
   hairline: 1,
 } as const;

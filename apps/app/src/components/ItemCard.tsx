@@ -14,6 +14,7 @@ import {
   Press,
   Row,
   Text,
+  TiltCard,
   colors,
   radii,
   shadows,
@@ -230,7 +231,8 @@ export function ItemCard({
   /* ---------------------------------------------------------------- tile -- */
   if (variant === 'grid' || variant === 'rail') {
     return (
-      <View
+      <TiltCard
+        maxTilt={4}
         style={{
           flex: variant === 'grid' ? 1 : undefined,
           width: variant === 'rail' ? 176 : undefined,
@@ -325,7 +327,7 @@ export function ItemCard({
         <View style={{ position: 'absolute', top: spacing.sm, right: spacing.sm }}>
           <SaveHeart size={30} />
         </View>
-      </View>
+      </TiltCard>
     );
   }
 

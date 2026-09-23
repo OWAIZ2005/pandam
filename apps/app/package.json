@@ -6,7 +6,7 @@
   "description": "PANDAM universal app (iOS / Android / Web) — Expo + Expo Router",
   "scripts": {
     "dev": "expo start --port 3000",
-    "dev:web": "expo start --web --port 3000",
+    "dev:web": "expo start --web",
     "dev:clear": "expo start --port 3000 --clear",
     "android": "expo run:android",
     "ios": "expo run:ios",

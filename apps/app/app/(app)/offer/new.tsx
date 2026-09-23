@@ -25,6 +25,7 @@ import {
 } from '@pandam/ui';
 
 import { AppHeader } from '@/components/AppHeader';
+import { TradeStage } from '@/components/brand/TradeStage';
 import { ErrorState } from '@/components/states';
 import { IS_DEMO_DATA, demoItem, demoMyListings, demoQuery } from '@/dummy';
 import { ApiError } from '@/lib/api/client';
@@ -221,17 +222,19 @@ export default function NewOfferScreen() {
           {requested.isPending ? (
             <SkeletonList count={1} />
           ) : requested.data ? (
-            <Card tone="need" padded>
-              <Stack gap="xs">
-                <Text variant="caption" tone="need" style={{ fontWeight: '600' }}>
-                  You would get
-                </Text>
-                <Text variant="h3">{requested.data.title}</Text>
-                <Text variant="bodySm" tone="secondary" numberOfLines={2}>
-                  {requested.data.description}
-                </Text>
-              </Stack>
-            </Card>
+            <TradeStage
+              sending={create.isPending}
+              get={{
+                id: requested.data.id,
+                title: requested.data.title,
+                photo: primaryImage(requested.data.images),
+              }}
+              give={
+                selected
+                  ? { id: selected.id, title: selected.title, photo: primaryImage(selected.images) }
+                  : null
+              }
+            />
           ) : null}
 
           {/* ----------------------------------------------- what you give -- */}

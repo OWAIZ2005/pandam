@@ -61,7 +61,7 @@ export function AppHeader({
           </Text>
         ) : null}
         <Row justify="space-between" gap="md" align="center">
-          <Text variant={size === 'lg' ? 'h1' : 'h2'} numberOfLines={2} style={{ flex: 1 }}>
+          <Text variant={size === 'lg' ? 'display' : 'h2'} numberOfLines={2} style={{ flex: 1 }}>
             {title}
           </Text>
           {/* A right action with no back button stays on the title line —

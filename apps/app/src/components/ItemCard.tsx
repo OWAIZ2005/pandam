@@ -52,8 +52,8 @@ function KindMark({ isHave, onPhoto = false }: { isHave: boolean; onPhoto?: bool
           alignItems: 'center',
           gap: spacing.xs,
           alignSelf: 'flex-start',
-          backgroundColor: 'rgba(18,22,25,0.5)',
-          borderRadius: radii.sm,
+          backgroundColor: 'rgba(36,27,22,0.55)',
+          borderRadius: radii.pill,
           paddingHorizontal: spacing.sm,
           paddingVertical: 3,
         }}
@@ -101,23 +101,25 @@ export function ItemCard({
     return (
       <Press
         scale="sm"
+        lift
         accessibilityRole="button"
         accessibilityLabel={label}
         onPress={onPress}
         style={{
+          ...shadows.xs,
           flex: variant === 'grid' ? 1 : undefined,
-          width: variant === 'rail' ? 168 : undefined,
+          width: variant === 'rail' ? 176 : undefined,
           backgroundColor: colors.surface,
           borderRadius: radii.lg,
           borderWidth: 1,
           borderColor: colors.border,
           overflow: 'hidden',
         }}
-        states={{ hover: { borderColor: colors.borderStrong, ...shadows.sm } }}
+        states={{ hover: { borderColor: colors.borderStrong } }}
       >
         <CoverTile
           seed={item.id}
-          height={108}
+          height={variant === 'rail' ? 150 : 140}
           radius="none"
           uri={cover}
           icon={<Ionicons name={icon} size={64} color="rgba(255,255,255,0.5)" />}
@@ -127,7 +129,7 @@ export function ItemCard({
         </CoverTile>
 
         <View style={{ padding: spacing.md, gap: spacing.xs }}>
-          <Text variant="bodyStrong" numberOfLines={2} style={{ minHeight: 44 }}>
+          <Text variant="bodyStrong" numberOfLines={2} style={{ minHeight: 44, letterSpacing: -0.2 }}>
             {item.title}
           </Text>
 
@@ -172,11 +174,11 @@ export function ItemCard({
       <Row gap="md" align="flex-start" style={{ padding: spacing.md }}>
         <CoverTile
           seed={item.id}
-          height={76}
-          radius="md"
+          height={84}
+          radius="lg"
           uri={cover}
           icon={<Ionicons name={icon} size={44} color="rgba(255,255,255,0.5)" />}
-          style={{ width: 76 }}
+          style={{ width: 84 }}
         />
 
         <View style={{ flex: 1, gap: spacing.xs, minWidth: 0 }}>

@@ -6,6 +6,7 @@ import { FlatList, ScrollView, View, useWindowDimensions } from 'react-native';
 import {
   Chip,
   EmptyState,
+  Reveal,
   Row,
   Screen,
   SearchInput,
@@ -23,6 +24,7 @@ import {
 import { CategoryFilter } from '@/components/CategoryFilter';
 import { ItemCard } from '@/components/ItemCard';
 import { ErrorState } from '@/components/states';
+import { demoCategoryList, demoCities, demoDiscover, demoQuery } from '@/dummy';
 import { type MarketKind } from '@/lib/api/market';
 import { useCategories } from '@/lib/hooks/useCategories';
 import { useDebounced } from '@/lib/hooks/useDebounced';
@@ -42,8 +44,8 @@ export default function DiscoverScreen() {
   const [city, setCity] = useState<string | null>(params.city ?? null);
   const q = useDebounced(rawQuery.trim(), 350);
 
-  const categories = useCategories();
-  const cities = useListingCities();
+  const categories = demoQuery(useCategories(), demoCategoryList as never);
+  const cities = demoQuery(useListingCities(), demoCities() as never);
   const filters = useMemo(
     () => ({
       category: categoryId ?? undefined,
@@ -54,7 +56,7 @@ export default function DiscoverScreen() {
     }),
     [categoryId, q, params.owner, city],
   );
-  const discover = useDiscover(kind, filters);
+  const discover = demoQuery(useDiscover(kind, filters), demoDiscover(kind, filters) as never);
   const items = discover.data?.pages.flatMap((p) => p.items) ?? [];
 
   /*
@@ -92,7 +94,7 @@ export default function DiscoverScreen() {
       style={{
         backgroundColor: colors.background,
         borderBottomWidth: 1,
-        borderBottomColor: colors.border,
+        borderBottomColor: colors.borderSoft,
       }}
     >
       <View
@@ -106,6 +108,12 @@ export default function DiscoverScreen() {
           gap: spacing.md,
         }}
       >
+        <View style={{ gap: 2 }}>
+          <Text variant="overline" tone={tone}>
+            {isHave ? 'What people have' : 'What people need'}
+          </Text>
+          <Text variant="display">Discover</Text>
+        </View>
         <SearchInput
           icon={<Ionicons name="search" size={17} color={colors.textMuted} />}
           placeholder={isHave ? 'Search what people have' : 'Search what people need'}
@@ -214,14 +222,16 @@ export default function DiscoverScreen() {
           flexGrow: 1,
         }}
         ListHeaderComponent={scrollingHeader}
-        renderItem={({ item }) => (
-          <ItemCard
-            item={item}
-            variant="grid"
-            onPress={() =>
-              router.push(isHave ? `/(app)/listing/${item.id}` : `/(app)/need/${item.id}`)
-            }
-          />
+        renderItem={({ item, index }) => (
+          <Reveal index={index} style={{ flex: 1 / columns }}>
+            <ItemCard
+              item={item}
+              variant="grid"
+              onPress={() =>
+                router.push(isHave ? `/(app)/listing/${item.id}` : `/(app)/need/${item.id}`)
+              }
+            />
+          </Reveal>
         )}
         onEndReachedThreshold={0.4}
         onEndReached={() => {

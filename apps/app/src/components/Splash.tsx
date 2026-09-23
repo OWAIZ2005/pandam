@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { Animated, Easing, View } from 'react-native';
 
-import { Gradient, Text, colors, radii, spacing } from '@pandam/ui';
+import { FloatingObject, Gradient, Text, colors, radii, shadows, spacing } from '@pandam/ui';
 
 /**
  * Full-screen brand loader shown while auth state is resolving.
@@ -59,24 +59,25 @@ export function Splash() {
             gap: spacing.lg,
           }}
         >
-          <View
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: radii.lg,
-              backgroundColor: 'rgba(255,255,255,0.14)',
-              borderWidth: 1,
-              borderColor: 'rgba(255,255,255,0.18)',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Ionicons name="swap-horizontal" size={30} color={colors.textInverse} />
-          </View>
+          <FloatingObject amplitude={6} rotate={5}>
+            <View
+              style={{
+                width: 76,
+                height: 76,
+                borderRadius: radii.xl,
+                backgroundColor: colors.surface,
+                alignItems: 'center',
+                justifyContent: 'center',
+                ...shadows.lg,
+              }}
+            >
+              <Ionicons name="swap-horizontal" size={34} color={colors.accent} />
+            </View>
+          </FloatingObject>
 
           <View style={{ alignItems: 'center', gap: spacing.xs }}>
             <Text variant="display" tone="inverse">
-              PANDAM
+              Pandam
             </Text>
             <Text variant="bodySm" style={{ color: 'rgba(255,255,255,0.72)' }}>
               Trade what you have for what you need

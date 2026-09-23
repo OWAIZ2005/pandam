@@ -1,7 +1,8 @@
 import { type ReactNode } from 'react';
 import { View } from 'react-native';
 
-import { colors, layout, radii, spacing } from '../tokens';
+import { FloatingObject } from '../motion/FloatingObject';
+import { colors, layout, radii, shadows, spacing } from '../tokens';
 
 import { Button } from './Button';
 import { Text } from './Text';
@@ -62,20 +63,36 @@ export function EmptyState({
       }}
     >
       {icon ? (
-        <View
-          style={{
-            width: inline ? 48 : 60,
-            height: inline ? 48 : 60,
-            borderRadius: radii.lg,
-            backgroundColor: frame.bg,
-            borderWidth: 1,
-            borderColor: frame.border,
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: spacing.sm,
-          }}
-        >
-          {icon}
+        <View style={{ alignItems: 'center', marginBottom: spacing.md }}>
+          {/* The object floats gently above a soft ground shadow — an empty
+              state that feels calm and alive rather than broken. Still under
+              reduced motion. */}
+          <FloatingObject amplitude={inline ? 3 : 6} rotate={inline ? 2 : 4}>
+            <View
+              style={{
+                width: inline ? 52 : 72,
+                height: inline ? 52 : 72,
+                borderRadius: inline ? radii.lg : radii.xl,
+                backgroundColor: frame.bg,
+                borderWidth: 1,
+                borderColor: frame.border,
+                alignItems: 'center',
+                justifyContent: 'center',
+                ...shadows.md,
+              }}
+            >
+              {icon}
+            </View>
+          </FloatingObject>
+          <View
+            style={{
+              marginTop: spacing.sm,
+              width: inline ? 34 : 46,
+              height: 6,
+              borderRadius: radii.pill,
+              backgroundColor: 'rgba(90,58,34,0.10)',
+            }}
+          />
         </View>
       ) : null}
 

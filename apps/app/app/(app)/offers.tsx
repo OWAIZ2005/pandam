@@ -18,6 +18,7 @@ import {
   spacing,
 } from '@pandam/ui';
 
+import { demoOffers, demoQuery } from '@/dummy';
 import { AppHeader } from '@/components/AppHeader';
 import { ErrorState } from '@/components/states';
 import { mediaSrc } from '@/lib/api/media';
@@ -43,8 +44,14 @@ const STATUS_LABEL: Record<OfferView['status'], string> = {
 export default function OffersScreen() {
   const router = useRouter();
   const [tab, setTab] = useState<'incoming' | 'outgoing'>('incoming');
-  const incoming = useIncomingOffers();
-  const outgoing = useOutgoingOffers();
+  const incoming = demoQuery(
+    useIncomingOffers(),
+    demoOffers.filter((o) => !o.isMine),
+  );
+  const outgoing = demoQuery(
+    useOutgoingOffers(),
+    demoOffers.filter((o) => o.isMine),
+  );
   const active = tab === 'incoming' ? incoming : outgoing;
 
   /* A count on the received tab: an unanswered offer is the one thing on this

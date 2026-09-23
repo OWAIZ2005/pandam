@@ -374,38 +374,38 @@ export default function HomeScreen() {
             </Row>
           </Reveal>
 
-<Reveal index={2}>
-          {/* ------------------------------------------------------ stats -- */}
-          <Card padded={false} radius="xl">
-            <Row style={{ paddingHorizontal: spacing.xs }}>
-              <Stat
-                value={activeHave}
-                label="listed"
-                tone="accent"
-                onPress={() => router.push('/(app)/(tabs)/profile')}
-              />
-              <Divider
-                tone="soft"
-                style={{ width: 1, height: 'auto', marginVertical: spacing.md }}
-              />
-              <Stat
-                value={activeNeed}
-                label="needed"
-                tone="need"
-                onPress={() => router.push('/(app)/(tabs)/profile')}
-              />
-              <Divider
-                tone="soft"
-                style={{ width: 1, height: 'auto', marginVertical: spacing.md }}
-              />
-              <Stat
-                value={matchCount}
-                label="matches"
-                tone="match"
-                onPress={() => router.push('/(app)/(tabs)/matches')}
-              />
-            </Row>
-          </Card>
+          <Reveal index={2}>
+            {/* ------------------------------------------------------ stats -- */}
+            <Card padded={false} radius="xl">
+              <Row style={{ paddingHorizontal: spacing.xs }}>
+                <Stat
+                  value={activeHave}
+                  label="listed"
+                  tone="accent"
+                  onPress={() => router.push('/(app)/(tabs)/profile')}
+                />
+                <Divider
+                  tone="soft"
+                  style={{ width: 1, height: 'auto', marginVertical: spacing.md }}
+                />
+                <Stat
+                  value={activeNeed}
+                  label="needed"
+                  tone="need"
+                  onPress={() => router.push('/(app)/(tabs)/profile')}
+                />
+                <Divider
+                  tone="soft"
+                  style={{ width: 1, height: 'auto', marginVertical: spacing.md }}
+                />
+                <Stat
+                  value={matchCount}
+                  label="matches"
+                  tone="match"
+                  onPress={() => router.push('/(app)/(tabs)/matches')}
+                />
+              </Row>
+            </Card>
           </Reveal>
         </Stack>
       </View>

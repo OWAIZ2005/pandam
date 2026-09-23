@@ -62,9 +62,19 @@ export function useToast(): ToastContextValue {
 const KIND: Record<ToastKind, { bg: string; border: string; glyph: string; fg: string }> = {
   // Dark surfaces, because a toast sits over content and needs to read as a
   // layer above the page rather than another card in it.
-  success: { bg: colors.surfaceInverse, border: palette.espresso700, glyph: '✓', fg: palette.sage200 },
+  success: {
+    bg: colors.surfaceInverse,
+    border: palette.espresso700,
+    glyph: '✓',
+    fg: palette.sage200,
+  },
   error: { bg: '#3A1B16', border: '#5E2A22', glyph: '!', fg: palette.terracotta200 },
-  info: { bg: colors.surfaceInverse, border: palette.espresso700, glyph: 'i', fg: palette.espresso300 },
+  info: {
+    bg: colors.surfaceInverse,
+    border: palette.espresso700,
+    glyph: 'i',
+    fg: palette.espresso300,
+  },
 };
 
 interface Live extends ToastOptions {

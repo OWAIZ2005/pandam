@@ -75,7 +75,13 @@ export function Card({
   // Plain surface cards rest on a faint warm shadow — on cream a border alone
   // reads flat; the soft shadow is what makes the redesign feel tactile.
   const depth: Elevation =
-    elevated === true ? 'sm' : elevated === false ? (tone === 'surface' && bordered ? 'xs' : 'none') : elevated;
+    elevated === true
+      ? 'sm'
+      : elevated === false
+        ? tone === 'surface' && bordered
+          ? 'xs'
+          : 'none'
+        : elevated;
 
   const base: StyleProp<ViewStyle> = [
     styles.card,

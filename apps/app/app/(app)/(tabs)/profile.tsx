@@ -23,8 +23,10 @@ import {
   layout,
   radii,
   spacing,
+  shadows,
 } from '@pandam/ui';
 
+import { demoMyListings, demoMyNeeds, demoQuery } from '@/dummy';
 import { AppHeader } from '@/components/AppHeader';
 import { ItemCard } from '@/components/ItemCard';
 import { ErrorState } from '@/components/states';
@@ -43,7 +45,7 @@ function MyItemsSection({
   onOpen: (item: MarketItem) => void;
   onAdd: () => void;
 }) {
-  const q = useMyItems(kind);
+  const q = demoQuery(useMyItems(kind), kind === 'listing' ? demoMyListings : demoMyNeeds);
   const isHave = kind === 'listing';
   const items = q.data ?? [];
   const live = items.filter((i) => i.status === 'published').length;
@@ -103,7 +105,7 @@ function MyItemsSection({
 /**
  * The unread count on a settings row.
  *
- * Tangerine rather than emerald: emerald means "I HAVE" everywhere else in
+ * Clay rather than terracotta: terracotta means "I HAVE" everywhere else in
  * the product, and a green count here would read as a quantity of something
  * rather than as something needing attention.
  */
@@ -169,12 +171,26 @@ export default function ProfileScreen() {
           the avatar and the name are the strongest things on screen, which is
           what a profile should lead with.
         */}
-        <Stack gap="2xl">
+        <Stack
+          gap="2xl"
+          style={{
+            backgroundColor: colors.surface,
+            borderRadius: radii['2xl'],
+            borderWidth: 1,
+            borderColor: colors.border,
+            padding: spacing.xl,
+            ...shadows.sm,
+          }}
+        >
           <Row gap="lg" align="flex-start">
-            <Avatar name={profile.displayName} size={64} uri={mediaSrc(profile.avatarUrl)} />
+            <View
+              style={{ borderRadius: radii.pill, borderWidth: 3, borderColor: colors.accentSoft }}
+            >
+              <Avatar name={profile.displayName} size={72} uri={mediaSrc(profile.avatarUrl)} />
+            </View>
 
             <View style={{ flex: 1, minWidth: 0, gap: 2, paddingTop: spacing.xs }}>
-              <Text variant="h1" numberOfLines={1}>
+              <Text variant="display" numberOfLines={1}>
                 {profile.displayName}
               </Text>
               <Text variant="bodySm" tone="muted" numberOfLines={1}>

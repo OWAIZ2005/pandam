@@ -20,6 +20,7 @@ import {
   spacing,
 } from '@pandam/ui';
 
+import { IS_DEMO_DATA, demoConversations, demoMessages, demoQuery } from '@/dummy';
 import { ErrorState } from '@/components/states';
 import { mediaSrc } from '@/lib/api/media';
 import { dayLabel, timeOfDay } from '@/lib/format';
@@ -142,8 +143,15 @@ function DaySeparator({ label }: { label: string }) {
 export default function ChatScreen() {
   const router = useRouter();
   const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
-  const conversation = useConversation(conversationId);
-  const messages = useMessages(conversationId);
+  const liveConversation = useConversation(conversationId);
+  const liveMessages = useMessages(conversationId);
+  const demoConv = IS_DEMO_DATA
+    ? demoConversations.find((c) => c.id === conversationId)
+    : undefined;
+  const conversation = demoConv ? demoQuery(liveConversation, demoConv) : liveConversation;
+  const messages = demoConv
+    ? demoQuery(liveMessages, demoMessages[demoConv.id] ?? [])
+    : liveMessages;
   const send = useSendMessage(conversationId!);
   const markRead = useMarkConversationRead(conversationId!);
   const [draft, setDraft] = useState('');
@@ -299,7 +307,7 @@ export default function ChatScreen() {
             accessibilityLabel="Send message"
             disabled={!canSend}
             onPress={handleSend}
-            // Filled emerald only once there is something to send: a live-looking
+            // Filled terracotta only once there is something to send: a live-looking
             // send button on an empty composer is a promise the app cannot keep.
             style={
               canSend ? { backgroundColor: colors.accent, borderColor: colors.accent } : undefined

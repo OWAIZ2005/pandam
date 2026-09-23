@@ -18,6 +18,7 @@ import {
   spacing,
 } from '@pandam/ui';
 
+import { demoMatches, demoQuery } from '@/dummy';
 import { AppHeader } from '@/components/AppHeader';
 import { ErrorState } from '@/components/states';
 import { TYPE_LABEL } from '@/lib/format';
@@ -113,7 +114,7 @@ function TradeLeg({
 export default function MatchDetailScreen() {
   const { key } = useLocalSearchParams<{ key: string }>();
   const router = useRouter();
-  const matches = useMatches();
+  const matches = demoQuery(useMatches(), demoMatches);
 
   const match = matches.data?.find((m) => m.key === decodeURIComponent(key ?? ''));
 

@@ -181,7 +181,9 @@ export function Button({
           borderColor: spec.border ?? 'transparent',
           alignSelf: fullWidth ? 'stretch' : 'flex-start',
         },
-        (spec.elevated || variant === 'primary') && !isDisabled && size !== 'sm' ? shadows.sm : null,
+        (spec.elevated || variant === 'primary') && !isDisabled && size !== 'sm'
+          ? shadows.sm
+          : null,
         // Disabled reads as "not available now", so it keeps its shape and
         // loses contrast rather than disappearing.
         isDisabled && { opacity: 0.42 },

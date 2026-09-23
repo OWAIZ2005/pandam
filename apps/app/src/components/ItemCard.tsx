@@ -129,7 +129,11 @@ export function ItemCard({
         </CoverTile>
 
         <View style={{ padding: spacing.md, gap: spacing.xs }}>
-          <Text variant="bodyStrong" numberOfLines={2} style={{ minHeight: 44, letterSpacing: -0.2 }}>
+          <Text
+            variant="bodyStrong"
+            numberOfLines={2}
+            style={{ minHeight: 44, letterSpacing: -0.2 }}
+          >
             {item.title}
           </Text>
 

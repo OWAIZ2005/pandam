@@ -76,7 +76,12 @@ const SPEC: Record<Kind, { soft: string; border: string; fg: string; solid: stri
     fg: colors.dangerText,
     solid: colors.danger,
   },
-  info: { soft: colors.infoSoft, border: colors.infoBorder, fg: colors.infoText, solid: colors.info },
+  info: {
+    soft: colors.infoSoft,
+    border: colors.infoBorder,
+    fg: colors.infoText,
+    solid: colors.info,
+  },
 };
 
 /**

@@ -65,7 +65,7 @@ export interface CategoryGridProps {
  * card. Eight gradients in a grid compete with each other and with the rest
  * of the page, and they make the catalogue look like a game menu; a
  * consistent neutral tile lets the ICON do the identifying, which is its job,
- * and lets the emerald/tangerine language keep its meaning elsewhere.
+ * and lets the terracotta/clay language keep its meaning elsewhere.
  */
 export function CategoryGrid({ categories, onSelect, limit, columns = 4 }: CategoryGridProps) {
   const shown = limit ? categories.slice(0, limit) : categories;

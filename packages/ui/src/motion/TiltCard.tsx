@@ -20,7 +20,9 @@ export interface TiltCardProps {
   style?: StyleProp<ViewStyle>;
 }
 
-type PointerLike = { nativeEvent: { locationX?: number; locationY?: number; offsetX?: number; offsetY?: number } };
+type PointerLike = {
+  nativeEvent: { locationX?: number; locationY?: number; offsetX?: number; offsetY?: number };
+};
 
 /**
  * A 3D-ish wrapper: the card tilts toward the pointer (web hover) or finger

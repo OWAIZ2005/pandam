@@ -30,6 +30,7 @@ import {
 import { CategoryGrid } from '@/components/CategoryFilter';
 import { ItemCard } from '@/components/ItemCard';
 import { MatchCard } from '@/components/MatchCard';
+import { ExchangeHero } from '@/components/brand/ExchangeHero';
 import { ErrorState } from '@/components/states';
 import {
   demoCategoryList,
@@ -38,6 +39,7 @@ import {
   demoMyNeeds,
   demoOthersListings,
   demoPages,
+  demoPhoto,
   demoQuery,
 } from '@/dummy';
 import { mediaSrc, primaryImage } from '@/lib/api/media';
@@ -54,137 +56,6 @@ function greeting(): string {
 }
 
 /* -------------------------------------------------------------------------- */
-
-/**
- * One of the two ways into the product: offer a thing, or ask for one.
- *
- * A rich, tactile card rather than a flat tile — this is the core concept of
- * Pandam, so it earns depth: a warm tinted surface, a small floating stack of
- * real item photos, and a gentle 3D tilt toward the pointer / finger. The
- * whole card is still one button doing exactly what it always did.
- */
-function IntentCard({
-  kind,
-  label,
-  hint,
-  cta,
-  photos,
-  count,
-  onPress,
-}: {
-  kind: 'have' | 'need';
-  label: string;
-  hint: string;
-  cta: string;
-  photos: string[];
-  count: number;
-  onPress: () => void;
-}) {
-  const isHave = kind === 'have';
-  const bg = isHave ? colors.accent : colors.needSoft;
-  const fg = isHave ? colors.textInverse : colors.needText;
-  const sub = isHave ? 'rgba(255,253,249,0.78)' : colors.textSecondary;
-  const icon: keyof typeof Ionicons.glyphMap = isHave ? 'cube-outline' : 'search-outline';
-
-  return (
-    <TiltCard style={{ flex: 1, minWidth: 0 }} maxTilt={5}>
-      <Press
-        scale="sm"
-        lift
-        accessibilityRole="button"
-        accessibilityLabel={label}
-        onPress={onPress}
-        style={{
-          minHeight: 240,
-          borderRadius: radii.xl,
-          backgroundColor: bg,
-          borderWidth: 1,
-          borderColor: isHave ? colors.accentStrong : colors.needBorder,
-          padding: spacing.lg,
-          overflow: 'hidden',
-          justifyContent: 'space-between',
-          ...shadows.sm,
-        }}
-      >
-        {/* Floating photo stack — real things, not an icon. */}
-        <View
-          pointerEvents="none"
-          style={{ position: 'absolute', right: -4, top: 10, width: 92, height: 84 }}
-        >
-          {photos.slice(0, 2).map((uri, i) => (
-            <FloatingObject
-              key={uri}
-              delay={i * 700}
-              amplitude={5}
-              rotate={2}
-              style={{
-                position: 'absolute',
-                right: i === 0 ? 20 : 0,
-                top: i === 0 ? 0 : 24,
-                transform: [{ rotate: i === 0 ? '-8deg' : '7deg' }],
-              }}
-            >
-              <View
-                style={{
-                  width: 54,
-                  height: 54,
-                  borderRadius: radii.md,
-                  borderWidth: 3,
-                  borderColor: colors.surface,
-                  backgroundColor: colors.surface,
-                  overflow: 'hidden',
-                  ...shadows.md,
-                }}
-              >
-                <CoverTile seed={uri} uri={uri} height={48} radius="sm" />
-              </View>
-            </FloatingObject>
-          ))}
-          {photos.length === 0 ? (
-            <FloatingObject style={{ position: 'absolute', right: 20, top: 8 }}>
-              <View
-                style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: radii.lg,
-                  backgroundColor: isHave ? 'rgba(255,253,249,0.16)' : colors.surface,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Ionicons name={icon} size={28} color={isHave ? colors.textInverse : colors.need} />
-              </View>
-            </FloatingObject>
-          ) : null}
-        </View>
-
-        <View style={{ gap: spacing.xs, maxWidth: '62%' }}>
-          <Text variant="overline" style={{ color: sub }}>
-            {isHave ? 'I HAVE' : 'I NEED'}
-          </Text>
-          <Text variant="numericLarge" numeric style={{ color: fg }}>
-            {count}
-          </Text>
-        </View>
-
-        <View style={{ gap: spacing.xs }}>
-          <Text variant="h2" style={{ color: fg }}>
-            {label}
-          </Text>
-          <Text variant="caption" style={{ color: sub }} numberOfLines={2}>
-            {hint}
-          </Text>
-          <Row gap="xs" style={{ marginTop: spacing.xs }}>
-            <Text variant="label" style={{ color: fg, fontWeight: '600' }}>
-              {cta}
-            </Text>
-            <Ionicons name="arrow-forward" size={13} color={fg} />
-          </Row>
-        </View>
-      </Press>
-    </TiltCard>
-  );
-}
 
 /**
  * One figure in the stat row.
@@ -257,10 +128,11 @@ export default function HomeScreen() {
   const havePhotos = [...(myHave.data ?? []), ...recentItems]
     .map((i) => primaryImage(i.images))
     .filter((u): u is string => !!u);
-  const needPhotos = recentItems
-    .slice(2)
-    .map((i) => primaryImage(i.images))
-    .filter((u): u is string => !!u);
+  const matchPhoto = matches.data?.[0] ? demoPhoto(matches.data[0].them.have.id) : undefined;
+  const needPhotos = [
+    ...(matchPhoto ? [matchPhoto] : []),
+    ...recentItems.slice(2).map((i) => primaryImage(i.images)),
+  ].filter((u): u is string => !!u);
 
   return (
     <Screen
@@ -352,26 +224,14 @@ export default function HomeScreen() {
 
           {/* ------------------------------------------- I HAVE / I NEED -- */}
           <Reveal index={1}>
-            <Row gap="md" align="stretch">
-              <IntentCard
-                kind="have"
-                label="List what you have"
-                hint="A product, a service or a skill"
-                cta="Add a listing"
-                count={activeHave}
-                photos={havePhotos}
-                onPress={() => router.push('/(app)/new-listing')}
-              />
-              <IntentCard
-                kind="need"
-                label="Ask for what you need"
-                hint="We watch for someone who mirrors you"
-                cta="Add a need"
-                count={activeNeed}
-                photos={needPhotos}
-                onPress={() => router.push('/(app)/new-need')}
-              />
-            </Row>
+            <ExchangeHero
+              havePhoto={havePhotos[0]}
+              needPhoto={needPhotos[0]}
+              haveCount={activeHave}
+              needCount={activeNeed}
+              onHave={() => router.push('/(app)/new-listing')}
+              onNeed={() => router.push('/(app)/new-need')}
+            />
           </Reveal>
 
           <Reveal index={2}>

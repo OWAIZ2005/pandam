@@ -105,20 +105,21 @@ function Layer({
 
   useEffect(() => {
     if (!motionOK) {
-      enter.value = 1;
+      enter.set(1);
       return undefined;
     }
     // Staggered spring entrance: rise, un-rotate, settle.
-    enter.value = withDelay(
-      120 + index * 110,
-      withSpring(1, { damping: 14, stiffness: 110, mass: 0.9 }),
+    enter.set(
+      withDelay(120 + index * 110, withSpring(1, { damping: 14, stiffness: 110, mass: 0.9 })),
     );
-    float.value = withDelay(
-      900 + index * 400,
-      withRepeat(
-        withTiming(1, { duration: 3400 + index * 500, easing: Easing.inOut(Easing.sin) }),
-        -1,
-        true,
+    float.set(
+      withDelay(
+        900 + index * 400,
+        withRepeat(
+          withTiming(1, { duration: 3400 + index * 500, easing: Easing.inOut(Easing.sin) }),
+          -1,
+          true,
+        ),
       ),
     );
     return () => cancelAnimation(float);
@@ -210,17 +211,16 @@ function ExchangeToken({ motionOK, size = 52 }: { motionOK: boolean; size?: numb
   const pulse = useSharedValue(0);
   useEffect(() => {
     if (!motionOK) return undefined;
-    spin.value = withRepeat(
-      withSequence(
-        withDelay(1800, withSpring(1, { damping: 10, stiffness: 90 })),
-        withDelay(1800, withSpring(0, { damping: 10, stiffness: 90 })),
+    spin.set(
+      withRepeat(
+        withSequence(
+          withDelay(1800, withSpring(1, { damping: 10, stiffness: 90 })),
+          withDelay(1800, withSpring(0, { damping: 10, stiffness: 90 })),
+        ),
+        -1,
       ),
-      -1,
     );
-    pulse.value = withRepeat(
-      withTiming(1, { duration: 1800, easing: Easing.out(Easing.quad) }),
-      -1,
-    );
+    pulse.set(withRepeat(withTiming(1, { duration: 1800, easing: Easing.out(Easing.quad) }), -1));
     return () => {
       cancelAnimation(spin);
       cancelAnimation(pulse);
@@ -310,20 +310,24 @@ export function ProductComposition({
       const n = e.nativeEvent;
       const x = n.offsetX ?? n.locationX ?? 0;
       const y = n.offsetY ?? n.locationY ?? 0;
-      px.value = withSpring(Math.max(-1, Math.min(1, (x / box.current.w) * 2 - 1)), {
-        damping: 20,
-        stiffness: 90,
-      });
-      py.value = withSpring(Math.max(-1, Math.min(1, (y / box.current.h) * 2 - 1)), {
-        damping: 20,
-        stiffness: 90,
-      });
+      px.set(
+        withSpring(Math.max(-1, Math.min(1, (x / box.current.w) * 2 - 1)), {
+          damping: 20,
+          stiffness: 90,
+        }),
+      );
+      py.set(
+        withSpring(Math.max(-1, Math.min(1, (y / box.current.h) * 2 - 1)), {
+          damping: 20,
+          stiffness: 90,
+        }),
+      );
     },
     [motionOK, px, py],
   );
   const onLeave = useCallback(() => {
-    px.value = withSpring(0, { damping: 20, stiffness: 90 });
-    py.value = withSpring(0, { damping: 20, stiffness: 90 });
+    px.set(withSpring(0, { damping: 20, stiffness: 90 }));
+    py.set(withSpring(0, { damping: 20, stiffness: 90 }));
   }, [px, py]);
 
   return (

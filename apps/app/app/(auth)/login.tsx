@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { loginSchema, type LoginInput } from '@pandam/validation';
 import { Link, useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 
 import {
   Button,
@@ -15,8 +15,6 @@ import {
   Stack,
   Text,
   colors,
-  layout,
-  spacing,
 } from '@pandam/ui';
 
 import { AuthShell } from '@/components/brand/AuthShell';

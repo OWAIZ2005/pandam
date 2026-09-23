@@ -162,13 +162,15 @@ export function ExchangeHero({
 
   const fire = useCallback(() => {
     if (!motionOK) return;
-    charge.value = withSequence(
-      withSpring(1, { damping: 12, stiffness: 140 }),
-      withDelay(500, withSpring(0, { damping: 14, stiffness: 90 })),
+    charge.set(
+      withSequence(
+        withSpring(1, { damping: 12, stiffness: 140 }),
+        withDelay(500, withSpring(0, { damping: 14, stiffness: 90 })),
+      ),
     );
-    spark.value = 0;
-    spark.value = withTiming(1.2, { duration: 1100, easing: Easing.inOut(Easing.cubic) });
-    spin.value = withSpring(spin.value + 1, { damping: 12, stiffness: 100 });
+    spark.set(0);
+    spark.set(withTiming(1.2, { duration: 1100, easing: Easing.inOut(Easing.cubic) }));
+    spin.set(withSpring(spin.get() + 1, { damping: 12, stiffness: 100 }));
   }, [motionOK, charge, spark, spin]);
 
   useEffect(() => {

@@ -3,10 +3,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { View } from 'react-native';
 
 import {
-  Avatar,
   Button,
   Card,
-  Gradient,
   Row,
   Screen,
   SkeletonList,
@@ -18,7 +16,8 @@ import {
   spacing,
 } from '@pandam/ui';
 
-import { demoMatches, demoQuery } from '@/dummy';
+import { MatchMoment } from '@/components/brand/MatchMoment';
+import { demoMatches, demoPhoto, demoQuery } from '@/dummy';
 import { AppHeader } from '@/components/AppHeader';
 import { ErrorState } from '@/components/states';
 import { TYPE_LABEL } from '@/lib/format';
@@ -156,7 +155,7 @@ export default function MatchDetailScreen() {
         <Stack gap="sm">
           <Button
             label="Make an offer"
-            variant="match"
+            variant="primary"
             size="lg"
             fullWidth
             disabled
@@ -170,33 +169,11 @@ export default function MatchDetailScreen() {
       }
     >
       {/* ------------------------------------------------------------ hero -- */}
-      <Gradient
-        token="match"
-        direction="vertical"
-        style={{
-          paddingTop: spacing['4xl'],
-          paddingHorizontal: layout.gutter,
-          paddingBottom: spacing['3xl'],
-        }}
-      >
-        <Row justify="space-between">
-          <Row
-            gap="xs"
-            style={{
-              backgroundColor: 'rgba(255,255,255,0.2)',
-              borderRadius: radii.pill,
-              paddingHorizontal: spacing.md,
-              paddingVertical: 5,
-            }}
-          >
-            <Ionicons name="sparkles" size={12} color={colors.textInverse} />
-            <Text variant="caption" tone="inverse" style={{ fontWeight: '600' }}>
-              Barter match
-            </Text>
-          </Row>
+      <View style={{ paddingTop: spacing['2xl'], paddingHorizontal: layout.gutter }}>
+        <Row justify="flex-end">
           <Text
             variant="label"
-            tone="inverse"
+            tone="secondary"
             onPress={() =>
               router.canGoBack() ? router.back() : router.replace('/(app)/(tabs)/matches')
             }
@@ -204,29 +181,14 @@ export default function MatchDetailScreen() {
             Close
           </Text>
         </Row>
-
-        {/*
-          Two overlapping avatars rather than a row of three elements: the
-          overlap is the picture of the match itself — two people meeting —
-          and it leaves the full width for the names.
-        */}
-        <Row gap="md" align="center" style={{ marginTop: spacing.xl }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Avatar name="You" size={46} ring />
-            <View style={{ marginLeft: -14 }}>
-              <Avatar name={them} size={46} ring />
-            </View>
-          </View>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Text variant="h2" tone="inverse" numberOfLines={1}>
-              You and {them}
-            </Text>
-            <Text variant="bodySm" style={{ color: 'rgba(255,255,255,0.78)' }}>
-              An even, two-way trade
-            </Text>
-          </View>
-        </Row>
-      </Gradient>
+      </View>
+      <MatchMoment
+        youPhoto={demoPhoto(match.you.have.id)}
+        themPhoto={demoPhoto(match.them.have.id)}
+        youSeed={match.you.have.id}
+        themSeed={match.them.have.id}
+        them={them}
+      />
 
       {/* ------------------------------------------------------------ body -- */}
       <View style={{ paddingHorizontal: layout.gutter, paddingVertical: spacing['2xl'] }}>

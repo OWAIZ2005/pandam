@@ -6,9 +6,7 @@ import { View } from 'react-native';
 import {
   Avatar,
   Card,
-  CoverTile,
   Divider,
-  FloatingObject,
   Notice,
   Press,
   Rail,
@@ -19,7 +17,6 @@ import {
   SkeletonList,
   Stack,
   Text,
-  TiltCard,
   colors,
   layout,
   radii,

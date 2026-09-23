@@ -11,7 +11,7 @@
  *
  * Frontend-only. Must never be imported by `apps/worker` or any package.
  */
-import { demoAllItems, demoItem, demoListings, demoNeeds } from './data';
+import { demoItem, demoListings, demoNeeds } from './data';
 
 export const IS_DEMO_DATA = process.env.EXPO_PUBLIC_DEMO_DATA === '1';
 
@@ -73,5 +73,4 @@ export function demoPhoto(id: string): string | undefined {
   return demoItem(id)?.images?.[0]?.url;
 }
 
-export { demoAllItems };
 export * from './data';

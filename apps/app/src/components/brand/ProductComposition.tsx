@@ -42,7 +42,7 @@ interface LayerSpec {
  * on purpose — foreground camera, mid-layer headphones, sneakers on another
  * plane — so the result reads as a styled still life, not a grid of photos.
  */
-const LAYOUTS: Record<'stack' | 'compact' | 'scatter', LayerSpec[]> = {
+const LAYOUTS: Record<'stack' | 'compact', LayerSpec[]> = {
   stack: [
     {
       img: 'laptop',
@@ -75,13 +75,58 @@ const LAYOUTS: Record<'stack' | 'compact' | 'scatter', LayerSpec[]> = {
     { img: 'sneakers', x: 0.3, y: 0.44, w: 0.3, rz: 7, ry: 10, depth: 0.8, z: 3 },
     { img: 'camera', x: 0.31, y: 0.0, w: 0.38, rz: -4, ry: -8, depth: 1.2, z: 4 },
   ],
-  scatter: [
-    { img: 'headphones', x: 0.02, y: 0.06, w: 0.3, rz: -12, ry: 18, depth: 0.6, z: 1 },
-    { img: 'laptop', x: 0.66, y: 0.04, w: 0.32, rz: 10, ry: -16, depth: 0.4, z: 1 },
-    { img: 'sneakers', x: 0.0, y: 0.7, w: 0.3, rz: 8, ry: 14, depth: 0.8, z: 1 },
-    { img: 'camera', x: 0.68, y: 0.68, w: 0.3, rz: -8, ry: -12, depth: 1.1, z: 1 },
-  ],
 };
+
+/**
+ * Splash framing, computed in PIXELS from the measured box rather than as
+ * fractions: objects are pinned to the four corners and sized so the top pair
+ * ends above, and the bottom pair starts below, the wordmark's central band
+ * (the middle ~34% of the height). Fractional positions let objects drift
+ * into the wordmark on tall/narrow phones — this cannot.
+ */
+function scatterSpecs(w: number, h: number): LayerSpec[] {
+  const band = h * 0.17; // half-height of the wordmark's keep-out band
+  const room = h / 2 - band - h * 0.05; // vertical room available per corner
+  const size = Math.max(64, Math.min(w * 0.3, room, 170));
+  const mx = Math.max(12, w * 0.05);
+  const topY = h * 0.05;
+  const botY = h - size - h * 0.05;
+  const px = (x: number) => x / w;
+  const py = (y: number) => y / h;
+  return [
+    { img: 'headphones', x: px(mx), y: py(topY), w: size / w, rz: -10, ry: 14, depth: 0.6, z: 1 },
+    {
+      img: 'laptop',
+      x: px(w - size - mx),
+      y: py(topY + size * 0.18),
+      w: size / w,
+      rz: 9,
+      ry: -14,
+      depth: 0.4,
+      z: 1,
+    },
+    {
+      img: 'sneakers',
+      x: px(mx),
+      y: py(botY - size * 0.12),
+      w: size / w,
+      rz: 7,
+      ry: 12,
+      depth: 0.8,
+      z: 1,
+    },
+    {
+      img: 'camera',
+      x: px(w - size - mx),
+      y: py(botY),
+      w: size / w,
+      rz: -7,
+      ry: -12,
+      depth: 1.1,
+      z: 1,
+    },
+  ];
+}
 
 /* -------------------------------------------------------------------------- */
 
@@ -370,7 +415,7 @@ function ScaledScene({
 }) {
   const [w, setW] = useState(1);
   const box = { w, h: height };
-  const specs = LAYOUTS[layout];
+  const specs = layout === 'scatter' ? scatterSpecs(w, height) : LAYOUTS[layout];
 
   return (
     <View style={{ flex: 1 }} onLayout={(e) => setW(e.nativeEvent.layout.width)}>

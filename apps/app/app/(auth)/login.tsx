@@ -18,6 +18,7 @@ import {
 } from '@pandam/ui';
 
 import { AuthShell } from '@/components/brand/AuthShell';
+import { OAuthButtons, OAuthDivider } from '@/components/brand/OAuthButtons';
 import { ApiError } from '@/lib/api/client';
 import { useLogin } from '@/lib/auth/hooks';
 
@@ -64,6 +65,8 @@ export default function LoginScreen() {
           >
             <Stack gap="2xl">
               <Stack gap="lg">
+                <OAuthButtons onSuccess={() => router.replace('/(app)/(tabs)')} />
+                <OAuthDivider />
                 <Controller
                   control={control}
                   name="email"

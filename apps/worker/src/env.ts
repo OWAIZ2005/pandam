@@ -42,6 +42,27 @@ export interface Env {
    */
   EXPO_ACCESS_TOKEN?: string;
 
+  /**
+   * "Sign in with Google/Apple" — see `lib/oauth.ts` and
+   * `services/auth.ts#loginWithOAuth`. Not secrets (they are OAuth *client*
+   * ids, which are public by design — the security boundary is the provider's
+   * signature on the ID token, verified against their published JWKS), but
+   * kept out of `vars` since they are still deployment-specific.
+   *
+   *  - GOOGLE_OAUTH_CLIENT_IDS: comma-separated. One PANDAM project has a
+   *    separate OAuth client per platform (Web, iOS, Android) in Google Cloud
+   *    Console; every one of their client ids must be accepted as a valid
+   *    `aud` on the ID token, so all of them go in this one list.
+   *  - APPLE_OAUTH_AUDIENCES: comma-separated. Apple's `aud` is the iOS app's
+   *    bundle id for a native sign-in and the "Services ID" for web — both
+   *    belong in this list.
+   *
+   * Without these set, `/api/v1/auth/oauth` returns a clear `not_implemented`
+   * rather than silently accepting a token it cannot actually verify.
+   */
+  GOOGLE_OAUTH_CLIENT_IDS?: string;
+  APPLE_OAUTH_AUDIENCES?: string;
+
   /** D1 — enabled once the d1_databases binding is uncommented. */
   DB?: D1Database;
   /** R2 — enabled once the r2_buckets binding is uncommented. */

@@ -21,6 +21,7 @@ import { matchesRepository } from './matches';
 import { messagesRepository } from './messages';
 import { needsRepository } from './needs';
 import { notificationsRepository } from './notifications';
+import { oauthIdentitiesRepository } from './oauth-identities';
 import { offersRepository } from './offers';
 import { paymentsRepository } from './payments';
 import { profilesRepository } from './profiles';
@@ -34,6 +35,7 @@ export function createRepositories(db: Database) {
   return {
     users: usersRepository(db),
     credentials: credentialsRepository(db),
+    oauthIdentities: oauthIdentitiesRepository(db),
     sessions: sessionsRepository(db),
     profiles: profilesRepository(db),
     categories: categoriesRepository(db),
@@ -59,6 +61,7 @@ export type Repositories = ReturnType<typeof createRepositories>;
 
 export * from './helpers';
 export type { CreateUserInput } from './users';
+export type { CreateOAuthIdentityInput } from './oauth-identities';
 export type { CreateSessionInput } from './sessions';
 export type { CreateProfileInput, UpdateProfileInput } from './profiles';
 export type { CreateListingInput, UpdateListingInput } from './listings';

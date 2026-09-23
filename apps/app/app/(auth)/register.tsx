@@ -19,6 +19,7 @@ import {
 } from '@pandam/ui';
 
 import { AuthShell } from '@/components/brand/AuthShell';
+import { OAuthButtons, OAuthDivider } from '@/components/brand/OAuthButtons';
 import { PasswordRequirements } from '@/components/PasswordRequirements';
 import { ApiError } from '@/lib/api/client';
 import { useRegister } from '@/lib/auth/hooks';
@@ -82,6 +83,8 @@ export default function RegisterScreen() {
           >
             <Stack gap="2xl">
               <Stack gap="lg">
+                <OAuthButtons onSuccess={() => router.replace('/(app)/(tabs)')} />
+                <OAuthDivider />
                 <Controller
                   control={control}
                   name="displayName"

@@ -11,7 +11,7 @@
  * the query cache.
  */
 import { type AuthenticatedUser } from '@pandam/types';
-import { type LoginInput, type RegisterInput } from '@pandam/validation';
+import { type LoginInput, type OAuthLoginInput, type RegisterInput } from '@pandam/validation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { authApi } from '@/lib/api/auth';
@@ -62,6 +62,18 @@ export function useRegister() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: RegisterInput) => authApi.register(input),
+    onSuccess: async (s) => {
+      await sessionToken.set(s.token);
+      qc.setQueryData<AuthenticatedUser>(authKeys.me, { user: s.user, profile: s.profile });
+    },
+  });
+}
+
+/** "Continue with Google/Apple" — same result shape as `useLogin`/`useRegister`. */
+export function useOAuthLogin() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: OAuthLoginInput) => authApi.oauthLogin(input),
     onSuccess: async (s) => {
       await sessionToken.set(s.token);
       qc.setQueryData<AuthenticatedUser>(authKeys.me, { user: s.user, profile: s.profile });

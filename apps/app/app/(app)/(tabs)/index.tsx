@@ -95,7 +95,7 @@ function IntentCard({
         accessibilityLabel={label}
         onPress={onPress}
         style={{
-          minHeight: 212,
+          minHeight: 240,
           borderRadius: radii.xl,
           backgroundColor: bg,
           borderWidth: 1,
@@ -109,7 +109,7 @@ function IntentCard({
         {/* Floating photo stack — real things, not an icon. */}
         <View
           pointerEvents="none"
-          style={{ position: 'absolute', right: -6, top: 14, width: 104, height: 110 }}
+          style={{ position: 'absolute', right: -4, top: 10, width: 92, height: 84 }}
         >
           {photos.slice(0, 2).map((uri, i) => (
             <FloatingObject
@@ -119,15 +119,15 @@ function IntentCard({
               rotate={2}
               style={{
                 position: 'absolute',
-                right: i === 0 ? 22 : 0,
-                top: i === 0 ? 0 : 30,
+                right: i === 0 ? 20 : 0,
+                top: i === 0 ? 0 : 24,
                 transform: [{ rotate: i === 0 ? '-8deg' : '7deg' }],
               }}
             >
               <View
                 style={{
-                  width: 64,
-                  height: 64,
+                  width: 54,
+                  height: 54,
                   borderRadius: radii.md,
                   borderWidth: 3,
                   borderColor: colors.surface,
@@ -136,7 +136,7 @@ function IntentCard({
                   ...shadows.md,
                 }}
               >
-                <CoverTile seed={uri} uri={uri} height={58} radius="sm" />
+                <CoverTile seed={uri} uri={uri} height={48} radius="sm" />
               </View>
             </FloatingObject>
           ))}

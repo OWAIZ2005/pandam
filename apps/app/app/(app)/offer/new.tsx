@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 
 import { type MarketItem } from '@pandam/types';
@@ -21,6 +21,7 @@ import {
   layout,
   radii,
   spacing,
+  useMotionOK,
   useToast,
 } from '@pandam/ui';
 
@@ -133,6 +134,17 @@ export default function NewOfferScreen() {
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
+  // Visual only: hold the "trade proposal sent" moment briefly before the
+  // existing toast + navigation run, unchanged.
+  const motionOK = useMotionOK();
+  const [sent, setSent] = useState(false);
+  const sentTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (sentTimer.current) clearTimeout(sentTimer.current);
+    },
+    [],
+  );
 
   const eligible = useMemo(
     () =>
@@ -152,7 +164,7 @@ export default function NewOfferScreen() {
         : null;
 
   const submit = () => {
-    if (!selectedId || !requested.data) return;
+    if (!selectedId || !requested.data || sent) return;
     create.mutate(
       {
         toUserId: requested.data.ownerId,
@@ -162,8 +174,14 @@ export default function NewOfferScreen() {
       },
       {
         onSuccess: (res) => {
-          toast.success('Offer sent. You will hear when they reply.');
-          router.replace(`/(app)/offer/${res.offer.id}`);
+          setSent(true);
+          sentTimer.current = setTimeout(
+            () => {
+              toast.success('Offer sent. You will hear when they reply.');
+              router.replace(`/(app)/offer/${res.offer.id}`);
+            },
+            motionOK ? 1300 : 700,
+          );
         },
       },
     );
@@ -185,13 +203,19 @@ export default function NewOfferScreen() {
             </Notice>
           ) : null}
           <Button
-            label={create.isPending ? 'Sending…' : 'Send offer'}
+            label={sent ? 'Sent' : create.isPending ? 'Sending…' : 'Send offer'}
             size="lg"
             fullWidth
-            disabled={!selectedId}
+            disabled={!selectedId || sent}
             loading={create.isPending}
             onPress={submit}
-            leftIcon={<Ionicons name="paper-plane-outline" size={17} color={colors.textInverse} />}
+            leftIcon={
+              <Ionicons
+                name={sent ? 'checkmark' : 'paper-plane-outline'}
+                size={17}
+                color={colors.textInverse}
+              />
+            }
           />
           {!selectedId && eligible.length > 0 ? (
             <Text variant="caption" tone="muted" center>
@@ -224,6 +248,7 @@ export default function NewOfferScreen() {
           ) : requested.data ? (
             <TradeStage
               sending={create.isPending}
+              sent={sent}
               get={{
                 id: requested.data.id,
                 title: requested.data.title,

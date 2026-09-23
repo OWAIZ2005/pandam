@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
-import { View } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 
 import {
   Avatar,
   Card,
+  CoverTile,
   Divider,
   Notice,
   Press,
@@ -98,6 +99,8 @@ function Stat({
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const wide = width >= 1024;
   const { profile } = useSession();
   const name = profile?.displayName?.split(' ')[0] ?? 'there';
 
@@ -135,6 +138,7 @@ export default function HomeScreen() {
     <Screen
       scroll
       padded={false}
+      contentStyle={{ maxWidth: '100%' }}
       edges={['top']}
       tabBarInset
       onRefresh={() =>
@@ -145,7 +149,7 @@ export default function HomeScreen() {
       <View
         style={{
           width: '100%',
-          maxWidth: layout.contentMaxWidth,
+          maxWidth: wide ? 1080 : layout.contentMaxWidth,
           alignSelf: 'center',
           paddingHorizontal: layout.gutter,
           paddingTop: spacing.lg,
@@ -220,50 +224,105 @@ export default function HomeScreen() {
           </Press>
 
           {/* ------------------------------------------- I HAVE / I NEED -- */}
-          <Reveal index={1}>
-            <ExchangeHero
-              havePhoto={havePhotos[0]}
-              needPhoto={needPhotos[0]}
-              haveCount={activeHave}
-              needCount={activeNeed}
-              onHave={() => router.push('/(app)/new-listing')}
-              onNeed={() => router.push('/(app)/new-need')}
-            />
-          </Reveal>
-
-          <Reveal index={2}>
-            {/* ------------------------------------------------------ stats -- */}
-            <Card padded={false} radius="xl">
-              <Row style={{ paddingHorizontal: spacing.xs }}>
-                <Stat
-                  value={activeHave}
-                  label="listed"
-                  tone="accent"
-                  onPress={() => router.push('/(app)/(tabs)/profile')}
+          <View
+            style={
+              wide
+                ? { flexDirection: 'row', gap: spacing['2xl'], alignItems: 'stretch' }
+                : { gap: spacing['2xl'] }
+            }
+          >
+            <View style={wide ? { flex: 1.5 } : undefined}>
+              <Reveal index={1}>
+                <ExchangeHero
+                  havePhoto={havePhotos[0]}
+                  needPhoto={needPhotos[0]}
+                  haveCount={activeHave}
+                  needCount={activeNeed}
+                  onHave={() => router.push('/(app)/new-listing')}
+                  onNeed={() => router.push('/(app)/new-need')}
                 />
-                <Divider
-                  tone="soft"
-                  style={{ width: 1, height: 'auto', marginVertical: spacing.md }}
-                />
-                <Stat
-                  value={activeNeed}
-                  label="needed"
-                  tone="need"
-                  onPress={() => router.push('/(app)/(tabs)/profile')}
-                />
-                <Divider
-                  tone="soft"
-                  style={{ width: 1, height: 'auto', marginVertical: spacing.md }}
-                />
-                <Stat
-                  value={matchCount}
-                  label="matches"
-                  tone="match"
-                  onPress={() => router.push('/(app)/(tabs)/matches')}
-                />
-              </Row>
-            </Card>
-          </Reveal>
+              </Reveal>
+            </View>
+            <View style={wide ? { flex: 1, gap: spacing.lg } : undefined}>
+              <Reveal index={2}>
+                {/* ------------------------------------------------------ stats -- */}
+                <Card padded={false} radius="xl">
+                  <Row style={{ paddingHorizontal: spacing.xs }}>
+                    <Stat
+                      value={activeHave}
+                      label="listed"
+                      tone="accent"
+                      onPress={() => router.push('/(app)/(tabs)/profile')}
+                    />
+                    <Divider
+                      tone="soft"
+                      style={{ width: 1, height: 'auto', marginVertical: spacing.md }}
+                    />
+                    <Stat
+                      value={activeNeed}
+                      label="needed"
+                      tone="need"
+                      onPress={() => router.push('/(app)/(tabs)/profile')}
+                    />
+                    <Divider
+                      tone="soft"
+                      style={{ width: 1, height: 'auto', marginVertical: spacing.md }}
+                    />
+                    <Stat
+                      value={matchCount}
+                      label="matches"
+                      tone="match"
+                      onPress={() => router.push('/(app)/(tabs)/matches')}
+                    />
+                  </Row>
+                </Card>
+              </Reveal>
+              {wide ? (
+                <Reveal index={3} style={{ flex: 1 }}>
+                  <Press
+                    scale="sm"
+                    lift
+                    accessibilityRole="button"
+                    accessibilityLabel="Browse what others have"
+                    onPress={() => goDiscover()}
+                    style={{
+                      flex: 1,
+                      minHeight: 180,
+                      borderRadius: radii['2xl'],
+                      overflow: 'hidden',
+                      ...shadows.sm,
+                    }}
+                  >
+                    <CoverTile
+                      seed="browse"
+                      uri={recentItems[3] ? primaryImage(recentItems[3].images) : undefined}
+                      height={400}
+                      radius="none"
+                      style={{ position: 'absolute', inset: 0, height: '100%' }}
+                    />
+                    <View
+                      style={{ flex: 1, justifyContent: 'flex-end', padding: spacing.xl, gap: 4 }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 22,
+                          lineHeight: 26,
+                          fontWeight: '800',
+                          letterSpacing: -0.5,
+                          color: colors.textInverse,
+                        }}
+                      >
+                        Browse what others have
+                      </Text>
+                      <Text variant="bodySm" style={{ color: 'rgba(255,253,249,0.85)' }}>
+                        {recentItems.length} things listed near you
+                      </Text>
+                    </View>
+                  </Press>
+                </Reveal>
+              ) : null}
+            </View>
+          </View>
         </Stack>
       </View>
 
@@ -271,7 +330,7 @@ export default function HomeScreen() {
       <View
         style={{
           width: '100%',
-          maxWidth: layout.contentMaxWidth,
+          maxWidth: wide ? 1080 : layout.contentMaxWidth,
           alignSelf: 'center',
           paddingHorizontal: layout.gutter,
           paddingTop: spacing['3xl'],

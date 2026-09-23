@@ -6,7 +6,6 @@ import { FlatList, ScrollView, View, useWindowDimensions } from 'react-native';
 import {
   Chip,
   EmptyState,
-  Reveal,
   Row,
   Screen,
   SearchInput,
@@ -29,7 +28,6 @@ import { type MarketKind } from '@/lib/api/market';
 import { useCategories } from '@/lib/hooks/useCategories';
 import { useDebounced } from '@/lib/hooks/useDebounced';
 import { useDiscover, useListingCities } from '@/lib/hooks/useMarket';
-import { PandamBackground } from '@/components/brand/PandamBackground';
 
 const KIND_OPTIONS = [
   { value: 'listing' as const, label: 'I HAVE', tone: 'accent' as const },
@@ -189,15 +187,13 @@ export default function DiscoverScreen() {
       ) : null}
 
       {featured ? (
-        <Reveal>
-          <ItemCard
-            item={featured}
-            variant="feature"
-            onPress={() =>
-              router.push(isHave ? `/(app)/listing/${featured.id}` : `/(app)/need/${featured.id}`)
-            }
-          />
-        </Reveal>
+        <ItemCard
+          item={featured}
+          variant="feature"
+          onPress={() =>
+            router.push(isHave ? `/(app)/listing/${featured.id}` : `/(app)/need/${featured.id}`)
+          }
+        />
       ) : null}
 
       {items.length > 0 ? (
@@ -217,7 +213,7 @@ export default function DiscoverScreen() {
   );
 
   return (
-    <Screen backdrop={<PandamBackground variant="discover" />} padded={false}>
+    <Screen padded={false}>
       {pinned}
 
       <FlatList
@@ -238,8 +234,8 @@ export default function DiscoverScreen() {
           flexGrow: 1,
         }}
         ListHeaderComponent={scrollingHeader}
-        renderItem={({ item, index }) => (
-          <Reveal index={index} style={{ flex: 1 / columns }}>
+        renderItem={({ item }) => (
+          <View style={{ flex: 1 / columns }}>
             <ItemCard
               item={item}
               variant="grid"
@@ -247,7 +243,7 @@ export default function DiscoverScreen() {
                 router.push(isHave ? `/(app)/listing/${item.id}` : `/(app)/need/${item.id}`)
               }
             />
-          </Reveal>
+          </View>
         )}
         onEndReachedThreshold={0.4}
         onEndReached={() => {

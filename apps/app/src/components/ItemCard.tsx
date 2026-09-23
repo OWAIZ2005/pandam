@@ -14,7 +14,6 @@ import {
   Press,
   Row,
   Text,
-  TiltCard,
   colors,
   radii,
   shadows,
@@ -41,10 +40,8 @@ export interface ItemCardProps {
 /**
  * The HAVE / NEED marker.
  *
- * A 3px coloured bar plus a word, not a pastel pill. On a photograph the bar
- * survives any background, and at the size a card actually gets on a phone it
- * is readable from further away than a tinted badge — which matters because
- * this is the single most important fact about any item in the product.
+ * A solid capsule on the photo, and a bar + word off it. Reads as one confident
+ * shape at thumbnail size — the single most important fact about any item.
  */
 function KindMark({ isHave, onPhoto = false }: { isHave: boolean; onPhoto?: boolean }) {
   const color = isHave ? colors.accent : colors.need;
@@ -55,17 +52,28 @@ function KindMark({ isHave, onPhoto = false }: { isHave: boolean; onPhoto?: bool
         style={{
           flexDirection: 'row',
           alignItems: 'center',
-          gap: spacing.xs,
+          gap: 5,
           alignSelf: 'flex-start',
-          backgroundColor: 'rgba(36,27,22,0.55)',
-          borderRadius: radii.pill,
-          paddingHorizontal: spacing.sm,
-          paddingVertical: 3,
+          backgroundColor: color,
+          borderRadius: radii.sm,
+          paddingHorizontal: 8,
+          paddingVertical: 4,
         }}
       >
-        <View style={{ width: 3, height: 10, borderRadius: 2, backgroundColor: color }} />
-        <Text variant="caption" style={{ color: colors.textInverse, fontWeight: '600' }}>
-          {isHave ? 'Have' : 'Need'}
+        <Ionicons
+          name={isHave ? 'pricetag' : 'search'}
+          size={10}
+          color={colors.textInverse}
+        />
+        <Text
+          style={{
+            fontSize: 10.5,
+            fontWeight: '800',
+            letterSpacing: 0.4,
+            color: colors.textInverse,
+          }}
+        >
+          {isHave ? 'HAVE' : 'WANTS'}
         </Text>
       </View>
     );
@@ -74,7 +82,7 @@ function KindMark({ isHave, onPhoto = false }: { isHave: boolean; onPhoto?: bool
   return (
     <Row gap="xs">
       <View style={{ width: 3, height: 11, borderRadius: 2, backgroundColor: color }} />
-      <Text variant="caption" tone={isHave ? 'accent' : 'need'} style={{ fontWeight: '600' }}>
+      <Text variant="caption" tone={isHave ? 'accent' : 'need'} style={{ fontWeight: '700' }}>
         {isHave ? 'Have' : 'Need'}
       </Text>
     </Row>
@@ -82,11 +90,48 @@ function KindMark({ isHave, onPhoto = false }: { isHave: boolean; onPhoto?: bool
 }
 
 /**
+ * The trade affordance — PANDAM's equivalent of Blinkit's "ADD" button: a
+ * small, confident, brand-coloured pill in the corner of every card that
+ * makes the primary action unmistakable at a glance. Purely visual: the whole
+ * card is the tap target, so this never nests a second pressable.
+ */
+function TradePill({ isHave }: { isHave: boolean }) {
+  const color = isHave ? colors.accent : colors.need;
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: isHave ? colors.accentSoft : colors.needSoft,
+        borderWidth: 1,
+        borderColor: isHave ? colors.accentBorder : colors.needBorder,
+        borderRadius: radii.sm,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+      }}
+    >
+      <Ionicons name="swap-horizontal" size={13} color={color} />
+      <Text style={{ fontSize: 12.5, fontWeight: '800', color, letterSpacing: 0.2 }}>Trade</Text>
+    </View>
+  );
+}
+
+/** A dot separator for dense metadata rows. */
+function Dot() {
+  return (
+    <View style={{ width: 2.5, height: 2.5, borderRadius: 2, backgroundColor: colors.textFaint }} />
+  );
+}
+
+/**
  * A listing ("I HAVE") or need ("I NEED") card.
  *
- * The cover shows the item's first photo when it has one; when it does not —
- * common, and always will be — `CoverTile` falls back to a gradient keyed to
- * the item id, so a scrolling wall of cards never reads as a grey list.
+ * Photo-forward and dense: the image fills the top edge-to-edge, the title and
+ * one line of concrete metadata (place · when) sit tight beneath it, and the
+ * trade action reads as a coloured pill in the corner. No tilt, no floating
+ * decoration — the photograph and the price do the work, the way a real
+ * marketplace card does.
  */
 export function ItemCard({
   item,
@@ -101,10 +146,12 @@ export function ItemCard({
   const price = item.pricing?.priceAmount;
   const label = `${isHave ? 'Have' : 'Need'}: ${item.title}`;
   const [hovered, setHovered] = useState(false);
-  // Image zoom on hover: the photo drifts closer inside its frame.
   const zoom = useAnimatedStyle(() => ({
-    transform: [{ scale: withSpring(hovered ? 1.07 : 1, { damping: 18, stiffness: 140 }) }],
+    transform: [{ scale: withSpring(hovered ? 1.06 : 1, { damping: 20, stiffness: 160 }) }],
   }));
+
+  const place = item.owner.locationCity;
+  const when = timeAgo(item.createdAt);
 
   /* ------------------------------------------------------------- feature -- */
   if (variant === 'feature') {
@@ -112,7 +159,6 @@ export function ItemCard({
       <View>
         <Press
           scale="sm"
-          lift
           accessibilityRole="button"
           accessibilityLabel={label}
           onPress={onPress}
@@ -120,18 +166,22 @@ export function ItemCard({
           onHoverOut={() => setHovered(false)}
           style={{
             backgroundColor: colors.surface,
-            borderRadius: radii['2xl'],
+            borderRadius: radii.xl,
             overflow: 'hidden',
-            ...shadows.md,
+            borderWidth: 1,
+            borderColor: colors.border,
+            ...shadows.sm,
           }}
+          states={{ hover: { ...shadows.md, borderColor: colors.borderStrong } }}
         >
-          <View style={{ height: 300, overflow: 'hidden' }}>
+          <View style={{ height: 260, overflow: 'hidden', backgroundColor: colors.surfaceMuted }}>
             <Animated.View style={[{ flex: 1 }, zoom]}>
               <CoverTile
                 seed={item.id}
-                height={300}
+                height={260}
                 radius="none"
                 uri={cover}
+                style={{ position: 'absolute', inset: 0, height: '100%' }}
                 icon={<Ionicons name={icon} size={120} color="rgba(255,255,255,0.5)" />}
               />
             </Animated.View>
@@ -140,25 +190,23 @@ export function ItemCard({
                 position: 'absolute',
                 top: spacing.md,
                 left: spacing.md,
-                right: spacing.md,
                 flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
+                gap: spacing.xs,
               }}
             >
               <View
                 style={{
                   backgroundColor: colors.accent,
-                  borderRadius: radii.pill,
-                  paddingHorizontal: spacing.md,
+                  borderRadius: radii.sm,
+                  paddingHorizontal: 10,
                   paddingVertical: 5,
                 }}
               >
                 <Text
                   style={{
-                    fontSize: 11,
+                    fontSize: 10.5,
                     fontWeight: '800',
-                    letterSpacing: 1.4,
+                    letterSpacing: 0.8,
                     color: colors.textInverse,
                   }}
                 >
@@ -172,15 +220,15 @@ export function ItemCard({
                 left: spacing.lg,
                 right: spacing.lg,
                 bottom: spacing.lg,
-                gap: 4,
+                gap: 6,
               }}
             >
               <Text
                 style={{
-                  fontSize: 24,
-                  lineHeight: 28,
+                  fontSize: 23,
+                  lineHeight: 27,
                   fontWeight: '800',
-                  letterSpacing: -0.6,
+                  letterSpacing: -0.5,
                   color: colors.textInverse,
                 }}
                 numberOfLines={2}
@@ -193,32 +241,36 @@ export function ItemCard({
                   size={20}
                   uri={mediaSrc(item.owner.avatarUrl)}
                 />
-                <Text variant="bodySm" style={{ color: 'rgba(255,253,249,0.9)' }} numberOfLines={1}>
+                <Text variant="bodySm" style={{ color: 'rgba(255,253,249,0.92)' }} numberOfLines={1}>
                   {item.owner.displayName}
-                  {item.owner.locationCity ? ` · ${item.owner.locationCity}` : ''}
+                  {place ? ` · ${place}` : ''}
                 </Text>
               </Row>
             </View>
           </View>
           <Row
             justify="space-between"
+            align="center"
             style={{ paddingHorizontal: spacing.lg, paddingVertical: spacing.md }}
           >
-            <Row gap="xs">
-              <Ionicons name="swap-horizontal" size={15} color={colors.accent} />
-              <Text variant="label" tone="accent" style={{ fontWeight: '700' }}>
-                Open to trade
-              </Text>
-            </Row>
             {price != null ? (
-              <Text variant="numeric" numeric tone="secondary">
-                or {formatMoney(price, item.pricing!.priceCurrency)}
-              </Text>
+              <Row gap="xs" align="baseline">
+                <Text variant="numericLarge" numeric style={{ fontWeight: '800' }}>
+                  {formatMoney(price, item.pricing!.priceCurrency)}
+                </Text>
+                <Text variant="caption" tone="muted">
+                  or trade
+                </Text>
+              </Row>
             ) : (
-              <Text variant="caption" tone="muted">
-                {item.category.name}
-              </Text>
+              <Row gap="xs" align="center">
+                <Ionicons name="swap-horizontal" size={16} color={colors.accent} />
+                <Text variant="bodyStrong" tone="accent">
+                  Open to trade
+                </Text>
+              </Row>
             )}
+            <TradePill isHave={isHave} />
           </Row>
         </Press>
         <View style={{ position: 'absolute', top: spacing.md, right: spacing.md }}>
@@ -230,17 +282,17 @@ export function ItemCard({
 
   /* ---------------------------------------------------------------- tile -- */
   if (variant === 'grid' || variant === 'rail') {
+    const isRail = variant === 'rail';
     return (
-      <TiltCard
-        maxTilt={4}
+      <View
         style={{
-          flex: variant === 'grid' ? 1 : undefined,
-          width: variant === 'rail' ? 176 : undefined,
+          position: 'relative',
+          flex: isRail ? undefined : 1,
+          width: isRail ? 168 : undefined,
         }}
       >
         <Press
           scale="sm"
-          lift
           accessibilityRole="button"
           accessibilityLabel={label}
           onPress={onPress}
@@ -248,86 +300,81 @@ export function ItemCard({
           onHoverOut={() => setHovered(false)}
           style={{
             ...shadows.xs,
-            flex: variant === 'grid' ? 1 : undefined,
-            width: variant === 'rail' ? 176 : undefined,
             backgroundColor: colors.surface,
-            borderRadius: radii.xl,
+            borderRadius: radii.lg,
             borderWidth: 1,
             borderColor: colors.border,
             overflow: 'hidden',
           }}
-          states={{ hover: { borderColor: colors.borderStrong } }}
+          states={{ hover: { ...shadows.md, borderColor: colors.borderStrong } }}
         >
-          <View style={{ height: variant === 'rail' ? 150 : 150, overflow: 'hidden' }}>
+          <View style={{ aspectRatio: 1.12, overflow: 'hidden', backgroundColor: colors.surfaceMuted }}>
             <Animated.View style={[{ flex: 1 }, zoom]}>
               <CoverTile
                 seed={item.id}
-                height={150}
+                height={200}
                 radius="none"
                 uri={cover}
+                style={{ position: 'absolute', inset: 0, height: '100%' }}
                 icon={<Ionicons name={icon} size={64} color="rgba(255,255,255,0.5)" />}
               />
             </Animated.View>
-            <View
-              style={{
-                position: 'absolute',
-                top: spacing.sm,
-                left: spacing.sm,
-                right: spacing.sm,
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-              }}
-            >
+            <View style={{ position: 'absolute', top: spacing.sm, left: spacing.sm }}>
               <KindMark isHave={isHave} onPhoto />
             </View>
           </View>
 
-          <View style={{ padding: spacing.md, gap: spacing.xs }}>
+          <View style={{ padding: spacing.md, gap: 5 }}>
             <Text
               variant="bodyStrong"
               numberOfLines={2}
-              style={{ minHeight: 44, letterSpacing: -0.2 }}
+              style={{ minHeight: 40, letterSpacing: -0.2, lineHeight: 20 }}
             >
               {item.title}
             </Text>
 
-            {price != null ? (
-              <Text variant="numeric" numeric tone="need">
-                {formatMoney(price, item.pricing!.priceCurrency)}
-              </Text>
-            ) : null}
-
-            <Meta>
-              <MetaItem
-                icon={<Ionicons name={icon} size={11} color={colors.textMuted} />}
-                label={item.category.name}
-              />
-              {item.owner.locationCity ? <MetaItem label={item.owner.locationCity} /> : null}
-            </Meta>
-
-            {showOwner ? (
-              <Row gap="xs" style={{ marginTop: spacing.xxs }}>
-                <Avatar
-                  name={item.owner.displayName}
-                  size={16}
-                  uri={mediaSrc(item.owner.avatarUrl)}
-                />
-                <Text variant="caption" tone="muted" numberOfLines={1} style={{ flex: 1 }}>
-                  {item.owner.displayName}
+            {/* place · when — concrete data, the marketplace signal */}
+            <Row gap="xs" align="center" style={{ minHeight: 16 }}>
+              {place ? (
+                <>
+                  <Ionicons name="location" size={11} color={colors.textFaint} />
+                  <Text variant="caption" tone="muted" numberOfLines={1} style={{ flexShrink: 1 }}>
+                    {place}
+                  </Text>
+                </>
+              ) : (
+                <Text variant="caption" tone="muted" numberOfLines={1}>
+                  {item.category.name}
                 </Text>
-              </Row>
-            ) : showStatus ? (
-              <View style={{ marginTop: spacing.xxs }}>
+              )}
+              <Dot />
+              <Text variant="caption" tone="faint" numberOfLines={1}>
+                {when}
+              </Text>
+            </Row>
+
+            <Row justify="space-between" align="center" style={{ marginTop: 3 }}>
+              {price != null ? (
+                <Text variant="numeric" numeric style={{ fontWeight: '800', letterSpacing: -0.3 }}>
+                  {formatMoney(price, item.pricing!.priceCurrency)}
+                </Text>
+              ) : (
+                <Text variant="label" tone={isHave ? 'accent' : 'need'} style={{ fontWeight: '700' }}>
+                  Barter only
+                </Text>
+              )}
+              {showStatus ? (
                 <Badge label={STATUS_LABEL[item.status]} kind={statusBadgeKind(item.status)} dot />
-              </View>
-            ) : null}
+              ) : (
+                <TradePill isHave={isHave} />
+              )}
+            </Row>
           </View>
         </Press>
         <View style={{ position: 'absolute', top: spacing.sm, right: spacing.sm }}>
           <SaveHeart size={30} />
         </View>
-      </TiltCard>
+      </View>
     );
   }
 
@@ -337,11 +384,11 @@ export function ItemCard({
       <Row gap="md" align="flex-start" style={{ padding: spacing.md }}>
         <CoverTile
           seed={item.id}
-          height={84}
+          height={88}
           radius="lg"
           uri={cover}
           icon={<Ionicons name={icon} size={44} color="rgba(255,255,255,0.5)" />}
-          style={{ width: 84 }}
+          style={{ width: 88 }}
         />
 
         <View style={{ flex: 1, gap: spacing.xs, minWidth: 0 }}>
@@ -352,15 +399,11 @@ export function ItemCard({
                 <Badge label={STATUS_LABEL[item.status]} kind={statusBadgeKind(item.status)} dot />
               ) : null}
               <Text variant="caption" tone="faint">
-                {timeAgo(item.createdAt)}
+                {when}
               </Text>
             </Row>
           </Row>
 
-          {/*
-            The title is the one thing that must be readable while scrolling
-            past, so it is the only element here above caption size.
-          */}
           <Text variant="h3" numberOfLines={2}>
             {item.title}
           </Text>
@@ -369,7 +412,7 @@ export function ItemCard({
             {item.description}
           </Text>
 
-          <Row justify="space-between" gap="sm" style={{ marginTop: spacing.xxs }}>
+          <Row justify="space-between" gap="sm" align="center" style={{ marginTop: spacing.xxs }}>
             <Meta>
               <MetaItem
                 icon={<Ionicons name={icon} size={11} color={colors.textMuted} />}
@@ -380,7 +423,7 @@ export function ItemCard({
             </Meta>
 
             {price != null ? (
-              <Text variant="numeric" numeric tone="need">
+              <Text variant="numeric" numeric tone="need" style={{ fontWeight: '800' }}>
                 {formatMoney(price, item.pricing!.priceCurrency)}
               </Text>
             ) : null}

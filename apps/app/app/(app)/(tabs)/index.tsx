@@ -5,13 +5,9 @@ import { View, useWindowDimensions } from 'react-native';
 
 import {
   Avatar,
-  Card,
-  CoverTile,
-  Divider,
   Notice,
   Press,
   Rail,
-  Reveal,
   Row,
   Screen,
   Section,
@@ -28,7 +24,6 @@ import {
 import { CategoryGrid } from '@/components/CategoryFilter';
 import { ItemCard } from '@/components/ItemCard';
 import { MatchCard } from '@/components/MatchCard';
-import { ExchangeHero } from '@/components/brand/ExchangeHero';
 import { ErrorState } from '@/components/states';
 import {
   demoCategoryList,
@@ -37,15 +32,13 @@ import {
   demoMyNeeds,
   demoOthersListings,
   demoPages,
-  demoPhoto,
   demoQuery,
 } from '@/dummy';
-import { mediaSrc, primaryImage } from '@/lib/api/media';
+import { mediaSrc } from '@/lib/api/media';
 import { useSession } from '@/lib/auth/hooks';
 import { useCategories } from '@/lib/hooks/useCategories';
 import { useDiscover, useMyItems } from '@/lib/hooks/useMarket';
 import { useMatches } from '@/lib/hooks/useMatches';
-import { PandamBackground } from '@/components/brand/PandamBackground';
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -57,13 +50,94 @@ function greeting(): string {
 /* -------------------------------------------------------------------------- */
 
 /**
- * One figure in the stat row.
- *
- * No icon and no coloured disc: the number IS the content, and a 34px circle
- * next to a single digit was drawing the eye away from it. Tabular figures
- * keep the three columns aligned as the counts change.
+ * A big, confident entry point — PANDAM's version of the bold colour-blocked
+ * action a consumer app puts front and centre. Solid brand fill, one icon, a
+ * verb, and the live count of what you already have running. No floating
+ * photos, no gradient haze: a decisive tap target.
  */
-function Stat({
+function ActionTile({
+  tone,
+  icon,
+  kicker,
+  label,
+  count,
+  onPress,
+}: {
+  tone: 'accent' | 'need';
+  icon: keyof typeof Ionicons.glyphMap;
+  kicker: string;
+  label: string;
+  count: number;
+  onPress: () => void;
+}) {
+  const bg = tone === 'accent' ? colors.accent : colors.need;
+  return (
+    <Press
+      scale="sm"
+      accessibilityRole="button"
+      accessibilityLabel={`${kicker} ${label}`}
+      onPress={onPress}
+      style={{
+        flex: 1,
+        backgroundColor: bg,
+        borderRadius: radii.lg,
+        padding: spacing.lg,
+        gap: spacing.lg,
+        minHeight: 132,
+        justifyContent: 'space-between',
+        ...shadows.sm,
+      }}
+    >
+      <Row justify="space-between" align="flex-start">
+        <View
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: radii.md,
+            backgroundColor: 'rgba(255,255,255,0.18)',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Ionicons name={icon} size={20} color={colors.textInverse} />
+        </View>
+        <View
+          style={{
+            width: 26,
+            height: 26,
+            borderRadius: radii.pill,
+            backgroundColor: 'rgba(255,255,255,0.18)',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Ionicons name="add" size={18} color={colors.textInverse} />
+        </View>
+      </Row>
+      <View style={{ gap: 1 }}>
+        <Text
+          style={{
+            fontSize: 10.5,
+            fontWeight: '800',
+            letterSpacing: 0.8,
+            color: 'rgba(255,255,255,0.85)',
+          }}
+        >
+          {kicker}
+        </Text>
+        <Text style={{ fontSize: 17, fontWeight: '800', letterSpacing: -0.3, color: colors.textInverse }}>
+          {label}
+        </Text>
+        <Text variant="caption" style={{ color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>
+          {count > 0 ? `${count} active` : 'Add your first'}
+        </Text>
+      </View>
+    </Press>
+  );
+}
+
+/** Compact match counter, sits on the surface strip under the action tiles. */
+function StatChip({
   value,
   label,
   tone,
@@ -76,22 +150,20 @@ function Stat({
 }) {
   return (
     <Press
-      scale="none"
+      scale="sm"
       dim={false}
       accessibilityRole="button"
       accessibilityLabel={`${value} ${label}`}
       onPress={onPress}
-      style={{ flex: 1, paddingVertical: spacing.md, borderRadius: radii.sm }}
+      style={{ flex: 1, alignItems: 'center', paddingVertical: spacing.sm, gap: 1 }}
       states={{ hover: { backgroundColor: colors.surfaceHover } }}
     >
-      <View style={{ alignItems: 'center', gap: 2 }}>
-        <Text variant="numericLarge" numeric tone={value === 0 ? 'faint' : tone}>
-          {value}
-        </Text>
-        <Text variant="caption" tone="muted" center numberOfLines={2}>
-          {label}
-        </Text>
-      </View>
+      <Text variant="numericLarge" numeric tone={value === 0 ? 'faint' : tone} style={{ fontWeight: '800' }}>
+        {value}
+      </Text>
+      <Text variant="caption" tone="muted">
+        {label}
+      </Text>
     </Press>
   );
 }
@@ -125,19 +197,8 @@ export default function HomeScreen() {
   const matchCount = matches.data?.length ?? 0;
   const hasNothingListed = activeHave === 0 && activeNeed === 0;
 
-  // Photos for the intent cards: your own things first, then the community's.
-  const havePhotos = [...(myHave.data ?? []), ...recentItems]
-    .map((i) => primaryImage(i.images))
-    .filter((u): u is string => !!u);
-  const matchPhoto = matches.data?.[0] ? demoPhoto(matches.data[0].them.have.id) : undefined;
-  const needPhotos = [
-    ...(matchPhoto ? [matchPhoto] : []),
-    ...recentItems.slice(2).map((i) => primaryImage(i.images)),
-  ].filter((u): u is string => !!u);
-
   return (
     <Screen
-      backdrop={<PandamBackground variant="home" />}
       scroll
       padded={false}
       contentStyle={{ maxWidth: '100%' }}
@@ -154,23 +215,17 @@ export default function HomeScreen() {
           maxWidth: wide ? 1080 : layout.contentMaxWidth,
           alignSelf: 'center',
           paddingHorizontal: layout.gutter,
-          paddingTop: spacing.lg,
+          paddingTop: spacing.md,
         }}
       >
-        <Stack gap="2xl">
+        <Stack gap="xl">
           {/* --------------------------------------------------- greeting -- */}
-          {/*
-            No gradient banner here. The marketing hero belongs on the way IN
-            to the product; once you are inside, a coloured slab across the top
-            of every visit is just something to scroll past. The page starts
-            with who you are and what you can do.
-          */}
-          <Row justify="space-between" align="center" gap="md">
+          <Row justify="space-between" align="center" gap={spacing.md}>
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text variant="label" tone="muted">
                 {greeting()},
               </Text>
-              <Text variant="display" numberOfLines={1}>
+              <Text variant="hero" numberOfLines={1}>
                 {name}
               </Text>
             </View>
@@ -182,21 +237,11 @@ export default function HomeScreen() {
               onPress={() => router.push('/(app)/(tabs)/profile')}
               style={{ borderRadius: radii.pill }}
             >
-              <Avatar
-                name={profile?.displayName ?? 'You'}
-                size={44}
-                uri={mediaSrc(profile?.avatarUrl)}
-              />
+              <Avatar name={profile?.displayName ?? 'You'} size={46} uri={mediaSrc(profile?.avatarUrl)} />
             </Press>
           </Row>
 
           {/* ----------------------------------------------------- search -- */}
-          {/*
-            A real-looking field that opens Discover. It is a button, not an
-            input, and is labelled as one for assistive tech — but it has to
-            LOOK like the search box it leads to, or the tap feels like a
-            detour instead of a continuation.
-          */}
           <Press
             scale="sm"
             accessibilityRole="button"
@@ -207,124 +252,85 @@ export default function HomeScreen() {
               alignItems: 'center',
               gap: spacing.sm,
               backgroundColor: colors.surface,
-              borderWidth: 1,
+              borderWidth: 1.5,
               borderColor: colors.border,
-              borderRadius: radii.pill,
+              borderRadius: radii.md,
               paddingHorizontal: spacing.lg,
-              height: 50,
+              height: 52,
               ...shadows.xs,
             }}
             states={{
-              hover: { borderColor: colors.borderStrong },
+              hover: { borderColor: colors.accentBorder },
               pressed: { backgroundColor: colors.surfaceHover },
             }}
           >
-            <Ionicons name="search" size={17} color={colors.textMuted} />
-            <Text tone="muted" style={{ flex: 1 }} numberOfLines={1}>
-              Search skills, products, services…
+            <Ionicons name="search" size={19} color={colors.accent} />
+            <Text tone="muted" style={{ flex: 1, fontSize: 15 }} numberOfLines={1}>
+              Search cameras, skills, furniture…
             </Text>
+            <Ionicons name="options-outline" size={18} color={colors.textMuted} />
           </Press>
 
           {/* ------------------------------------------- I HAVE / I NEED -- */}
-          <View
-            style={
-              wide
-                ? { flexDirection: 'row', gap: spacing['2xl'], alignItems: 'stretch' }
-                : { gap: spacing['2xl'] }
-            }
+          <Row gap={spacing.md} align="flex-start">
+            <ActionTile
+              tone="accent"
+              icon="cube"
+              kicker="I HAVE"
+              label="List an item"
+              count={activeHave}
+              onPress={() => router.push('/(app)/new-listing')}
+            />
+            <ActionTile
+              tone="need"
+              icon="search"
+              kicker="I NEED"
+              label="Post a want"
+              count={activeNeed}
+              onPress={() => router.push('/(app)/new-need')}
+            />
+          </Row>
+
+          {/* --------------------------------------------------- matches -- */}
+          <Press
+            scale="sm"
+            accessibilityRole="button"
+            accessibilityLabel={`${matchCount} matches`}
+            onPress={() => router.push('/(app)/(tabs)/matches')}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.md,
+              backgroundColor: colors.matchSoft,
+              borderWidth: 1,
+              borderColor: colors.matchBorder,
+              borderRadius: radii.lg,
+              padding: spacing.md,
+            }}
+            states={{ hover: { borderColor: colors.match } }}
           >
-            <View style={wide ? { flex: 1.5 } : undefined}>
-              <Reveal index={1}>
-                <ExchangeHero
-                  havePhoto={havePhotos[0]}
-                  needPhoto={needPhotos[0]}
-                  haveCount={activeHave}
-                  needCount={activeNeed}
-                  onHave={() => router.push('/(app)/new-listing')}
-                  onNeed={() => router.push('/(app)/new-need')}
-                />
-              </Reveal>
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: radii.md,
+                backgroundColor: colors.match,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="git-compare" size={20} color={colors.textInverse} />
             </View>
-            <View style={wide ? { flex: 1, gap: spacing.lg } : undefined}>
-              <Reveal index={2}>
-                {/* ------------------------------------------------------ stats -- */}
-                <Card padded={false} radius="xl">
-                  <Row style={{ paddingHorizontal: spacing.xs }}>
-                    <Stat
-                      value={activeHave}
-                      label="listed"
-                      tone="accent"
-                      onPress={() => router.push('/(app)/(tabs)/profile')}
-                    />
-                    <Divider
-                      tone="soft"
-                      style={{ width: 1, height: 'auto', marginVertical: spacing.md }}
-                    />
-                    <Stat
-                      value={activeNeed}
-                      label="needed"
-                      tone="need"
-                      onPress={() => router.push('/(app)/(tabs)/profile')}
-                    />
-                    <Divider
-                      tone="soft"
-                      style={{ width: 1, height: 'auto', marginVertical: spacing.md }}
-                    />
-                    <Stat
-                      value={matchCount}
-                      label="matches"
-                      tone="match"
-                      onPress={() => router.push('/(app)/(tabs)/matches')}
-                    />
-                  </Row>
-                </Card>
-              </Reveal>
-              {wide ? (
-                <Reveal index={3} style={{ flex: 1 }}>
-                  <Press
-                    scale="sm"
-                    lift
-                    accessibilityRole="button"
-                    accessibilityLabel="Browse what others have"
-                    onPress={() => goDiscover()}
-                    style={{
-                      flex: 1,
-                      minHeight: 180,
-                      borderRadius: radii['2xl'],
-                      overflow: 'hidden',
-                      ...shadows.sm,
-                    }}
-                  >
-                    <CoverTile
-                      seed="browse"
-                      uri={recentItems[3] ? primaryImage(recentItems[3].images) : undefined}
-                      height={400}
-                      radius="none"
-                      style={{ position: 'absolute', inset: 0, height: '100%' }}
-                    />
-                    <View
-                      style={{ flex: 1, justifyContent: 'flex-end', padding: spacing.xl, gap: 4 }}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 22,
-                          lineHeight: 26,
-                          fontWeight: '800',
-                          letterSpacing: -0.5,
-                          color: colors.textInverse,
-                        }}
-                      >
-                        Browse what others have
-                      </Text>
-                      <Text variant="bodySm" style={{ color: 'rgba(255,253,249,0.85)' }}>
-                        {recentItems.length} things listed near you
-                      </Text>
-                    </View>
-                  </Press>
-                </Reveal>
-              ) : null}
+            <View style={{ flex: 1 }}>
+              <Text variant="bodyStrong" tone="match" style={{ fontWeight: '800' }}>
+                {matchCount > 0 ? `${matchCount} barter match${matchCount === 1 ? '' : 'es'}` : 'No matches yet'}
+              </Text>
+              <Text variant="caption" tone="secondary" numberOfLines={1}>
+                {matchCount > 0 ? 'Someone wants what you have' : 'List items to find your mirror'}
+              </Text>
             </View>
-          </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.matchText} />
+          </Press>
         </Stack>
       </View>
 
@@ -335,88 +341,44 @@ export default function HomeScreen() {
           maxWidth: wide ? 1080 : layout.contentMaxWidth,
           alignSelf: 'center',
           paddingHorizontal: layout.gutter,
-          paddingTop: spacing['3xl'],
+          paddingTop: spacing['2xl'],
         }}
       >
-        <Stack gap="3xl">
-          {/* ---------------------------------------------------- matches -- */}
-          <Section
-            eyebrow="Reciprocal"
-            title="Your barter matches"
-            actionLabel={matchCount > 0 ? 'See all' : undefined}
-            onAction={matchCount > 0 ? () => router.push('/(app)/(tabs)/matches') : undefined}
-          >
-            {matches.isPending ? (
-              <SkeletonList count={1} />
-            ) : matches.isError ? (
-              <ErrorState error={matches.error} onRetry={() => void matches.refetch()} />
-            ) : matchCount === 0 ? (
-              /*
-               * The empty match state depends on WHY it is empty. With nothing
-               * listed, matching cannot work yet and the fix is to list
-               * something; with items listed, there is simply no mirror yet and
-               * the useful next move is to go looking.
-               */
-              <Card tone="match" padded>
-                <Stack gap="md">
-                  <Row gap="sm">
-                    <Ionicons name="sparkles" size={16} color={colors.match} />
-                    <Text variant="bodyStrong" tone="match">
-                      No match yet
-                    </Text>
-                  </Row>
-                  <Text variant="bodySm" tone="secondary">
-                    {hasNothingListed
-                      ? 'Matching needs both halves: something you have, and something you need. Add one of each and we will watch for your mirror.'
-                      : 'Nobody mirrors you yet — they would need to want what you have and have what you want. We will tell you the moment it happens.'}
-                  </Text>
-                  <Press
-                    onPress={
-                      hasNothingListed ? () => router.push('/(app)/new-need') : () => goDiscover()
-                    }
-                    scale="sm"
-                    hitSlop={10}
-                    accessibilityRole="button"
-                    style={{ alignSelf: 'flex-start' }}
-                  >
-                    <Row gap="xs">
-                      <Text variant="label" tone="match">
-                        {hasNothingListed ? 'Add what you need' : 'Browse what others have'}
-                      </Text>
-                      <Ionicons name="arrow-forward" size={13} color={colors.matchText} />
-                    </Row>
-                  </Press>
-                </Stack>
-              </Card>
-            ) : (
-              <Stack gap="md">
-                {matches.data!.slice(0, 2).map((m) => (
-                  <MatchCard
-                    key={m.key}
-                    match={m}
-                    onPress={() => router.push('/(app)/(tabs)/matches')}
-                  />
-                ))}
-              </Stack>
-            )}
-          </Section>
-
+        <Stack gap="2xl">
           {/* ------------------------------------------------- categories -- */}
           {categories.data && categories.data.length > 0 ? (
             <Section title="Browse by category" actionLabel="All" onAction={() => goDiscover()}>
-              <CategoryGrid
-                categories={categories.data}
-                limit={8}
-                onSelect={(id) => goDiscover(id)}
-              />
+              <CategoryGrid categories={categories.data} limit={8} onSelect={(id) => goDiscover(id)} />
+            </Section>
+          ) : null}
+
+          {/* ---------------------------------------------------- matches -- */}
+          {matchCount > 0 ? (
+            <Section
+              eyebrow="Reciprocal"
+              title="Your barter matches"
+              actionLabel="See all"
+              onAction={() => router.push('/(app)/(tabs)/matches')}
+            >
+              {matches.isPending ? (
+                <SkeletonList count={1} />
+              ) : matches.isError ? (
+                <ErrorState error={matches.error} onRetry={() => void matches.refetch()} />
+              ) : (
+                <Stack gap="md">
+                  {matches.data!.slice(0, 2).map((m) => (
+                    <MatchCard key={m.key} match={m} onPress={() => router.push('/(app)/(tabs)/matches')} />
+                  ))}
+                </Stack>
+              )}
             </Section>
           ) : null}
 
           {/* ----------------------------------------------------- recent -- */}
           <Section
-            title="People are offering"
-            subtitle="Freshly listed by other members"
-            actionLabel="Discover"
+            title="Fresh near you"
+            subtitle="Just listed by other members"
+            actionLabel="See all"
             onAction={() => goDiscover()}
           >
             {recent.isPending ? (
@@ -444,32 +406,50 @@ export default function HomeScreen() {
             )}
           </Section>
 
+          {/* --------------------------------------------- match counters -- */}
+          <View
+            style={{
+              flexDirection: 'row',
+              backgroundColor: colors.surface,
+              borderWidth: 1,
+              borderColor: colors.border,
+              borderRadius: radii.lg,
+              overflow: 'hidden',
+            }}
+          >
+            <StatChip value={activeHave} label="listed" tone="accent" onPress={() => router.push('/(app)/(tabs)/profile')} />
+            <View style={{ width: 1, backgroundColor: colors.borderSoft }} />
+            <StatChip value={activeNeed} label="wanted" tone="need" onPress={() => router.push('/(app)/(tabs)/profile')} />
+            <View style={{ width: 1, backgroundColor: colors.borderSoft }} />
+            <StatChip value={matchCount} label="matches" tone="match" onPress={() => router.push('/(app)/(tabs)/matches')} />
+          </View>
+
           {/* ----------------------------------------------- how it works -- */}
-          {/*
-            Kept only while the user has nothing listed. Once someone is
-            actually trading, an explanation of what barter is has stopped
-            being help and become clutter on every visit.
-          */}
           {hasNothingListed ? (
-            <Card tone="muted" bordered padded>
-              <Stack gap="sm">
-                <Text variant="label" tone="secondary">
-                  How barter works here
+            <View
+              style={{
+                backgroundColor: colors.surfaceMuted,
+                borderRadius: radii.lg,
+                padding: spacing.lg,
+                gap: spacing.sm,
+              }}
+            >
+              <Text variant="label" tone="secondary" style={{ fontWeight: '700' }}>
+                How barter works here
+              </Text>
+              <Text variant="bodySm" tone="secondary">
+                You have{' '}
+                <Text variant="bodySm" tone="accent" style={{ fontWeight: '700' }}>
+                  web design
+                </Text>{' '}
+                and need{' '}
+                <Text variant="bodySm" tone="need" style={{ fontWeight: '700' }}>
+                  photography
                 </Text>
-                <Text variant="bodySm" tone="secondary">
-                  You have{' '}
-                  <Text variant="bodySm" tone="accent" style={{ fontWeight: '600' }}>
-                    web design
-                  </Text>{' '}
-                  and need{' '}
-                  <Text variant="bodySm" tone="need" style={{ fontWeight: '600' }}>
-                    photography
-                  </Text>
-                  . Someone else has photography and needs web design. PANDAM spots the mirror — no
-                  money changes hands.
-                </Text>
-              </Stack>
-            </Card>
+                . Someone else has photography and needs web design. PANDAM spots the mirror — no money
+                changes hands.
+              </Text>
+            </View>
           ) : null}
         </Stack>
       </View>

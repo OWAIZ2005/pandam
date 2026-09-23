@@ -42,6 +42,7 @@ export function CoverTile({
   style,
 }: CoverTileProps) {
   const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const showPhoto = !!uri && !failed;
 
   return (
@@ -53,8 +54,9 @@ export function CoverTile({
         <>
           <Image
             source={{ uri }}
-            style={{ position: 'absolute', inset: 0 }}
+            style={{ position: 'absolute', inset: 0, opacity: loaded ? 1 : 0 }}
             resizeMode="cover"
+            onLoad={() => setLoaded(true)}
             onError={() => setFailed(true)}
             accessibilityIgnoresInvertColors
           />
@@ -66,13 +68,13 @@ export function CoverTile({
             for the sake of two small labels.
           */}
           <Gradient
-            colors={['rgba(18,22,25,0.42)', 'rgba(18,22,25,0)']}
+            colors={['rgba(36,27,22,0.34)', 'rgba(36,27,22,0)']}
             direction="vertical"
             pointerEvents="none"
             style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 72 }}
           />
           <Gradient
-            colors={['rgba(18,22,25,0)', 'rgba(18,22,25,0.46)']}
+            colors={['rgba(36,27,22,0)', 'rgba(36,27,22,0.5)']}
             direction="vertical"
             pointerEvents="none"
             style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 96 }}
@@ -85,7 +87,7 @@ export function CoverTile({
             position: 'absolute',
             right: -12,
             bottom: -14,
-            opacity: 0.28,
+            opacity: 0.22,
             transform: [{ rotate: '-12deg' }],
           }}
         >

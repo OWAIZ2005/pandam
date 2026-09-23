@@ -67,7 +67,7 @@ interface Spec {
  * A gradient on every filled button is the single fastest way to make an
  * interface look generated, and it fights the one place PANDAM genuinely
  * wants spectacle — the reciprocal match. So `primary` is one confident
- * emerald, and `match` keeps a lift as the exception.
+ * terracotta, and `match` keeps a lift as the exception.
  */
 const SPEC: Record<Variant, Spec> = {
   primary: {
@@ -100,7 +100,7 @@ const SPEC: Record<Variant, Spec> = {
   tertiary: {
     bg: colors.surfaceMuted,
     bgHover: colors.surfaceHover,
-    bgActive: '#E8E9E6',
+    bgActive: colors.surfacePressed,
     fg: colors.textPrimary,
   },
   ghost: {
@@ -176,12 +176,12 @@ export function Button({
           height: pad.h,
           paddingHorizontal: pad.px,
           backgroundColor: spec.bg,
-          borderRadius: radii.md,
+          borderRadius: size === 'sm' ? radii.md : radii.pill,
           borderWidth: spec.border ? 1 : 0,
           borderColor: spec.border ?? 'transparent',
           alignSelf: fullWidth ? 'stretch' : 'flex-start',
         },
-        spec.elevated && !isDisabled ? shadows.sm : null,
+        (spec.elevated || variant === 'primary') && !isDisabled && size !== 'sm' ? shadows.sm : null,
         // Disabled reads as "not available now", so it keeps its shape and
         // loses contrast rather than disappearing.
         isDisabled && { opacity: 0.42 },

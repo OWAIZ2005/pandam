@@ -167,6 +167,11 @@ export const colors = {
   info: palette.blue600,
   infoSoft: palette.blue50,
   infoText: palette.blue600,
+  infoBorder: '#C4D8E3',
+  warningBorder: '#EAD3A6',
+  dangerBorder: '#EDC3B9',
+  /** Deeper pressed fill for a muted control. */
+  surfacePressed: '#E6D8C6',
 
   /** Keyboard focus ring. Deliberately the brand colour, never the OS blue. */
   focus: palette.terracotta500,
@@ -244,7 +249,7 @@ export const spacing = {
 /**
  * Radius. Controls and containers are deliberately DIFFERENT: a button at the
  * same radius as the card holding it makes both read as stickers. Controls sit
- * tighter (10), containers a little softer (14), and the full pill is reserved
+ * tighter (12), containers generously soft (18), and the full pill is reserved
  * for things that are genuinely pill-shaped — filter chips, badges, avatars.
  */
 export const radii = {
@@ -253,11 +258,11 @@ export const radii = {
   /** Inline marks: badges on a dense row, tags, small swatches. */
   sm: 8,
   /** Controls: buttons, inputs, segmented controls. */
-  md: 10,
-  /** Containers: cards, sheets, tiles. */
-  lg: 14,
-  xl: 20,
-  '2xl': 26,
+  md: 12,
+  /** Containers: cards, sheets, tiles. Generous — the warm redesign is soft-cornered. */
+  lg: 18,
+  xl: 24,
+  '2xl': 30,
   pill: 999,
 } as const;
 
@@ -313,39 +318,42 @@ export type TypographyVariant = keyof typeof typography;
  * only job is to say "this floats above the page" — sheets, sticky bars, menus.
  * Everything is a tight, near-vertical, low-opacity shadow; nothing blooms.
  */
+/** Warm espresso shadow colour — a black shadow on cream reads grey and dirty. */
+const SHADOW = '#5A3A22';
+
 export const shadows = {
   none: {},
   /** Barely there. A card that should feel attached to the page. */
   xs: {
-    shadowColor: palette.ink,
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
+    shadowColor: SHADOW,
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
     shadowOffset: { width: 0, height: 1 },
     elevation: 1,
   },
-  /** A card that has lifted — pressed, dragged, or selected. */
+  /** A resting card on the cream ground — soft, warm, slightly diffused. */
   sm: {
-    shadowColor: palette.ink,
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  /** Menus, popovers, sticky footers. */
-  md: {
-    shadowColor: palette.ink,
+    shadowColor: SHADOW,
     shadowOpacity: 0.08,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
+    elevation: 3,
   },
-  /** Modals and sheets only. */
-  lg: {
-    shadowColor: palette.ink,
+  /** A lifted card — hovered, held, or a hero tile. */
+  md: {
+    shadowColor: SHADOW,
     shadowOpacity: 0.12,
-    shadowRadius: 24,
+    shadowRadius: 22,
     shadowOffset: { width: 0, height: 10 },
-    elevation: 12,
+    elevation: 8,
+  },
+  /** Modals, sheets, floating objects. */
+  lg: {
+    shadowColor: SHADOW,
+    shadowOpacity: 0.16,
+    shadowRadius: 36,
+    shadowOffset: { width: 0, height: 18 },
+    elevation: 14,
   },
 } as const;
 
@@ -387,7 +395,16 @@ export const timings = { instant: 90, fast: 140, base: 200, slow: 240 } as const
 export const springs = {
   press: { damping: 22, stiffness: 380, mass: 0.5 },
   enter: { damping: 24, stiffness: 200, mass: 0.8 },
+  /** Soft settle for tilt/depth returning to rest. */
+  tilt: { damping: 16, stiffness: 160, mass: 0.7 },
 } as const;
+
+/**
+ * Ambient motion (ms). The ONE exception to the 240ms ceiling: slow idle loops
+ * on decorative objects (empty states, the match moment). Never on controls,
+ * and always disabled under reduced motion.
+ */
+export const ambient = { float: 3200, drift: 5200, pulse: 1800 } as const;
 
 /* -------------------------------------------------------------------------- */
 /* Layout                                                                     */
@@ -429,5 +446,6 @@ export const tokens = {
   focusRing,
   timings,
   springs,
+  ambient,
   layout,
 } as const;

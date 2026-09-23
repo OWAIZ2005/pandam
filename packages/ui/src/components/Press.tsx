@@ -7,7 +7,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { colors, timings } from '../tokens';
+import { colors, shadows, timings } from '../tokens';
 
 /** What the caller can paint differently per interaction state. */
 export interface PressStateStyles {
@@ -20,6 +20,11 @@ export interface PressStateStyles {
 }
 
 export interface PressProps extends Omit<PressableProps, 'style' | 'children'> {
+  /**
+   * Tactile depth: the surface rises (translate + warm shadow) on hover and
+   * settles flat on press, like a physical card being pushed into the table.
+   */
+  lift?: boolean;
   children: ReactNode;
   /**
    * How far the element dips on press. Small by default: a deep dip reads as
@@ -69,6 +74,7 @@ export function Press({
   scale = 'md',
   dim = true,
   noFocusRing = false,
+  lift = false,
   style,
   states,
   onPressIn,
@@ -160,9 +166,11 @@ export function Press({
             } as unknown as ViewStyle)
           : null,
         style,
+        lift && isHovered ? [{ transform: [{ translateY: -2 }] }, shadows.md] : null,
         isHovered && states?.hover,
         isPressed && [
           { transform: [{ scale: SCALE[scale] }] },
+          lift ? shadows.xs : null,
           dim ? { opacity: 0.94 } : null,
           states?.pressed,
         ],

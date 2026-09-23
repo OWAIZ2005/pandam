@@ -11,7 +11,7 @@ import {
 import { AccessibilityInfo, Animated, Easing, Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors, layout, radii, shadows, spacing, timings } from '../tokens';
+import { colors, layout, palette, radii, shadows, spacing, timings } from '../tokens';
 
 import { Press } from './Press';
 import { Text } from './Text';
@@ -62,9 +62,9 @@ export function useToast(): ToastContextValue {
 const KIND: Record<ToastKind, { bg: string; border: string; glyph: string; fg: string }> = {
   // Dark surfaces, because a toast sits over content and needs to read as a
   // layer above the page rather than another card in it.
-  success: { bg: '#10362A', border: '#1C5942', glyph: '✓', fg: '#8BE0B4' },
-  error: { bg: '#3A1618', border: '#63262A', glyph: '!', fg: '#F2A5A8' },
-  info: { bg: colors.surfaceInverse, border: '#2C363E', glyph: 'i', fg: '#A9B5BF' },
+  success: { bg: colors.surfaceInverse, border: palette.espresso700, glyph: '✓', fg: palette.sage200 },
+  error: { bg: '#3A1B16', border: '#5E2A22', glyph: '!', fg: palette.terracotta200 },
+  info: { bg: colors.surfaceInverse, border: palette.espresso700, glyph: 'i', fg: palette.espresso300 },
 };
 
 interface Live extends ToastOptions {
@@ -193,7 +193,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               </Text>
             </View>
 
-            <Text variant="bodySm" style={{ flex: 1, color: '#F4F6F5' }}>
+            <Text variant="bodySm" style={{ flex: 1, color: colors.textInverse }}>
               {toast.message}
             </Text>
 

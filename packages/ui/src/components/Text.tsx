@@ -19,9 +19,9 @@ type Tone =
  * Tone colours.
  *
  * The coloured tones map to the `*Text` tokens — the darkest step in each
- * ramp — not the mid-ramp brand colours. A label in mid emerald on white is
+ * ramp — not the mid-ramp brand colours. A label in mid terracotta on white is
  * about 3.4:1, which fails AA for text; the same label in `accentText` clears
- * it and still reads unmistakably as emerald. Fills use the bright token,
+ * it and still reads unmistakably as terracotta. Fills use the bright token,
  * text uses the dark one; that distinction is why coloured copy in this
  * product stays readable.
  */

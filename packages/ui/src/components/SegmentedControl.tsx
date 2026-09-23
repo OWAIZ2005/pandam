@@ -30,7 +30,7 @@ const TONE_BG = {
  *
  * Used for HAVE / NEED, the single most important state in the product. The
  * thumb slides and takes the tone of the segment it lands on, so the switch
- * itself teaches the emerald/tangerine language rather than just reporting a
+ * itself teaches the terracotta/clay language rather than just reporting a
  * value. It is the one piece of motion on most screens, which is why it is
  * allowed to be the expressive one.
  */

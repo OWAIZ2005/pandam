@@ -26,6 +26,7 @@ import {
   Text,
   colors,
   layout,
+  radii,
   spacing,
 } from '@pandam/ui';
 import { boundedString, itemTypeSchema, z } from '@pandam/validation';
@@ -109,10 +110,28 @@ export interface ItemFormProps {
 function StepLabel({ n, label, hint }: { n: number; label: string; hint?: string }) {
   return (
     <Row gap="md" align="flex-start" style={{ marginBottom: spacing.md }}>
-      <Text variant="numeric" numeric tone="accent" style={{ marginTop: 1, minWidth: 14 }}>
-        {n}
-      </Text>
+      {/* A numbered stop on the guided path: a warm disc that reads as a
+          progress marker, not a form-field decoration. */}
+      <View
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: radii.pill,
+          backgroundColor: colors.accentSoft,
+          borderWidth: 1,
+          borderColor: colors.accentBorder,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Text variant="label" numeric tone="accent" style={{ fontWeight: '700' }}>
+          {n}
+        </Text>
+      </View>
       <View style={{ flex: 1, gap: 1 }}>
+        <Text variant="overline" tone="muted">
+          Step {n}
+        </Text>
         <Text variant="h3">{label}</Text>
         {hint ? (
           <Text variant="bodySm" tone="secondary">

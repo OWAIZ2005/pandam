@@ -17,9 +17,10 @@ import * as ImagePicker from 'expo-image-picker';
 import { ActivityIndicator, Alert, Pressable, View } from 'react-native';
 
 import { type ItemImage } from '@pandam/types';
-import { Press, Row, Text, colors, radii, spacing } from '@pandam/ui';
+import { Press, Row, Text, colors, radii, shadows, spacing } from '@pandam/ui';
 import { MAX_LISTING_IMAGES } from '@pandam/validation';
 
+import { SpringIn } from '@/components/brand/SpringIn';
 import { mediaSrc } from '@/lib/api/media';
 import { useDeleteListingImage, useUploadListingImages } from '@/lib/hooks/useMedia';
 
@@ -69,56 +70,66 @@ export function PhotoPicker({ existing = [], local, onChangeLocal, listingId }: 
   };
 
   const tile = {
-    width: 76,
-    height: 76,
-    borderRadius: radii.md,
+    width: 96,
+    height: 96,
+    borderRadius: radii.lg,
+  } as const;
+  const print = {
+    borderRadius: radii.lg + 4,
+    padding: 4,
+    backgroundColor: colors.surface,
+    ...shadows.md,
   } as const;
 
   return (
     <View>
-      <Row gap="sm" style={{ flexWrap: 'wrap' }}>
-        {existing.map((image) => (
-          <View key={image.id}>
-            <Image
-              source={{ uri: mediaSrc(image.url) }}
-              style={tile}
-              contentFit="cover"
-              transition={150}
-            />
-            <Pressable
-              accessibilityLabel="Remove photo"
-              disabled={busy}
-              onPress={() => remove.mutate({ listingId: listingId!, imageId: image.id })}
-              style={{
-                position: 'absolute',
-                top: -6,
-                right: -6,
-                backgroundColor: colors.surface,
-                borderRadius: radii.pill,
-              }}
-            >
-              <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
-            </Pressable>
-          </View>
+      <Row gap="md" style={{ flexWrap: 'wrap', alignItems: 'center' }}>
+        {existing.map((image, i) => (
+          <SpringIn key={image.id} index={i}>
+            <View style={print}>
+              <Image
+                source={{ uri: mediaSrc(image.url) }}
+                style={tile}
+                contentFit="cover"
+                transition={150}
+              />
+              <Pressable
+                accessibilityLabel="Remove photo"
+                disabled={busy}
+                onPress={() => remove.mutate({ listingId: listingId!, imageId: image.id })}
+                style={{
+                  position: 'absolute',
+                  top: -6,
+                  right: -6,
+                  backgroundColor: colors.surface,
+                  borderRadius: radii.pill,
+                }}
+              >
+                <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
+              </Pressable>
+            </View>
+          </SpringIn>
         ))}
 
-        {local.map((uri) => (
-          <View key={uri}>
-            <Image source={{ uri }} style={tile} contentFit="cover" />
-            <Pressable
-              accessibilityLabel="Remove photo"
-              onPress={() => onChangeLocal(local.filter((u) => u !== uri))}
-              style={{
-                position: 'absolute',
-                top: -6,
-                right: -6,
-                backgroundColor: colors.surface,
-                borderRadius: radii.pill,
-              }}
-            >
-              <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
-            </Pressable>
-          </View>
+        {local.map((uri, i) => (
+          <SpringIn key={uri} index={existing.length + i}>
+            <View style={print}>
+              <Image source={{ uri }} style={tile} contentFit="cover" />
+              <Pressable
+                accessibilityLabel="Remove photo"
+                onPress={() => onChangeLocal(local.filter((u) => u !== uri))}
+                style={{
+                  position: 'absolute',
+                  top: -6,
+                  right: -6,
+                  backgroundColor: colors.surface,
+                  borderRadius: radii.pill,
+                }}
+              >
+                <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
+              </Pressable>
+            </View>
+          </SpringIn>
         ))}
 
         {remaining > 0 ? (
@@ -128,19 +139,27 @@ export function PhotoPicker({ existing = [], local, onChangeLocal, listingId }: 
             disabled={busy}
             onPress={() => void pick()}
             style={{
-              ...tile,
-              borderWidth: 1.5,
-              borderColor: colors.border,
+              width: 104,
+              height: 104,
+              borderRadius: radii.lg + 4,
+              borderWidth: 2,
+              borderColor: colors.accentBorder,
               borderStyle: 'dashed',
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: colors.surfaceMuted,
+              gap: 4,
+              backgroundColor: colors.accentSoft,
             }}
           >
             {busy ? (
-              <ActivityIndicator size="small" color={colors.textMuted} />
+              <ActivityIndicator size="small" color={colors.accent} />
             ) : (
-              <Ionicons name="camera-outline" size={22} color={colors.textMuted} />
+              <>
+                <Ionicons name="camera-outline" size={24} color={colors.accent} />
+                <Text variant="caption" tone="accent" style={{ fontWeight: '700' }}>
+                  Add photo
+                </Text>
+              </>
             )}
           </Press>
         ) : null}

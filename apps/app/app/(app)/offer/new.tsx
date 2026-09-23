@@ -26,6 +26,7 @@ import {
 
 import { AppHeader } from '@/components/AppHeader';
 import { ErrorState } from '@/components/states';
+import { IS_DEMO_DATA, demoItem, demoMyListings, demoQuery } from '@/dummy';
 import { ApiError } from '@/lib/api/client';
 import { primaryImage } from '@/lib/api/media';
 import { TYPE_LABEL } from '@/lib/format';
@@ -123,8 +124,10 @@ export default function NewOfferScreen() {
   const router = useRouter();
   const toast = useToast();
   const { requestedListingId } = useLocalSearchParams<{ requestedListingId: string }>();
-  const requested = useItem('listing', requestedListingId);
-  const mine = useMyItems('listing');
+  const liveRequested = useItem('listing', requestedListingId);
+  const demoRequested = IS_DEMO_DATA ? demoItem(requestedListingId ?? '') : undefined;
+  const requested = demoRequested ? demoQuery(liveRequested, demoRequested) : liveRequested;
+  const mine = demoQuery(useMyItems('listing'), demoMyListings);
   const create = useCreateOffer();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);

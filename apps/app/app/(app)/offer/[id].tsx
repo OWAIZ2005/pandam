@@ -25,6 +25,7 @@ import {
 
 import { AppHeader } from '@/components/AppHeader';
 import { ErrorState } from '@/components/states';
+import { IS_DEMO_DATA, demoOffers, demoQuery } from '@/dummy';
 import { ApiError } from '@/lib/api/client';
 import { mediaSrc } from '@/lib/api/media';
 import { TYPE_LABEL, timeAgo } from '@/lib/format';
@@ -96,7 +97,9 @@ export default function OfferDetailScreen() {
   const router = useRouter();
   const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const offer = useOffer(id);
+  const liveOffer = useOffer(id);
+  const demoOffer = IS_DEMO_DATA ? demoOffers.find((o) => o.id === id) : undefined;
+  const offer = demoOffer ? demoQuery(liveOffer, demoOffer) : liveOffer;
   const respond = useRespondToOffer();
 
   const respondError =

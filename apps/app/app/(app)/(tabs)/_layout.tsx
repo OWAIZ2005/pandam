@@ -3,12 +3,12 @@ import { Tabs } from 'expo-router';
 import { type ColorValue, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors, radii, spacing } from '@pandam/ui';
+import { colors, radii, shadows, spacing } from '@pandam/ui';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
 /** Height of the bar's own content; the device's bottom inset is added on top. */
-const BAR_CONTENT_HEIGHT = 54;
+const BAR_CONTENT_HEIGHT = 62;
 
 /**
  * A tab icon.
@@ -32,16 +32,19 @@ function TabIcon({
   color: ColorValue;
 }) {
   return (
-    <View style={{ alignItems: 'center', justifyContent: 'flex-start' }}>
-      <View
-        style={{
-          height: 2,
-          width: 18,
-          borderRadius: radii.pill,
-          backgroundColor: focused ? colors.accent : 'transparent',
-          marginBottom: spacing.sm,
-        }}
-      />
+    <View
+      style={{
+        marginTop: spacing.sm,
+        width: 52,
+        height: 30,
+        borderRadius: radii.pill,
+        alignItems: 'center',
+        justifyContent: 'center',
+        // A soft terracotta pill behind the active glyph — carries the state
+        // together with the filled glyph and the tinted label.
+        backgroundColor: focused ? colors.accentSoft : 'transparent',
+      }}
+    >
       <Ionicons
         name={focused ? name : (`${name}-outline` as IconName)}
         size={21}
@@ -55,7 +58,7 @@ function TabIcon({
  * The centre action.
  *
  * Previously a raised gradient pill with a coloured halo — the single most
- * "generated" detail in the product. It is now a flat emerald square sitting
+ * "generated" detail in the product. It is now a round terracotta button sitting
  * IN the bar with everything else: still unmistakably the primary action,
  * because it is the only filled thing down there, but no longer shouting over
  * the four navigation targets it sits between.
@@ -68,18 +71,21 @@ function CreateTabIcon({ focused }: { focused: boolean }) {
         Without it this tab's glyph sits 10px higher than its four neighbours,
         which is small enough to look like a mistake rather than a choice.
       */}
-      <View style={{ height: 2, marginBottom: spacing.sm }} />
       <View
         style={{
-          width: 34,
-          height: 34,
-          borderRadius: radii.md,
+          marginTop: spacing.xs,
+          width: 46,
+          height: 46,
+          borderRadius: radii.pill,
           backgroundColor: focused ? colors.accentStrong : colors.accent,
           alignItems: 'center',
           justifyContent: 'center',
+          borderWidth: 3,
+          borderColor: colors.surface,
+          ...shadows.md,
         }}
       >
-        <Ionicons name="add" size={20} color={colors.textInverse} />
+        <Ionicons name="add" size={24} color={colors.textInverse} />
       </View>
     </View>
   );
@@ -106,16 +112,19 @@ export default function TabsLayout() {
           paddingTop: 0,
           paddingBottom: insets.bottom,
           borderTopWidth: 1,
-          borderTopColor: colors.border,
+          borderTopColor: colors.borderSoft,
           backgroundColor: colors.surface,
-          // No shadow: the bar is attached to the bottom of the screen, and a
-          // drop shadow there would cast light upward from nowhere.
-          elevation: 0,
-          shadowOpacity: 0,
+          // A faint warm shadow cast upward so the bar reads as a tray the
+          // cream page slides beneath.
+          elevation: 8,
+          shadowColor: '#5A3A22',
+          shadowOpacity: 0.06,
+          shadowRadius: 16,
+          shadowOffset: { width: 0, height: -4 },
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '500',
+          fontWeight: '600',
           letterSpacing: 0,
           marginTop: 1,
         },

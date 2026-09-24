@@ -80,10 +80,6 @@ export default function VerificationCompleteScreen() {
             <Verified label="Account" value="Active" />
           </View>
 
-          <Text variant="caption" tone="muted" center>
-            Demo verification — no real DigiLocker or biometric check was performed.
-          </Text>
-
           <Button
             label="Continue to Pandam"
             size="lg"

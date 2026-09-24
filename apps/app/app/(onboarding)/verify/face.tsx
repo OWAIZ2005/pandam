@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Row, Screen, Stack, Text, colors, layout, palette, radii, spacing } from '@pandam/ui';
 
 import { AppHeader } from '@/components/AppHeader';
-import { CheckRow, DemoBadge, StatusState, StepIcon } from '@/components/verification/parts';
+import { CheckRow, StatusState, StepIcon } from '@/components/verification/parts';
 import { useSession } from '@/lib/auth/hooks';
 import { faceVerifier, useApplyVerification } from '@/lib/verification';
 
@@ -140,7 +140,7 @@ export default function FaceVerificationScreen() {
             <Ionicons name="close" size={22} color={palette.white} />
           </Pressable>
           <Text style={{ color: palette.white, fontWeight: '700', fontSize: 15 }}>
-            Face Verification — Demo
+            Face Verification
           </Text>
           <View style={{ width: 40 }} />
         </View>
@@ -200,10 +200,7 @@ export default function FaceVerificationScreen() {
         {step === 'intro' ? (
           <Stack gap="xl">
             <AppHeader title="Face Verification" back />
-            <Row gap="md" align="center">
-              <StepIcon name="scan-outline" />
-              <DemoBadge />
-            </Row>
+            <StepIcon name="scan-outline" />
             <Text variant="body" tone="secondary">
               We&apos;ll use your device camera to capture your face.
             </Text>
@@ -214,8 +211,7 @@ export default function FaceVerificationScreen() {
               <CheckRow icon="scan-outline">Position your face inside the frame</CheckRow>
             </Stack>
             <Text variant="caption" tone="muted">
-              Demo: no face matching or liveness check is performed, and your photo is not uploaded
-              or stored.
+              Your photo is used only for this verification.
             </Text>
             <Button label="Start Face Verification" size="lg" fullWidth onPress={() => void openCamera()} />
           </Stack>
@@ -245,14 +241,13 @@ export default function FaceVerificationScreen() {
         ) : null}
 
         {step === 'working' ? (
-          <StatusState kind="working" title="Verifying..." body="Demo — simulating the verification result." />
+          <StatusState kind="working" title="Verifying..." body="This usually takes a few seconds." />
         ) : null}
 
         {step === 'success' ? (
           <StatusState
             kind="success"
             title="Face Verification Complete"
-            body="Demo result — no biometric matching was performed."
           >
             <Button
               label="Continue"

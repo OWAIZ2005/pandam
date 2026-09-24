@@ -66,29 +66,6 @@ export function StepProgress({ current }: { current: 'identity' | 'complete' }) 
   );
 }
 
-/** Small, honest "this is a demo" marker. */
-export function DemoBadge({ label = 'Demo' }: { label?: string }) {
-  return (
-    <View
-      style={{
-        alignSelf: 'flex-start',
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-        borderRadius: radii.sm,
-        backgroundColor: colors.warningSoft,
-        borderWidth: 1,
-        borderColor: colors.warningBorder,
-      }}
-    >
-      <Ionicons name="flask-outline" size={11} color={colors.warningText} />
-      <Text style={{ fontSize: 11, fontWeight: '700', color: colors.warningText }}>{label}</Text>
-    </View>
-  );
-}
-
 export function CheckRow({ children, icon = 'checkmark-circle' }: { children: ReactNode; icon?: IconName }) {
   return (
     <Row gap="sm" align="flex-start">

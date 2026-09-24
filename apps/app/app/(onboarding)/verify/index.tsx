@@ -17,7 +17,6 @@ function StepCard({
   locked,
   lockedHint,
   actionLabel,
-  demoNote,
   onPress,
 }: {
   icon: IconName;
@@ -27,7 +26,6 @@ function StepCard({
   locked?: boolean;
   lockedHint?: string;
   actionLabel: string;
-  demoNote: string;
   onPress: () => void;
 }) {
   return (
@@ -84,12 +82,6 @@ function StepCard({
           ) : null}
         </Stack>
       )}
-      <Row gap="xs" align="center">
-        <Ionicons name="flask-outline" size={12} color={colors.textMuted} />
-        <Text variant="caption" tone="muted" style={{ flex: 1 }}>
-          {demoNote}
-        </Text>
-      </Row>
     </View>
   );
 }
@@ -136,7 +128,6 @@ export default function VerifyIdentityScreen() {
             description="Verify your identity using DigiLocker."
             done={govDone}
             actionLabel="Verify with DigiLocker"
-            demoNote="Demo — production DigiLocker integration will be connected later."
             onPress={() => router.push('/(onboarding)/verify/digilocker')}
           />
           <StepCard
@@ -147,7 +138,6 @@ export default function VerifyIdentityScreen() {
             locked={!govDone}
             lockedHint="Complete Government ID first."
             actionLabel="Verify My Face"
-            demoNote="Demo — production liveness verification will be connected later."
             onPress={() => router.push('/(onboarding)/verify/face')}
           />
 

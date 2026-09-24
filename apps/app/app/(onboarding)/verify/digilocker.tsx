@@ -3,12 +3,11 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import { Button, Notice, Row, Screen, Stack, Text, colors, layout, radii, spacing } from '@pandam/ui';
+import { Button, Notice, Screen, Stack, Text, colors, layout, radii, spacing } from '@pandam/ui';
 
 import { AppHeader } from '@/components/AppHeader';
 import {
   CheckRow,
-  DemoBadge,
   StatusState,
   StepIcon,
 } from '@/components/verification/parts';
@@ -65,22 +64,18 @@ export default function DigiLockerScreen() {
 
         {step === 'intro' ? (
           <Stack gap="xl">
-            <Row gap="md" align="center">
-              <StepIcon name="id-card-outline" />
-              <DemoBadge />
-            </Row>
+            <StepIcon name="id-card-outline" />
             <Text variant="body" tone="secondary">
-              Pandam will use DigiLocker in production to verify your identity using an eligible
-              government-issued digital document.
+              Pandam uses DigiLocker to verify your identity using an eligible government-issued
+              digital document.
             </Text>
             <Stack gap="md">
               <CheckRow icon="lock-closed">Secure verification</CheckRow>
               <CheckRow icon="hand-left">User-controlled consent</CheckRow>
               <CheckRow icon="checkmark-done">One-time verification</CheckRow>
             </Stack>
-            <Notice kind="neutral" icon={<Ionicons name="information-circle" size={16} color={colors.textMuted} />}>
-              This is a demo. No connection is made to DigiLocker and no government ID
-              information is collected or stored.
+            <Notice kind="neutral" icon={<Ionicons name="lock-closed" size={16} color={colors.textMuted} />}>
+              Your information is shared only with your consent and used only for verification.
             </Notice>
             <Button label="Continue" size="lg" fullWidth onPress={() => setStep('consent')} />
           </Stack>
@@ -102,12 +97,9 @@ export default function DigiLockerScreen() {
                 gap: spacing.md,
               }}
             >
-              <Row justify="space-between" align="center">
-                <Text variant="label" tone="secondary" style={{ fontWeight: '700' }}>
-                  Information requested
-                </Text>
-                <DemoBadge label="Demo authorization" />
-              </Row>
+              <Text variant="label" tone="secondary" style={{ fontWeight: '700' }}>
+                Information requested
+              </Text>
               <CheckRow icon="person-outline">Name</CheckRow>
               <CheckRow icon="calendar-outline">Date of Birth</CheckRow>
               <CheckRow icon="document-text-outline">Eligible Government ID information</CheckRow>
@@ -123,7 +115,7 @@ export default function DigiLockerScreen() {
           <StatusState
             kind="working"
             title={stage === 'connecting' ? 'Connecting securely...' : 'Verifying your identity...'}
-            body="Demo — simulating the DigiLocker response."
+            body="This usually takes a few seconds."
           />
         ) : null}
 
@@ -131,7 +123,6 @@ export default function DigiLockerScreen() {
           <StatusState
             kind="success"
             title="Identity Verified"
-            body="Demo result — no real DigiLocker verification was performed."
           >
             <Button
               label="Continue to face verification"

@@ -13,7 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Text, colors, palette, useMotionOK } from '@pandam/ui';
+import { CountBadge, Text, colors, palette, useMotionOK } from '@pandam/ui';
 
 import { demoMatches, demoQuery } from '@/dummy';
 import { useMatches } from '@/lib/hooks/useMatches';
@@ -99,26 +99,14 @@ function TabItem({
           color={focused ? palette.white : 'rgba(255,253,249,0.62)'}
         />
         {badge ? (
-          <View
-            style={{
-              position: 'absolute',
-              top: -5,
-              right: -10,
-              minWidth: 17,
-              height: 17,
-              paddingHorizontal: 4,
-              borderRadius: 9,
-              backgroundColor: colors.match,
-              borderWidth: 2,
-              borderColor: colors.surfaceInverse,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Text style={{ fontSize: 9.5, fontWeight: '800', color: palette.white }}>
-              {badge > 9 ? '9+' : badge}
-            </Text>
-          </View>
+          <CountBadge
+            value={badge}
+            color={colors.match}
+            ringColor={colors.surfaceInverse}
+            // Anchored from the LEFT at the icon's upper-right, so a wider "9+"
+            // grows away from the glyph instead of back over it.
+            style={{ position: 'absolute', top: -6, left: 13 }}
+          />
         ) : null}
       </Animated.View>
       <Animated.View style={label}>

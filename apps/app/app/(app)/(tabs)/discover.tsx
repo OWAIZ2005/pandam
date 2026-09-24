@@ -20,12 +20,13 @@ import {
   spacing,
 } from '@pandam/ui';
 
+import { AddCategorySheet } from '@/components/AddCategorySheet';
 import { CategoryFilter } from '@/components/CategoryFilter';
 import { ItemCard } from '@/components/ItemCard';
 import { ErrorState } from '@/components/states';
-import { demoCategoryList, demoCities, demoDiscover, demoQuery } from '@/dummy';
+import { demoCities, demoDiscover, demoQuery } from '@/dummy';
 import { type MarketKind } from '@/lib/api/market';
-import { useCategories } from '@/lib/hooks/useCategories';
+import { useBrowseCategories } from '@/lib/hooks/useCategories';
 import { useDebounced } from '@/lib/hooks/useDebounced';
 import { useDiscover, useListingCities } from '@/lib/hooks/useMarket';
 
@@ -43,7 +44,8 @@ export default function DiscoverScreen() {
   const [city, setCity] = useState<string | null>(params.city ?? null);
   const q = useDebounced(rawQuery.trim(), 350);
 
-  const categories = demoQuery(useCategories(), demoCategoryList as never);
+  const categories = useBrowseCategories();
+  const [addingCategory, setAddingCategory] = useState(false);
   const cities = demoQuery(useListingCities(), demoCities() as never);
   const filters = useMemo(
     () => ({
@@ -138,6 +140,7 @@ export default function DiscoverScreen() {
           selectedId={categoryId}
           onSelect={setCategoryId}
           tone={tone}
+          onAdd={() => setAddingCategory(true)}
         />
       ) : (
         <Row gap="sm">
@@ -305,6 +308,13 @@ export default function DiscoverScreen() {
             </Row>
           ) : null
         }
+      />
+      <AddCategorySheet
+        visible={addingCategory}
+        onClose={() => setAddingCategory(false)}
+        existing={categories.data ?? []}
+        onCreated={(c) => setCategoryId(c.id)}
+        onUseExisting={(id) => setCategoryId(id)}
       />
     </Screen>
   );

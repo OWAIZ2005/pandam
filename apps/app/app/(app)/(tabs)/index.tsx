@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 
 import {
@@ -21,12 +21,14 @@ import {
   spacing,
 } from '@pandam/ui';
 
+import { AddCategorySheet } from '@/components/AddCategorySheet';
+import { IntentSwitch } from '@/components/brand/IntentSwitch';
+import { PandamBackground } from '@/components/brand/PandamBackground';
 import { CategoryGrid } from '@/components/CategoryFilter';
 import { ItemCard } from '@/components/ItemCard';
 import { MatchCard } from '@/components/MatchCard';
 import { ErrorState } from '@/components/states';
 import {
-  demoCategoryList,
   demoMatches,
   demoMyListings,
   demoMyNeeds,
@@ -36,7 +38,7 @@ import {
 } from '@/dummy';
 import { mediaSrc } from '@/lib/api/media';
 import { useSession } from '@/lib/auth/hooks';
-import { useCategories } from '@/lib/hooks/useCategories';
+import { useBrowseCategories } from '@/lib/hooks/useCategories';
 import { useDiscover, useMyItems } from '@/lib/hooks/useMarket';
 import { useMatches } from '@/lib/hooks/useMatches';
 
@@ -48,93 +50,6 @@ function greeting(): string {
 }
 
 /* -------------------------------------------------------------------------- */
-
-/**
- * A big, confident entry point — PANDAM's version of the bold colour-blocked
- * action a consumer app puts front and centre. Solid brand fill, one icon, a
- * verb, and the live count of what you already have running. No floating
- * photos, no gradient haze: a decisive tap target.
- */
-function ActionTile({
-  tone,
-  icon,
-  kicker,
-  label,
-  count,
-  onPress,
-}: {
-  tone: 'accent' | 'need';
-  icon: keyof typeof Ionicons.glyphMap;
-  kicker: string;
-  label: string;
-  count: number;
-  onPress: () => void;
-}) {
-  const bg = tone === 'accent' ? colors.accent : colors.need;
-  return (
-    <Press
-      scale="sm"
-      accessibilityRole="button"
-      accessibilityLabel={`${kicker} ${label}`}
-      onPress={onPress}
-      style={{
-        flex: 1,
-        backgroundColor: bg,
-        borderRadius: radii.lg,
-        padding: spacing.lg,
-        gap: spacing.lg,
-        minHeight: 132,
-        justifyContent: 'space-between',
-        ...shadows.sm,
-      }}
-    >
-      <Row justify="space-between" align="flex-start">
-        <View
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: radii.md,
-            backgroundColor: 'rgba(255,255,255,0.18)',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Ionicons name={icon} size={20} color={colors.textInverse} />
-        </View>
-        <View
-          style={{
-            width: 26,
-            height: 26,
-            borderRadius: radii.pill,
-            backgroundColor: 'rgba(255,255,255,0.18)',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Ionicons name="add" size={18} color={colors.textInverse} />
-        </View>
-      </Row>
-      <View style={{ gap: 1 }}>
-        <Text
-          style={{
-            fontSize: 10.5,
-            fontWeight: '800',
-            letterSpacing: 0.8,
-            color: 'rgba(255,255,255,0.85)',
-          }}
-        >
-          {kicker}
-        </Text>
-        <Text style={{ fontSize: 17, fontWeight: '800', letterSpacing: -0.3, color: colors.textInverse }}>
-          {label}
-        </Text>
-        <Text variant="caption" style={{ color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>
-          {count > 0 ? `${count} active` : 'Add your first'}
-        </Text>
-      </View>
-    </Press>
-  );
-}
 
 /** Compact match counter, sits on the surface strip under the action tiles. */
 function StatChip({
@@ -177,7 +92,8 @@ export default function HomeScreen() {
   const { profile } = useSession();
   const name = profile?.displayName?.split(' ')[0] ?? 'there';
 
-  const categories = demoQuery(useCategories(), demoCategoryList as never);
+  const categories = useBrowseCategories();
+  const [addingCategory, setAddingCategory] = useState(false);
   const matches = demoQuery(useMatches(), demoMatches);
   const recent = demoQuery(useDiscover('listing', { limit: 8 }), demoPages(demoOthersListings));
   const myHave = demoQuery(useMyItems('listing'), demoMyListings);
@@ -199,6 +115,7 @@ export default function HomeScreen() {
 
   return (
     <Screen
+      backdrop={<PandamBackground variant="glow" />}
       scroll
       padded={false}
       contentStyle={{ maxWidth: '100%' }}
@@ -272,24 +189,12 @@ export default function HomeScreen() {
           </Press>
 
           {/* ------------------------------------------- I HAVE / I NEED -- */}
-          <Row gap={spacing.md} align="flex-start">
-            <ActionTile
-              tone="accent"
-              icon="cube"
-              kicker="I HAVE"
-              label="List an item"
-              count={activeHave}
-              onPress={() => router.push('/(app)/new-listing')}
-            />
-            <ActionTile
-              tone="need"
-              icon="search"
-              kicker="I NEED"
-              label="Post a want"
-              count={activeNeed}
-              onPress={() => router.push('/(app)/new-need')}
-            />
-          </Row>
+          <IntentSwitch
+            haveCount={activeHave}
+            needCount={activeNeed}
+            onHave={() => router.push('/(app)/new-listing')}
+            onNeed={() => router.push('/(app)/new-need')}
+          />
 
           {/* --------------------------------------------------- matches -- */}
           <Press
@@ -348,7 +253,12 @@ export default function HomeScreen() {
           {/* ------------------------------------------------- categories -- */}
           {categories.data && categories.data.length > 0 ? (
             <Section title="Browse by category" actionLabel="All" onAction={() => goDiscover()}>
-              <CategoryGrid categories={categories.data} limit={8} onSelect={(id) => goDiscover(id)} />
+              <CategoryGrid
+                categories={categories.data}
+                limit={8}
+                onSelect={(id) => goDiscover(id)}
+                onAdd={() => setAddingCategory(true)}
+              />
             </Section>
           ) : null}
 
@@ -453,6 +363,13 @@ export default function HomeScreen() {
           ) : null}
         </Stack>
       </View>
+      <AddCategorySheet
+        visible={addingCategory}
+        onClose={() => setAddingCategory(false)}
+        existing={categories.data ?? []}
+        onCreated={(c) => goDiscover(c.id)}
+        onUseExisting={(id) => goDiscover(id)}
+      />
     </Screen>
   );
 }

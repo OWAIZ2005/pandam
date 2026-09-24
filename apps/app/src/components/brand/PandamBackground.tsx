@@ -2,7 +2,7 @@ import { type ReactNode, useCallback, useRef } from 'react';
 import { type LayoutChangeEvent, type StyleProp, View, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
-import { FloatingObject, palette, useMotionOK } from '@pandam/ui';
+import { FloatingObject, Gradient, colors, palette, useMotionOK } from '@pandam/ui';
 
 import { brandImages, type BrandImageKey } from './imagery';
 import { OrganicShape } from './OrganicShape';
@@ -99,7 +99,35 @@ export function PandamDepthLayer({
   );
 }
 
-type Variant = 'home' | 'discover' | 'matches' | 'profile' | 'create' | 'quiet';
+type Variant = 'home' | 'discover' | 'matches' | 'profile' | 'create' | 'quiet' | 'glow';
+
+/**
+ * A soft radial glow, faked natively with stacked translucent discs (React
+ * Native has no radial gradient). Reads like a blurred colour field — the
+ * "mesh gradient" look — with no SVG, no image asset and no blur cost.
+ */
+function Glow({ size, color, style }: { size: number; color: string; style: object }) {
+  const rings = [1, 0.78, 0.58, 0.4];
+  return (
+    <View style={[{ position: 'absolute', width: size, height: size }, style]}>
+      {rings.map((k) => (
+        <View
+          key={k}
+          style={{
+            position: 'absolute',
+            width: size * k,
+            height: size * k,
+            left: (size - size * k) / 2,
+            top: (size - size * k) / 2,
+            borderRadius: (size * k) / 2,
+            backgroundColor: color,
+            opacity: 0.05,
+          }}
+        />
+      ))}
+    </View>
+  );
+}
 
 /**
  * Screen backdrops. Each variant places a few warm pebbles differently so
@@ -174,6 +202,23 @@ export function PandamBackground({ variant = 'quiet' }: { variant?: Variant }) {
       </>
     ),
     quiet: <OrganicShape size={300} color={T} rotate={-14} style={{ top: -140, right: -140 }} />,
+    /*
+     * `glow`: the premium default for content-dense screens. A warm wash that
+     * fades into the page over the top ~third, plus two very low-contrast
+     * colour fields (terracotta top-right, clay mid-left). Nothing opaque, so
+     * it can never sit on top of, or slice, the cards and photos above it.
+     */
+    glow: (
+      <>
+        <Gradient
+          colors={['#F1DFCC', colors.background]}
+          direction="vertical"
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 360 }}
+        />
+        <Glow size={520} color={palette.terracotta400} style={{ top: -260, right: -200 }} />
+        <Glow size={420} color={palette.clay400} style={{ top: 300, left: -260 }} />
+      </>
+    ),
   };
   return (
     <View

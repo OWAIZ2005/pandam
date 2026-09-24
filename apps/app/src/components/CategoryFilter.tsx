@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
 import { View } from 'react-native';
 
 import { type Category } from '@pandam/types';
@@ -12,6 +13,8 @@ export interface CategoryFilterProps {
   onSelect: (id: string | null) => void;
   /** Which accent the selected chip paints. */
   tone?: 'accent' | 'need';
+  /** When set, the row ends with a "New" chip that calls this. */
+  onAdd?: () => void;
 }
 
 /**
@@ -26,6 +29,7 @@ export function CategoryFilter({
   selectedId,
   onSelect,
   tone = 'accent',
+  onAdd,
 }: CategoryFilterProps) {
   return (
     <Rail gap="sm">
@@ -46,6 +50,15 @@ export function CategoryFilter({
           onPress={() => onSelect(selectedId === c.id ? null : c.id)}
         />
       ))}
+      {onAdd ? (
+        <Chip
+          label="New"
+          icon={<Ionicons name="add" size={14} color={colors.accent} />}
+          selected={false}
+          tone={tone}
+          onPress={onAdd}
+        />
+      ) : null}
     </Rail>
   );
 }
@@ -53,65 +66,111 @@ export function CategoryFilter({
 export interface CategoryGridProps {
   categories: Category[];
   onSelect: (id: string) => void;
-  /** Cap the tiles shown; the caller renders its own "see all". */
+  /** Cap the tiles shown (the Add tile counts toward it); the caller renders "see all". */
   limit?: number;
-  columns?: number;
+  /** When set, the grid ends with an "Add" tile that calls this. */
+  onAdd?: () => void;
 }
+
+const GRID_GAP = spacing.md;
+/** Width of the tile's icon box; labels get a fixed two-line slot beneath. */
+const LABEL_LINES = 2;
+const LABEL_LINE_HEIGHT = 15;
 
 /**
  * The browse grid on Home.
  *
- * Each tile is a quiet tinted square with one icon, not a coloured gradient
- * card. Eight gradients in a grid compete with each other and with the rest
- * of the page, and they make the catalogue look like a game menu; a
- * consistent neutral tile lets the ICON do the identifying, which is its job,
- * and lets the terracotta/clay language keep its meaning elsewhere.
+ * Every tile is the SAME width (measured from the container, never flexGrow),
+ * so columns line up and a short last row does not stretch. The label always
+ * reserves two lines, so a long name ("Musical Instruments") wraps without
+ * pushing its row taller than its neighbours, and never clips. Neutral tiles
+ * let the icon identify the category; the optional Add tile is the one
+ * accent-outlined tile, so it reads as an action rather than a category.
  */
-export function CategoryGrid({ categories, onSelect, limit, columns = 4 }: CategoryGridProps) {
-  const shown = limit ? categories.slice(0, limit) : categories;
+export function CategoryGrid({ categories, onSelect, limit, onAdd }: CategoryGridProps) {
+  const [width, setWidth] = useState(0);
+  const columns = width === 0 ? 4 : width < 260 ? 3 : Math.min(8, Math.max(4, Math.floor(width / 96)));
+  const tileW = width ? Math.floor((width - GRID_GAP * (columns - 1)) / columns) : 0;
+
+  const room = limit ? limit - (onAdd ? 1 : 0) : categories.length;
+  const shown = categories.slice(0, Math.max(0, room));
+
+  const tileStyle = { width: tileW, gap: spacing.sm, alignItems: 'center' as const };
+  const box = {
+    width: '100%' as const,
+    height: Math.min(64, tileW || 64),
+    borderRadius: radii.md,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  };
+  const label = (text: string, tone?: 'accent') => (
+    <Text
+      variant="caption"
+      center
+      numberOfLines={LABEL_LINES}
+      tone={tone}
+      style={{
+        lineHeight: LABEL_LINE_HEIGHT,
+        minHeight: LABEL_LINE_HEIGHT * LABEL_LINES,
+        fontWeight: tone ? '700' : '500',
+        alignSelf: 'stretch',
+      }}
+    >
+      {text}
+    </Text>
+  );
 
   return (
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
-      {shown.map((c) => (
+    <View
+      onLayout={(e) => setWidth(Math.floor(e.nativeEvent.layout.width))}
+      style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: GRID_GAP, rowGap: spacing.lg }}
+    >
+      {tileW > 0
+        ? shown.map((c) => (
+            <Press
+              key={c.id}
+              scale="sm"
+              accessibilityRole="button"
+              accessibilityLabel={`Browse ${c.name}`}
+              onPress={() => onSelect(c.id)}
+              style={tileStyle}
+            >
+              <View
+                style={{
+                  ...box,
+                  backgroundColor: colors.surface,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}
+              >
+                <Ionicons name={categoryIcon(c.slug)} size={24} color={colors.textSecondary} />
+              </View>
+              {label(c.name)}
+            </Press>
+          ))
+        : null}
+      {tileW > 0 && onAdd ? (
         <Press
-          key={c.id}
           scale="sm"
           accessibilityRole="button"
-          accessibilityLabel={`Browse ${c.name}`}
-          onPress={() => onSelect(c.id)}
-          style={{
-            width: `${100 / columns}%`,
-            flexGrow: 1,
-            flexBasis: 68,
-            maxWidth: 110,
-            gap: spacing.sm,
-            alignItems: 'center',
-            paddingVertical: spacing.xs,
-            borderRadius: radii.md,
-          }}
-          states={{ hover: { backgroundColor: colors.surfaceHover } }}
+          accessibilityLabel="Add a category"
+          onPress={onAdd}
+          style={tileStyle}
         >
           <View
             style={{
-              width: '100%',
-              aspectRatio: 1,
-              maxHeight: 60,
-              borderRadius: radii.md,
-              backgroundColor: colors.surface,
-              borderWidth: 1,
-              borderColor: colors.border,
-              alignItems: 'center',
-              justifyContent: 'center',
+              ...box,
+              backgroundColor: colors.accentSoft,
+              borderWidth: 1.5,
+              borderStyle: 'dashed',
+              borderColor: colors.accentBorder,
             }}
           >
-            <Ionicons name={categoryIcon(c.slug)} size={22} color={colors.textSecondary} />
+            <Ionicons name="add" size={26} color={colors.accent} />
           </View>
-
-          <Text variant="caption" center numberOfLines={2}>
-            {c.name}
-          </Text>
+          {label('Add', 'accent')}
         </Press>
-      ))}
+      ) : null}
     </View>
   );
 }

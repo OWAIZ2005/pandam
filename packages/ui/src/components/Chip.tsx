@@ -76,8 +76,9 @@ export function Chip({
         <View
           style={{
             minWidth: 18,
+            height: 18,
             paddingHorizontal: 5,
-            paddingVertical: 1,
+            justifyContent: 'center',
             borderRadius: radii.pill,
             backgroundColor: selected ? 'rgba(255,255,255,0.22)' : colors.surface,
             borderWidth: selected ? 0 : 1,
@@ -91,7 +92,9 @@ export function Chip({
             style={{
               color: selected ? colors.textInverse : colors.textMuted,
               fontSize: 11,
-              lineHeight: 14,
+              lineHeight: selected ? 18 : 16,
+              includeFontPadding: false,
+              textAlignVertical: 'center',
             }}
           >
             {count}

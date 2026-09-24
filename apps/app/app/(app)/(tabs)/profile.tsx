@@ -36,7 +36,6 @@ import { mediaSrc } from '@/lib/api/media';
 import { useLogout, useSession } from '@/lib/auth/hooks';
 import { useMyItems } from '@/lib/hooks/useMarket';
 import { useUnreadNotificationCount } from '@/lib/hooks/useNotifications';
-import { PandamBackground } from '@/components/brand/PandamBackground';
 
 function MyItemsSection({
   kind,
@@ -162,7 +161,7 @@ export default function ProfileScreen() {
   const chevron = <Ionicons name="chevron-forward" size={16} color={colors.textFaint} />;
 
   return (
-    <Screen backdrop={<PandamBackground variant="profile" />} scroll padded={false} tabBarInset>
+    <Screen scroll padded={false} tabBarInset>
       <View
         style={{
           width: '100%',

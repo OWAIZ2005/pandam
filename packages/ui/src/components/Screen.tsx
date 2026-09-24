@@ -1,8 +1,16 @@
-import { type ReactNode } from 'react';
+import { createContext, type ReactNode, useContext } from 'react';
 import { RefreshControl, ScrollView, type StyleProp, View, type ViewStyle } from 'react-native';
 import { type Edge, SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors, layout, palette, spacing } from '../tokens';
+
+/**
+ * App-wide default backdrop. The app provides one (its ambient background) at
+ * the root; every Screen on the standard page background paints it unless it
+ * passes its own `backdrop` (or `backdrop={null}` to opt out).
+ */
+const DefaultBackdrop = createContext<ReactNode>(null);
+export const ScreenBackdropProvider = DefaultBackdrop.Provider;
 
 export interface ScreenProps {
   children: ReactNode;
@@ -50,6 +58,8 @@ export function Screen({
   contentStyle,
   backdrop,
 }: ScreenProps) {
+  const fallback = useContext(DefaultBackdrop);
+  const layer = backdrop !== undefined ? backdrop : background === colors.background ? fallback : null;
   const inner: StyleProp<ViewStyle> = [
     { width: '100%', maxWidth: layout.contentMaxWidth, alignSelf: 'center', flexGrow: 1 },
     padded && { paddingHorizontal: layout.gutter, paddingVertical: spacing.lg },
@@ -59,7 +69,7 @@ export function Screen({
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: background }} edges={edges}>
-      {backdrop}
+      {layer}
       {scroll ? (
         <ScrollView
           keyboardShouldPersistTaps="handled"

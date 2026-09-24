@@ -22,7 +22,6 @@ import { ErrorState } from '@/components/states';
 import { mediaSrc } from '@/lib/api/media';
 import { timeAgo } from '@/lib/format';
 import { useTransactions } from '@/lib/hooks/useTransactions';
-import { PandamBackground } from '@/components/brand/PandamBackground';
 
 const STATUS_KIND: Record<
   BarterTransactionView['status'],
@@ -57,7 +56,7 @@ export default function TransactionsScreen() {
   const open = items.filter((t) => t.status === 'created' || t.status === 'in_progress').length;
 
   return (
-    <Screen padded={false} backdrop={<PandamBackground variant="quiet" />}>
+    <Screen padded={false}>
       <View
         style={{
           width: '100%',

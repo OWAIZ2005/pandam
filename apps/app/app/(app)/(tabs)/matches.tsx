@@ -21,7 +21,6 @@ import { MatchCard } from '@/components/MatchCard';
 import { ErrorState } from '@/components/states';
 import { demoMatches, demoQuery } from '@/dummy';
 import { useMatches } from '@/lib/hooks/useMatches';
-import { PandamBackground } from '@/components/brand/PandamBackground';
 
 export default function MatchesScreen() {
   const router = useRouter();
@@ -29,7 +28,7 @@ export default function MatchesScreen() {
   const count = matches.data?.length ?? 0;
 
   return (
-    <Screen backdrop={<PandamBackground variant="matches" />} padded={false}>
+    <Screen padded={false}>
       <View
         style={{
           paddingHorizontal: layout.gutter,

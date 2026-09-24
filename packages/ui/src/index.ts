@@ -12,6 +12,7 @@ export { cx } from './cx';
 export { Text, Heading, type TextProps } from './components/Text';
 export { Button, type ButtonProps } from './components/Button';
 export { Sheet, type SheetProps } from './components/Sheet';
+export { ScreenBackdropProvider } from './components/Screen';
 export { CountBadge, type CountBadgeProps } from './components/CountBadge';
 export { IconButton, type IconButtonProps } from './components/IconButton';
 export { Press, type PressProps, type PressStateStyles } from './components/Press';

@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { type ComponentProps, useState } from 'react';
 import { View } from 'react-native';
 
 import { type Category } from '@pandam/types';
@@ -172,5 +172,92 @@ export function CategoryGrid({ categories, onSelect, limit, onAdd }: CategoryGri
         </Press>
       ) : null}
     </View>
+  );
+}
+
+export interface CategoryRailProps {
+  categories: Category[];
+  selectedId: string | null;
+  onSelect: (id: string | null) => void;
+  tone?: 'accent' | 'need';
+  onAdd?: () => void;
+}
+
+const RAIL_TILE = 72;
+const RAIL_BOX = 58;
+
+/**
+ * Discover's category filter: the SAME tile language as Home's "Browse by
+ * category" grid (icon box + two-line label), laid out as one horizontal rail
+ * so it stays compact above the results. "All" leads, the selected tile fills
+ * with the current HAVE/NEED colour, and an Add tile ends the row.
+ */
+export function CategoryRail({ categories, selectedId, onSelect, tone = 'accent', onAdd }: CategoryRailProps) {
+  const fill = tone === 'need' ? colors.need : colors.accent;
+  const text = tone === 'need' ? colors.needText : colors.accentText;
+
+  const tile = (
+    key: string,
+    name: string,
+    icon: ComponentProps<typeof Ionicons>['name'],
+    selected: boolean,
+    onPress: () => void,
+    variant: 'category' | 'add' = 'category',
+  ) => (
+    <Press
+      key={key}
+      scale="sm"
+      accessibilityRole={variant === 'add' ? 'button' : 'tab'}
+      accessibilityState={variant === 'add' ? undefined : { selected }}
+      accessibilityLabel={variant === 'add' ? 'Add a category' : name}
+      onPress={onPress}
+      style={{ width: RAIL_TILE, alignItems: 'center', gap: spacing.sm }}
+    >
+      <View
+        style={{
+          width: RAIL_BOX,
+          height: RAIL_BOX,
+          borderRadius: radii.md,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: variant === 'add' ? colors.accentSoft : selected ? fill : colors.surface,
+          borderWidth: variant === 'add' ? 1.5 : selected ? 0 : 1,
+          borderStyle: variant === 'add' ? 'dashed' : 'solid',
+          borderColor: variant === 'add' ? colors.accentBorder : colors.border,
+        }}
+      >
+        <Ionicons
+          name={icon}
+          size={variant === 'add' ? 26 : 23}
+          color={variant === 'add' ? colors.accent : selected ? colors.textInverse : colors.textSecondary}
+        />
+      </View>
+      <Text
+        variant="caption"
+        center
+        numberOfLines={2}
+        style={{
+          lineHeight: LABEL_LINE_HEIGHT,
+          minHeight: LABEL_LINE_HEIGHT * LABEL_LINES,
+          alignSelf: 'stretch',
+          fontWeight: selected || variant === 'add' ? '700' : '500',
+          color: variant === 'add' ? colors.accentText : selected ? text : colors.textPrimary,
+        }}
+      >
+        {name}
+      </Text>
+    </Press>
+  );
+
+  return (
+    <Rail gap="sm">
+      {tile('all', 'All', 'apps', selectedId === null, () => onSelect(null))}
+      {categories.map((c) =>
+        tile(c.id, c.name, categoryIcon(c.slug), selectedId === c.id, () =>
+          onSelect(selectedId === c.id ? null : c.id),
+        ),
+      )}
+      {onAdd ? tile('add', 'Add', 'add', false, onAdd, 'add') : null}
+    </Rail>
   );
 }

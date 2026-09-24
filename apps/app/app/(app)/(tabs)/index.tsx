@@ -23,7 +23,6 @@ import {
 
 import { AddCategorySheet } from '@/components/AddCategorySheet';
 import { IntentSwitch } from '@/components/brand/IntentSwitch';
-import { PandamBackground } from '@/components/brand/PandamBackground';
 import { CategoryGrid } from '@/components/CategoryFilter';
 import { ItemCard } from '@/components/ItemCard';
 import { MatchCard } from '@/components/MatchCard';
@@ -115,7 +114,6 @@ export default function HomeScreen() {
 
   return (
     <Screen
-      backdrop={<PandamBackground variant="glow" />}
       scroll
       padded={false}
       contentStyle={{ maxWidth: '100%' }}

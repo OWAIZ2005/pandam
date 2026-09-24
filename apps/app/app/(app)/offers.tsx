@@ -23,7 +23,6 @@ import { AppHeader } from '@/components/AppHeader';
 import { ErrorState } from '@/components/states';
 import { mediaSrc } from '@/lib/api/media';
 import { useIncomingOffers, useOutgoingOffers } from '@/lib/hooks/useOffers';
-import { PandamBackground } from '@/components/brand/PandamBackground';
 
 const STATUS_KIND: Record<OfferView['status'], 'neutral' | 'success' | 'danger' | 'warning'> = {
   pending: 'warning',
@@ -60,7 +59,7 @@ export default function OffersScreen() {
   const pendingIncoming = (incoming.data ?? []).filter((o) => o.status === 'pending').length;
 
   return (
-    <Screen padded={false} backdrop={<PandamBackground variant="quiet" />}>
+    <Screen padded={false}>
       <View
         style={{
           width: '100%',

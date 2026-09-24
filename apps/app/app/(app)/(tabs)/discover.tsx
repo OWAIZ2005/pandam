@@ -21,7 +21,7 @@ import {
 } from '@pandam/ui';
 
 import { AddCategorySheet } from '@/components/AddCategorySheet';
-import { CategoryFilter } from '@/components/CategoryFilter';
+import { CategoryRail } from '@/components/CategoryFilter';
 import { ItemCard } from '@/components/ItemCard';
 import { ErrorState } from '@/components/states';
 import { demoCities, demoDiscover, demoQuery } from '@/dummy';
@@ -96,7 +96,6 @@ export default function DiscoverScreen() {
     // centred column as the grid, so nothing is left hanging on a wide screen.
     <View
       style={{
-        backgroundColor: colors.background,
         borderBottomWidth: 1,
         borderBottomColor: colors.borderSoft,
       }}
@@ -135,7 +134,7 @@ export default function DiscoverScreen() {
   const scrollingHeader = (
     <Stack gap="lg" style={{ paddingBottom: spacing.lg }}>
       {categories.data ? (
-        <CategoryFilter
+        <CategoryRail
           categories={categories.data}
           selectedId={categoryId}
           onSelect={setCategoryId}
@@ -144,9 +143,9 @@ export default function DiscoverScreen() {
         />
       ) : (
         <Row gap="sm">
-          <Skeleton width={64} height={36} radius={radii.pill} />
-          <Skeleton width={92} height={36} radius={radii.pill} />
-          <Skeleton width={78} height={36} radius={radii.pill} />
+          {[0, 1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} width={72} height={58} radius={radii.md} />
+          ))}
         </Row>
       )}
 

@@ -20,7 +20,6 @@ import {
 } from '@pandam/ui';
 
 import { AppHeader } from '@/components/AppHeader';
-import { PandamBackground } from '@/components/brand/PandamBackground';
 
 /**
  * One of the two things you can add.
@@ -150,7 +149,7 @@ export default function CreateScreen() {
   const router = useRouter();
 
   return (
-    <Screen backdrop={<PandamBackground variant="create" />} scroll tabBarInset>
+    <Screen scroll tabBarInset>
       <AppHeader
         title="Add to the marketplace"
         subtitle="Barter works when both sides list what they have and what they want."

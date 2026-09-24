@@ -95,24 +95,32 @@ function KindMark({ isHave, onPhoto = false }: { isHave: boolean; onPhoto?: bool
  * makes the primary action unmistakable at a glance. Purely visual: the whole
  * card is the tap target, so this never nests a second pressable.
  */
-function TradePill({ isHave }: { isHave: boolean }) {
+function TradePill({ isHave, compact = false }: { isHave: boolean; compact?: boolean }) {
   const color = isHave ? colors.accent : colors.need;
   return (
     <View
+      accessibilityElementsHidden
       style={{
+        flexShrink: 0,
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: 4,
+        height: 30,
+        minWidth: 30,
         backgroundColor: isHave ? colors.accentSoft : colors.needSoft,
         borderWidth: 1,
         borderColor: isHave ? colors.accentBorder : colors.needBorder,
         borderRadius: radii.sm,
-        paddingHorizontal: 10,
-        paddingVertical: 6,
+        paddingHorizontal: compact ? 0 : 9,
       }}
     >
-      <Ionicons name="swap-horizontal" size={13} color={color} />
-      <Text style={{ fontSize: 12.5, fontWeight: '800', color, letterSpacing: 0.2 }}>Trade</Text>
+      <Ionicons name="swap-horizontal" size={14} color={color} />
+      {compact ? null : (
+        <Text style={{ fontSize: 12, lineHeight: 15, fontWeight: '800', color, letterSpacing: 0.2 }}>
+          Trade
+        </Text>
+      )}
     </View>
   );
 }
@@ -146,6 +154,10 @@ export function ItemCard({
   const price = item.pricing?.priceAmount;
   const label = `${isHave ? 'Have' : 'Need'}: ${item.title}`;
   const [hovered, setHovered] = useState(false);
+  // Narrow tiles (small phones, 2-up grid) switch the Trade pill to icon-only
+  // so it never collides with the price.
+  const [tileW, setTileW] = useState(0);
+  const compact = tileW > 0 && tileW < 170;
   const zoom = useAnimatedStyle(() => ({
     transform: [{ scale: withSpring(hovered ? 1.06 : 1, { damping: 20, stiffness: 160 }) }],
   }));
@@ -288,8 +300,9 @@ export function ItemCard({
         style={{
           position: 'relative',
           flex: isRail ? undefined : 1,
-          width: isRail ? 168 : undefined,
+          width: isRail ? 176 : undefined,
         }}
+        onLayout={(e) => setTileW(e.nativeEvent.layout.width)}
       >
         <Press
           scale="sm"
@@ -353,20 +366,30 @@ export function ItemCard({
               </Text>
             </Row>
 
-            <Row justify="space-between" align="center" style={{ marginTop: 3 }}>
+            <Row justify="space-between" align="center" gap="sm" style={{ marginTop: 3, minHeight: 30 }}>
               {price != null ? (
-                <Text variant="numeric" numeric style={{ fontWeight: '800', letterSpacing: -0.3 }}>
+                <Text
+                  variant="numeric"
+                  numeric
+                  numberOfLines={1}
+                  style={{ fontWeight: '800', letterSpacing: -0.3, flexShrink: 1 }}
+                >
                   {formatMoney(price, item.pricing!.priceCurrency)}
                 </Text>
               ) : (
-                <Text variant="label" tone={isHave ? 'accent' : 'need'} style={{ fontWeight: '700' }}>
+                <Text
+                  variant="label"
+                  tone={isHave ? 'accent' : 'need'}
+                  numberOfLines={1}
+                  style={{ fontWeight: '700', flexShrink: 1 }}
+                >
                   Barter only
                 </Text>
               )}
               {showStatus ? (
                 <Badge label={STATUS_LABEL[item.status]} kind={statusBadgeKind(item.status)} dot />
               ) : (
-                <TradePill isHave={isHave} />
+                <TradePill isHave={isHave} compact={compact} />
               )}
             </Row>
           </View>

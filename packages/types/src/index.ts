@@ -312,8 +312,14 @@ export interface OfferView {
   toUser: OwnerRef;
   /** The `fromUser`'s HAVE being offered. */
   offered: ItemRef;
-  /** The `toUser`'s HAVE being requested. */
+  /** What the offer is for: the `toUser`'s HAVE, or their I NEED request. */
   requested: ItemRef;
+  /** Whether `requested` is a listing (I HAVE) or a need (I NEED request). */
+  requestedKind: 'listing' | 'need';
+  /** Optional photo the sender attached, ready to fetch. */
+  imageUrl: string | null;
+  /** The trade conversation between the two parties (opens when the offer is sent). */
+  conversationId: string | null;
   message: string | null;
   matchId: string | null;
   expiresAt: number | null;

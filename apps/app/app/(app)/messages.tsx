@@ -16,7 +16,7 @@ import {
   spacing,
 } from '@pandam/ui';
 
-import { demoConversations, demoQuery } from '@/dummy';
+import { demoConversations, demoMergeList } from '@/dummy';
 import { AppHeader } from '@/components/AppHeader';
 import { ObjectCluster } from '@/components/brand/ObjectCluster';
 import { ErrorState } from '@/components/states';
@@ -26,7 +26,7 @@ import { useConversations } from '@/lib/hooks/useConversations';
 
 export default function MessagesScreen() {
   const router = useRouter();
-  const conversations = demoQuery(useConversations(), demoConversations);
+  const conversations = demoMergeList(useConversations(), demoConversations);
   const items = conversations.data ?? [];
   const unreadCount = items.filter((c) => c.unread).length;
 

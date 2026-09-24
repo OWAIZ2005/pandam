@@ -19,7 +19,7 @@ import {
   spacing,
 } from '@pandam/ui';
 
-import { demoNotifications, demoQuery } from '@/dummy';
+import { demoMergeList, demoNotifications } from '@/dummy';
 import { AppHeader } from '@/components/AppHeader';
 import { ErrorState } from '@/components/states';
 import { timeAgo } from '@/lib/format';
@@ -128,7 +128,7 @@ function PushOptIn() {
 
 export default function NotificationsScreen() {
   const router = useRouter();
-  const notifications = demoQuery(useNotifications(), demoNotifications);
+  const notifications = demoMergeList(useNotifications(), demoNotifications);
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
   const items = notifications.data ?? [];

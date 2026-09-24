@@ -2,15 +2,16 @@
  * `/api/v1/offers` — barter proposals between two users: "I give you my HAVE
  * for your HAVE". No money anywhere in this file — see `payments.ts` for that.
  *
- *   POST /             propose a trade (auth)
+ *   POST /attachments  upload an optional photo for an offer (auth)
+ *   POST /             propose a trade for a listing OR an I NEED request (auth)
  *   GET  /incoming     offers sent TO the caller (auth)
  *   GET  /outgoing     offers the caller SENT (auth)
  *   GET  /:id          one offer (a party to it only)
  *   POST /:id/respond  accept / reject (recipient) / cancel (sender)
  *
- * Accepting an offer atomically creates the `barter_transactions` row and the
- * negotiation `conversation` — both exist the instant a trade is agreed, so
- * the client never has to orchestrate that itself.
+ * Sending an offer opens its `conversation` straight away (both parties can
+ * talk before deciding). Accepting creates the `barter_transactions` row and
+ * reuses that conversation.
  */
 import { type ItemRef, type OfferView } from '@pandam/types';
 import { createOfferSchema, respondToOfferSchema } from '@pandam/validation';
@@ -18,6 +19,7 @@ import { type Context, Hono } from 'hono';
 
 import { offerTransition } from '../../../domain/offers';
 import { ApiError, sendOk } from '../../../lib/http';
+import { mediaUrl, readUploadedImage, requireMedia } from '../../../lib/media';
 import { toOwnerRef } from '../../../lib/serialize';
 import { parseBody } from '../../../lib/validate';
 import { authMiddleware, getAuth, requireAuth } from '../../../middleware/auth';
@@ -26,48 +28,88 @@ import { type AppEnv } from '../../../types';
 
 export const offersRoute = new Hono<AppEnv>();
 
+/**
+ * Upload the optional photo for an offer BEFORE creating it; returns the key
+ * to pass as `imageKey`. Keys are scoped to the uploader (`offers/<userId>/`)
+ * and random, and the create step only accepts the caller's own prefix.
+ */
+offersRoute.post('/attachments', authMiddleware, requireAuth, async (c) => {
+  const { user } = getAuth(c);
+  const bucket = requireMedia(c.env);
+  const { bytes, contentType, extension } = await readUploadedImage(c.req.raw);
+  const key = `offers/${user.id}/${crypto.randomUUID()}.${extension}`;
+  await bucket.put(key, bytes, { httpMetadata: { contentType } });
+  return sendOk(c, { imageKey: key, imageUrl: mediaUrl(key) }, 201);
+});
+
 offersRoute.post('/', authMiddleware, requireAuth, async (c) => {
   const { user } = getAuth(c);
   const { repos } = c.get('ctx');
   const input = await parseBody(c, createOfferSchema);
 
-  if (input.toUserId === user.id) {
-    throw new ApiError('unprocessable', 'You cannot send an offer to yourself.');
-  }
-
-  const [offered, requested] = await Promise.all([
-    repos.listings.findById(input.offeredListingId),
-    repos.listings.findById(input.requestedListingId),
-  ]);
+  const offered = await repos.listings.findById(input.offeredListingId);
   if (!offered || offered.status !== 'published' || offered.ownerId !== user.id) {
     throw new ApiError('unprocessable', 'You can only offer your own published listing.');
   }
-  if (!requested || requested.status !== 'published' || requested.ownerId !== input.toUserId) {
-    throw new ApiError('unprocessable', "That's not a published listing of the recipient's.");
-  }
-  if (offered.transactionType === 'sale' || requested.transactionType === 'sale') {
+  if (offered.transactionType === 'sale') {
     throw new ApiError('unprocessable', 'A sale-only listing cannot be part of a barter offer.');
+  }
+
+  // The recipient is ALWAYS the owner of the requested item, never taken
+  // from the request body. A supplied `toUserId` is only cross-checked.
+  let toUserId: string;
+  if (input.requestedListingId) {
+    const requested = await repos.listings.findById(input.requestedListingId);
+    if (!requested || requested.status !== 'published') {
+      throw new ApiError('unprocessable', 'That listing is not available for trade.');
+    }
+    if (requested.transactionType === 'sale') {
+      throw new ApiError('unprocessable', 'A sale-only listing cannot be part of a barter offer.');
+    }
+    toUserId = requested.ownerId;
+  } else {
+    const need = await repos.needs.findById(input.requestedNeedId!);
+    if (!need || need.status !== 'published') {
+      throw new ApiError('unprocessable', 'That request is not open any more.');
+    }
+    toUserId = need.ownerId;
+  }
+  if (input.toUserId && input.toUserId !== toUserId) {
+    throw new ApiError('unprocessable', 'That item belongs to someone else.');
+  }
+  if (toUserId === user.id) {
+    throw new ApiError('unprocessable', 'You cannot send an offer to yourself.');
+  }
+  if (input.imageKey && !input.imageKey.startsWith(`offers/${user.id}/`)) {
+    throw new ApiError('forbidden', 'That image does not belong to you.');
   }
   // `matchId` is not cross-checked against a persisted `matches` row: the
   // deterministic matches this app shows today are computed on the fly (see
-  // `routes/api/v1/matches.ts`) and never written to that table, so there is
-  // no real `mch_…` id to validate against yet. The column and the FK exist
-  // for when that changes; today the app never sends this field.
+  // `routes/api/v1/matches.ts`) and never written to that table.
 
   const created = await repos.offers.create({
     matchId: input.matchId ?? null,
     fromUserId: user.id,
-    toUserId: input.toUserId,
+    toUserId,
     offeredListingId: input.offeredListingId,
-    requestedListingId: input.requestedListingId,
+    requestedListingId: input.requestedListingId ?? null,
+    requestedNeedId: input.requestedNeedId ?? null,
+    imageKey: input.imageKey ?? null,
     message: input.message ?? null,
     expiresAt: input.expiresAt ?? null,
   });
 
+  // The trade conversation opens with the offer, so the two people can talk
+  // it through BEFORE deciding. Accepting later reuses this same thread.
+  const conversation = await repos.conversations.create({
+    offerId: created.id,
+    participantUserIds: [user.id, toUserId],
+  });
+
   await notify(c, {
-    userId: input.toUserId,
+    userId: toUserId,
     type: 'offer_received',
-    data: { offerId: created.id },
+    data: { offerId: created.id, conversationId: conversation.id },
   });
 
   return sendOk(c, { offer: await hydrate(c, created, user.id) }, 201);
@@ -127,14 +169,20 @@ offersRoute.post('/:id/respond', authMiddleware, requireAuth, async (c) => {
       initiatedByUserId: offer.fromUserId,
       counterpartyUserId: offer.toUserId,
     });
-    const conversation = await repos.conversations.create({
-      offerId: offer.id,
-      participantUserIds: [offer.fromUserId, offer.toUserId],
-    });
+    // Offers made since chat-on-send already have their thread; older ones
+    // get one now.
+    const conversation =
+      (await repos.conversations.findByOffer(offer.id)) ??
+      (await repos.conversations.create({
+        offerId: offer.id,
+        participantUserIds: [offer.fromUserId, offer.toUserId],
+      }));
     await Promise.all([
-      // Both listings realised the trade — they're no longer on the market.
+      // The traded items leave the market; a fulfilled request closes.
       repos.listings.setStatus(offer.offeredListingId, 'archived'),
-      repos.listings.setStatus(offer.requestedListingId, 'archived'),
+      offer.requestedListingId
+        ? repos.listings.setStatus(offer.requestedListingId, 'archived')
+        : repos.needs.setStatus(offer.requestedNeedId!, 'archived'),
       notify(c, {
         userId: offer.fromUserId,
         type: 'offer_accepted',
@@ -169,7 +217,9 @@ async function hydrate(
     fromUserId: string;
     toUserId: string;
     offeredListingId: string;
-    requestedListingId: string;
+    requestedListingId: string | null;
+    requestedNeedId: string | null;
+    imageKey: string | null;
     message: string | null;
     matchId: string | null;
     expiresAt: number | null;
@@ -180,11 +230,14 @@ async function hydrate(
   meId: string,
 ): Promise<OfferView> {
   const { repos } = c.get('ctx');
-  const [fromProfile, toProfile, offeredListing, requestedListing] = await Promise.all([
+  const [fromProfile, toProfile, offeredListing, requestedItem, conversation] = await Promise.all([
     repos.profiles.findByUserId(offer.fromUserId),
     repos.profiles.findByUserId(offer.toUserId),
     repos.market.getListing(offer.offeredListingId),
-    repos.market.getListing(offer.requestedListingId),
+    offer.requestedListingId
+      ? repos.market.getListing(offer.requestedListingId)
+      : repos.market.getNeed(offer.requestedNeedId!),
+    repos.conversations.findByOffer(offer.id),
   ]);
 
   const toItemRef = (
@@ -196,7 +249,7 @@ async function hydrate(
     } | null,
   ): ItemRef => ({
     id,
-    title: item?.title ?? 'Listing removed',
+    title: item?.title ?? 'No longer available',
     type: (item?.type ?? 'product') as ItemRef['type'],
     category: item?.category ?? { id: '', name: 'Unknown', slug: 'unknown' },
   });
@@ -208,7 +261,10 @@ async function hydrate(
     fromUser: toOwnerRef(offer.fromUserId, fromProfile),
     toUser: toOwnerRef(offer.toUserId, toProfile),
     offered: toItemRef(offer.offeredListingId, offeredListing),
-    requested: toItemRef(offer.requestedListingId, requestedListing),
+    requested: toItemRef(offer.requestedListingId ?? offer.requestedNeedId!, requestedItem),
+    requestedKind: offer.requestedListingId ? 'listing' : 'need',
+    imageUrl: offer.imageKey ? mediaUrl(offer.imageKey) : null,
+    conversationId: conversation?.id ?? null,
     message: offer.message,
     matchId: offer.matchId,
     expiresAt: offer.expiresAt,

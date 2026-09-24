@@ -26,6 +26,7 @@ import { ItemCard } from '@/components/ItemCard';
 import { ErrorState } from '@/components/states';
 import { demoCities, demoDiscover, demoMergePages, demoQuery } from '@/dummy';
 import { type MarketKind } from '@/lib/api/market';
+import { useSession } from '@/lib/auth/hooks';
 import { useBrowseCategories } from '@/lib/hooks/useCategories';
 import { useDebounced } from '@/lib/hooks/useDebounced';
 import { useDiscover, useListingCities } from '@/lib/hooks/useMarket';
@@ -58,7 +59,12 @@ export default function DiscoverScreen() {
     [categoryId, q, params.owner, city],
   );
   const discover = demoMergePages(useDiscover(kind, filters), demoDiscover(kind, filters));
-  const items = discover.data?.pages.flatMap((p) => p.items) ?? [];
+  const { user: me } = useSession();
+  // Discover is for OTHER people's items — your own listing or request is not
+  // an opportunity for you (it lives on your Profile instead).
+  const items = (discover.data?.pages.flatMap((p) => p.items) ?? []).filter(
+    (i) => i.ownerId !== me?.id,
+  );
   // Marketplace rhythm: the freshest item leads as a large feature card.
   const featured = items.length > 3 ? items[0] : null;
   const gridItems = featured ? items.slice(1) : items;

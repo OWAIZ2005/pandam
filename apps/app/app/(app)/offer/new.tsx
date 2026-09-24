@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { Image, Pressable, View } from 'react-native';
 
-import { type MarketItem } from '@pandam/types';
+import { type MarketItem, type OfferView } from '@pandam/types';
 import {
   Button,
   Card,
@@ -22,7 +23,6 @@ import {
   radii,
   spacing,
   useMotionOK,
-  useToast,
 } from '@pandam/ui';
 
 import { AppHeader } from '@/components/AppHeader';
@@ -30,7 +30,7 @@ import { TradeStage } from '@/components/brand/TradeStage';
 import { ErrorState } from '@/components/states';
 import { IS_DEMO_DATA, demoItem, demoMergeList, demoMyListings, demoQuery } from '@/dummy';
 import { ApiError } from '@/lib/api/client';
-import { primaryImage } from '@/lib/api/media';
+import { primaryImage, uploadOfferImage } from '@/lib/api/media';
 import { TYPE_LABEL } from '@/lib/format';
 import { useCreateOffer } from '@/lib/hooks/useOffers';
 import { useItem, useMyItems } from '@/lib/hooks/useMarket';
@@ -116,32 +116,41 @@ function SelectableItem({
   );
 }
 
+/** Items that exist only in the client showcase can't take part in a real offer. */
+const isRealId = (id: string) => !id.startsWith('demo-');
+
 /**
- * "Offer a trade" — pick one of the caller's own published, barter-eligible
- * listings to exchange for `requestedListingId`. Offers are always
- * listing-for-listing; there is no direct "offer against a need" (a need
- * carries no item of its own to give back).
+ * "Offer a trade" — pick one of your own published, barter-eligible listings
+ * to give, for either someone's listing (`requestedListingId`) or someone's
+ * I NEED request (`requestedNeedId`). Optionally attach a photo and a
+ * message. On success the chat is already open (the Worker creates the
+ * trade conversation with the offer), so the success state offers it.
  */
 export default function NewOfferScreen() {
   const router = useRouter();
-  const toast = useToast();
-  const { requestedListingId } = useLocalSearchParams<{ requestedListingId: string }>();
-  const liveRequested = useItem('listing', requestedListingId);
-  const demoRequested = IS_DEMO_DATA ? demoItem(requestedListingId ?? '') : undefined;
+  const params = useLocalSearchParams<{ requestedListingId?: string; requestedNeedId?: string }>();
+  const kind: 'listing' | 'need' = params.requestedNeedId ? 'need' : 'listing';
+  const targetId = (kind === 'need' ? params.requestedNeedId : params.requestedListingId) ?? '';
+  const liveRequested = useItem(kind, targetId);
+  const demoRequested = IS_DEMO_DATA ? demoItem(targetId) : undefined;
   const requested = demoRequested ? demoQuery(liveRequested, demoRequested) : liveRequested;
   const mine = demoMergeList(useMyItems('listing'), demoMyListings);
   const create = useCreateOffer();
+  const motionOK = useMotionOK();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
-  // Visual only: hold the "trade proposal sent" moment briefly before the
-  // existing toast + navigation run, unchanged.
-  const motionOK = useMotionOK();
-  const [sent, setSent] = useState(false);
-  const sentTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [photo, setPhoto] = useState<string | null>(null);
+  // Upload once: a retry after a failed SEND reuses the already-uploaded key.
+  const [photoKey, setPhotoKey] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [sentOffer, setSentOffer] = useState<OfferView | null>(null);
+  const [showDone, setShowDone] = useState(false);
+  const doneTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(
     () => () => {
-      if (sentTimer.current) clearTimeout(sentTimer.current);
+      if (doneTimer.current) clearTimeout(doneTimer.current);
     },
     [],
   );
@@ -149,43 +158,147 @@ export default function NewOfferScreen() {
   const eligible = useMemo(
     () =>
       (mine.data ?? []).filter(
-        (l) => l.status === 'published' && l.pricing?.transactionType !== 'sale',
+        (l) => isRealId(l.id) && l.status === 'published' && l.pricing?.transactionType !== 'sale',
       ),
     [mine.data],
   );
-
   const selected = eligible.find((i) => i.id === selectedId) ?? null;
+  const targetIsReal = isRealId(targetId);
+
+  const pickPhoto = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 0.8,
+    });
+    const uri = res.canceled ? null : res.assets[0]?.uri;
+    if (!uri) return;
+    setPhoto(uri);
+    setPhotoKey(null);
+    setUploadError(null);
+  };
+  const removePhoto = () => {
+    setPhoto(null);
+    setPhotoKey(null);
+    setUploadError(null);
+  };
 
   const formError =
-    create.error instanceof ApiError
+    uploadError ??
+    (create.error instanceof ApiError
       ? create.error.message
       : create.error
         ? 'Could not send the offer. Check your connection and try again.'
-        : null;
+        : null);
 
-  const submit = () => {
-    if (!selectedId || !requested.data || sent) return;
+  const busy = uploading || create.isPending;
+
+  const submit = async () => {
+    if (!selectedId || !requested.data || !targetIsReal || busy || sentOffer) return;
+    let imageKey = photoKey;
+    if (photo && !imageKey) {
+      setUploading(true);
+      setUploadError(null);
+      try {
+        imageKey = (await uploadOfferImage(photo)).imageKey;
+        setPhotoKey(imageKey);
+      } catch {
+        setUploadError('The photo could not be uploaded. Try again, or remove it and send without it.');
+        return;
+      } finally {
+        setUploading(false);
+      }
+    }
     create.mutate(
       {
-        toUserId: requested.data.ownerId,
         offeredListingId: selectedId,
-        requestedListingId: requested.data.id,
+        ...(kind === 'need' ? { requestedNeedId: targetId } : { requestedListingId: targetId }),
         message: message.trim() || undefined,
+        imageKey: imageKey ?? undefined,
       },
       {
-        onSuccess: (res) => {
-          setSent(true);
-          sentTimer.current = setTimeout(
-            () => {
-              toast.success('Offer sent. You will hear when they reply.');
-              router.replace(`/(app)/offer/${res.offer.id}`);
-            },
-            motionOK ? 1300 : 700,
-          );
+        onSuccess: ({ offer }) => {
+          setSentOffer(offer);
+          // Let the "trade sent" moment play, then show where to go next.
+          doneTimer.current = setTimeout(() => setShowDone(true), motionOK ? 1300 : 300);
         },
       },
     );
   };
+
+  /* ------------------------------------------------------ offer sent -- */
+  if (sentOffer && showDone) {
+    const name = sentOffer.toUser.displayName;
+    return (
+      <Screen scroll padded={false} edges={['top', 'bottom']}>
+        <View
+          style={{
+            width: '100%',
+            maxWidth: layout.contentMaxWidth,
+            alignSelf: 'center',
+            paddingHorizontal: layout.gutter,
+            paddingTop: spacing['4xl'],
+            paddingBottom: spacing['3xl'],
+          }}
+        >
+          <Stack gap="xl" align="center">
+            <View
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: 40,
+                backgroundColor: colors.match,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="paper-plane" size={34} color={colors.textInverse} />
+            </View>
+            <Stack gap="xs" align="center">
+              <Text variant="display" center>
+                Offer Sent
+              </Text>
+              <Text variant="body" tone="secondary" center>
+                Your trade offer has been sent to {name}. You can chat while they decide.
+              </Text>
+            </Stack>
+            <Card padded style={{ alignSelf: 'stretch' }}>
+              <Stack gap="xs">
+                <Text variant="caption" tone="muted">
+                  You offered
+                </Text>
+                <Text variant="bodyStrong">{sentOffer.offered.title}</Text>
+                <Text variant="caption" tone="muted" style={{ marginTop: spacing.sm }}>
+                  {sentOffer.requestedKind === 'need' ? 'For their request' : 'For'}
+                </Text>
+                <Text variant="bodyStrong">{sentOffer.requested.title}</Text>
+              </Stack>
+            </Card>
+            <Stack gap="sm" style={{ alignSelf: 'stretch' }}>
+              {sentOffer.conversationId ? (
+                <Button
+                  label={`Chat with ${name.split(' ')[0]}`}
+                  size="lg"
+                  fullWidth
+                  leftIcon={<Ionicons name="chatbubbles" size={17} color={colors.textInverse} />}
+                  onPress={() => router.replace(`/(app)/chat/${sentOffer.conversationId}`)}
+                />
+              ) : null}
+              <Button
+                label="View offer"
+                variant="secondary"
+                size="lg"
+                fullWidth
+                onPress={() => router.replace(`/(app)/offer/${sentOffer.id}`)}
+              />
+            </Stack>
+          </Stack>
+        </View>
+      </Screen>
+    );
+  }
+
+  const ownerName = requested.data?.owner.displayName;
 
   return (
     <Screen
@@ -195,23 +308,27 @@ export default function NewOfferScreen() {
       footer={
         <Stack gap="sm">
           {formError ? (
-            <Notice
-              kind="danger"
-              icon={<Ionicons name="alert-circle" size={16} color={colors.danger} />}
-            >
+            <Notice kind="danger" icon={<Ionicons name="alert-circle" size={16} color={colors.danger} />}>
               {formError}
             </Notice>
           ) : null}
+          {!targetIsReal ? (
+            <Notice kind="neutral" icon={<Ionicons name="information-circle" size={16} color={colors.textMuted} />}>
+              This item isn&apos;t accepting offers right now.
+            </Notice>
+          ) : null}
           <Button
-            label={sent ? 'Sent' : create.isPending ? 'Sending…' : 'Send offer'}
+            label={
+              sentOffer ? 'Sent' : uploading ? 'Uploading photo…' : create.isPending ? 'Sending…' : 'Send offer'
+            }
             size="lg"
             fullWidth
-            disabled={!selectedId || sent}
-            loading={create.isPending}
-            onPress={submit}
+            disabled={!selectedId || !targetIsReal || !!sentOffer}
+            loading={busy}
+            onPress={() => void submit()}
             leftIcon={
               <Ionicons
-                name={sent ? 'checkmark' : 'paper-plane-outline'}
+                name={sentOffer ? 'checkmark' : 'paper-plane-outline'}
                 size={17}
                 color={colors.textInverse}
               />
@@ -237,18 +354,21 @@ export default function NewOfferScreen() {
       >
         <AppHeader
           title="Offer a trade"
-          subtitle="Goods for goods — no money changes hands."
+          subtitle={
+            kind === 'need'
+              ? `Offer ${ownerName ? `${ownerName.split(' ')[0]} ` : ''}something for their request.`
+              : 'Goods for goods — no money changes hands.'
+          }
           back
         />
 
         <Stack gap="2xl">
-          {/* ------------------------------------------------ what you get -- */}
           {requested.isPending ? (
             <SkeletonList count={1} />
           ) : requested.data ? (
             <TradeStage
-              sending={create.isPending}
-              sent={sent}
+              sending={busy}
+              sent={!!sentOffer}
               get={{
                 id: requested.data.id,
                 title: requested.data.title,
@@ -262,7 +382,6 @@ export default function NewOfferScreen() {
             />
           ) : null}
 
-          {/* ----------------------------------------------- what you give -- */}
           <View>
             <View style={{ gap: 2, marginBottom: spacing.md }}>
               <Text variant="h3">What will you give?</Text>
@@ -280,7 +399,7 @@ export default function NewOfferScreen() {
                 <Stack gap="md">
                   <Text variant="bodySm" tone="secondary">
                     You have nothing to offer yet — a trade needs something from both sides. Add a
-                    listing and come back; this item will still be here.
+                    listing and come back; this will still be here.
                   </Text>
                   <Button
                     label="Add something I have"
@@ -303,18 +422,74 @@ export default function NewOfferScreen() {
             )}
           </View>
 
-          {/* --------------------------------------------------- the swap -- */}
-          {/*
-            Once both halves are known, spell the trade out in one sentence.
-            It is the last thing read before sending, and it is cheaper to
-            check here than to withdraw an offer afterwards.
-          */}
+          {/* ------------------------------------------------ optional photo -- */}
+          <View style={{ gap: spacing.sm }}>
+            <View style={{ gap: 2 }}>
+              <Text variant="h3">Add a photo</Text>
+              <Text variant="bodySm" tone="secondary">
+                Optional — show what you&apos;re offering or an example of your work.
+              </Text>
+            </View>
+            {photo ? (
+              <View style={{ width: 120, height: 120 }}>
+                <Image
+                  source={{ uri: photo }}
+                  style={{ width: 120, height: 120, borderRadius: radii.lg, backgroundColor: colors.surfaceMuted }}
+                  resizeMode="cover"
+                  accessibilityLabel="Photo attached to your offer"
+                />
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Remove photo"
+                  onPress={removePhoto}
+                  hitSlop={10}
+                  style={{
+                    position: 'absolute',
+                    top: -8,
+                    right: -8,
+                    width: 28,
+                    height: 28,
+                    borderRadius: 14,
+                    backgroundColor: colors.surfaceInverse,
+                    borderWidth: 2,
+                    borderColor: colors.surface,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Ionicons name="close" size={15} color={colors.textInverse} />
+                </Pressable>
+              </View>
+            ) : (
+              <Press
+                scale="sm"
+                accessibilityRole="button"
+                accessibilityLabel="Add a photo"
+                onPress={() => void pickPhoto()}
+                style={{
+                  width: 120,
+                  height: 120,
+                  borderRadius: radii.lg,
+                  borderWidth: 1.5,
+                  borderStyle: 'dashed',
+                  borderColor: colors.accentBorder,
+                  backgroundColor: colors.accentSoft,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 4,
+                }}
+              >
+                <Ionicons name="camera-outline" size={24} color={colors.accent} />
+                <Text variant="caption" tone="accent" style={{ fontWeight: '700' }}>
+                  Add photo
+                </Text>
+              </Press>
+            )}
+          </View>
+
           {selected && requested.data ? (
-            <Notice
-              kind="success"
-              icon={<Ionicons name="swap-horizontal" size={16} color={colors.accent} />}
-            >
-              You give “{selected.title}” and get “{requested.data.title}”.
+            <Notice kind="success" icon={<Ionicons name="swap-horizontal" size={16} color={colors.accent} />}>
+              You give “{selected.title}” for “{requested.data.title}”.
             </Notice>
           ) : null}
 

@@ -22,6 +22,8 @@ import {
 
 import { IS_DEMO_DATA, demoConversations, demoMessages, demoQuery } from '@/dummy';
 import { ErrorState } from '@/components/states';
+import { TradeContextCard, tradeSubtitle } from '@/components/TradeContextCard';
+import { useOffer } from '@/lib/hooks/useOffers';
 import { mediaSrc } from '@/lib/api/media';
 import { dayLabel, timeOfDay } from '@/lib/format';
 import {
@@ -164,6 +166,8 @@ export default function ChatScreen() {
   }, [conversationId]);
 
   const person = conversation.data?.participants[0];
+  // The trade this chat belongs to (every trade chat is tied to one offer).
+  const offer = useOffer(conversation.data?.offerId ?? undefined);
   const name = person?.displayName ?? 'Chat';
   const rendered = useMemo(() => group(messages.data ?? []), [messages.data]);
   const canSend = !!draft.trim() && !send.isPending;
@@ -220,12 +224,29 @@ export default function ChatScreen() {
                 {name}
               </Text>
               <Text variant="caption" tone="muted" numberOfLines={1}>
-                Trade agreed — arrange the swap
+                {tradeSubtitle(offer.data)}
               </Text>
             </View>
           </Row>
         </Press>
       </Row>
+
+      {offer.data ? (
+        <View
+          style={{
+            width: '100%',
+            maxWidth: layout.contentMaxWidth,
+            alignSelf: 'center',
+            paddingHorizontal: layout.gutter,
+            paddingTop: spacing.md,
+          }}
+        >
+          <TradeContextCard
+            offer={offer.data}
+            onOpen={() => router.push(`/(app)/offer/${offer.data!.id}`)}
+          />
+        </View>
+      ) : null}
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}

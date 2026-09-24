@@ -18,7 +18,7 @@ import {
   spacing,
 } from '@pandam/ui';
 
-import { demoOffers, demoQuery } from '@/dummy';
+import { demoMergeList, demoOffers } from '@/dummy';
 import { AppHeader } from '@/components/AppHeader';
 import { ErrorState } from '@/components/states';
 import { mediaSrc } from '@/lib/api/media';
@@ -44,11 +44,11 @@ const STATUS_LABEL: Record<OfferView['status'], string> = {
 export default function OffersScreen() {
   const router = useRouter();
   const [tab, setTab] = useState<'incoming' | 'outgoing'>('incoming');
-  const incoming = demoQuery(
+  const incoming = demoMergeList(
     useIncomingOffers(),
     demoOffers.filter((o) => !o.isMine),
   );
-  const outgoing = demoQuery(
+  const outgoing = demoMergeList(
     useOutgoingOffers(),
     demoOffers.filter((o) => o.isMine),
   );

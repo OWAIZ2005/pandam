@@ -117,9 +117,17 @@ async function hydrate(
   if (offer) {
     const [offeredListing, requestedListing] = await Promise.all([
       repos.market.getListing(offer.offeredListingId),
-      repos.market.getListing(offer.requestedListingId),
+      // An offer on an I NEED request has no listing on the other side; the
+      // request itself is what that side of the trade is about.
+      offer.requestedListingId
+        ? repos.market.getListing(offer.requestedListingId)
+        : offer.requestedNeedId
+          ? repos.market.getNeed(offer.requestedNeedId)
+          : Promise.resolve(null),
     ]);
-    const toRef = (item: typeof offeredListing): ItemRef =>
+    const toRef = (
+      item: { id: string; title: string; type: ItemRef['type']; category: ItemRef['category'] } | null,
+    ): ItemRef =>
       item
         ? { id: item.id, title: item.title, type: item.type, category: item.category }
         : emptyItem;

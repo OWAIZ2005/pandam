@@ -157,6 +157,17 @@ export function ItemDetail({ kind, id }: { kind: MarketKind; id: string }) {
               }
               leftIcon={<Ionicons name="create-outline" size={16} color={colors.textInverse} />}
             />
+            {!isHave ? (
+              // Your own request: the offers people sent for it live in Offers.
+              <Button
+                label="View offers"
+                variant="secondary"
+                size="lg"
+                fullWidth
+                onPress={() => router.push('/(app)/offers')}
+                leftIcon={<Ionicons name="mail-open-outline" size={16} color={colors.textPrimary} />}
+              />
+            ) : null}
             <Row gap="sm">
               {STATUS_ACTIONS[item.status].map((a) => (
                 <Button
@@ -217,17 +228,22 @@ export function ItemDetail({ kind, id }: { kind: MarketKind; id: string }) {
           </Stack>
         ) : (
           <Stack gap="sm">
+            {/* Someone else's I NEED request: fulfil it with something you have. */}
             <Button
-              label={`See ${item.owner.displayName.split(' ')[0]}’s listings`}
+              label="Offer a trade"
               variant="need"
               size="lg"
               fullWidth
-              onPress={() => router.push(`/(app)/(tabs)/discover?owner=${item.ownerId}`)}
-              leftIcon={<Ionicons name="storefront-outline" size={17} color={colors.textInverse} />}
+              onPress={() => router.push(`/(app)/offer/new?requestedNeedId=${item.id}`)}
+              leftIcon={<Ionicons name="swap-horizontal" size={17} color={colors.textInverse} />}
             />
-            <Text variant="caption" tone="muted" center>
-              A request is fulfilled by offering one of your own listings against theirs.
-            </Text>
+            <Button
+              label={`See ${item.owner.displayName.split(' ')[0]}’s listings`}
+              variant="quiet"
+              size="sm"
+              fullWidth
+              onPress={() => router.push(`/(app)/(tabs)/discover?owner=${item.ownerId}`)}
+            />
           </Stack>
         )
       }

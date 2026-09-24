@@ -9,7 +9,7 @@ import { usePushRegistration } from '@/lib/hooks/usePushRegistration';
 
 /** Authenticated area. Guards every screen inside `(app)`. */
 export default function AppLayout() {
-  const { isResolving, isAuthenticated } = useSession();
+  const { isResolving, isAuthenticated, user } = useSession();
   // Both are no-ops until somebody is signed in, so they can sit above the
   // guard and keep their hook order stable across the redirect.
   usePushRegistration();
@@ -18,6 +18,12 @@ export default function AppLayout() {
   const showSplash = useHoldSplash(isResolving);
   if (showSplash) return <Splash />;
   if (!isAuthenticated) return <Redirect href="/(auth)/login" />;
+  // First-time onboarding: a signed-in account that has not finished the
+  // one-time identity verification is sent there (and resumes where it
+  // stopped). Verified accounts never see it again.
+  if (user?.identityVerification?.status !== 'verified') {
+    return <Redirect href="/(onboarding)/verify" />;
+  }
 
   return (
     <Stack

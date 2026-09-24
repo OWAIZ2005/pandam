@@ -46,6 +46,7 @@ import type {
   TransactionType,
   UserRow,
   UserStatus,
+  IdentityVerificationStatus,
 } from '@pandam/database/schema';
 
 /* -------------------------------------------------------------------------- */
@@ -121,6 +122,7 @@ export type {
   ReportSubjectType,
   TransactionType,
   UserStatus,
+  IdentityVerificationStatus,
 };
 
 /* -------------------------------------------------------------------------- */
@@ -164,6 +166,16 @@ export interface SafeUser {
   status: UserStatus;
   createdAt: number;
   updatedAt: number;
+  /** First-time identity verification progress. Outcomes only — no ID data. */
+  identityVerification: IdentityVerification;
+}
+
+export type IdentityVerificationStepStatus = 'not_started' | 'verified';
+
+export interface IdentityVerification {
+  status: IdentityVerificationStatus;
+  governmentId: IdentityVerificationStepStatus;
+  face: IdentityVerificationStepStatus;
 }
 
 /** A user's public profile as returned by the API. */

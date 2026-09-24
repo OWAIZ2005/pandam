@@ -64,3 +64,14 @@ export const oauthLoginSchema = z.object({
   displayName: boundedString(1, 80).optional(),
 });
 export type OAuthLoginInput = z.infer<typeof oauthLoginSchema>;
+
+/**
+ * One identity-verification step. Only `demo` exists today: a simulated
+ * DigiLocker / face check used for client demos. A production provider will
+ * add its own mode here (e.g. an authorization code the Worker exchanges with
+ * the provider itself) — the client never asserts "I am verified" in production.
+ */
+export const verificationStepSchema = z.object({
+  mode: z.literal('demo'),
+});
+export type VerificationStepInput = z.infer<typeof verificationStepSchema>;

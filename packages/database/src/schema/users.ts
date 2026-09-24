@@ -1,11 +1,16 @@
 import { sql } from 'drizzle-orm';
 import { index, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
-import { USER_STATUS, type UserStatus } from '../enums';
+import {
+  IDENTITY_VERIFICATION_STATUS,
+  type IdentityVerificationStatus,
+  USER_STATUS,
+  type UserStatus,
+} from '../enums';
 
-import { createdAt, idColumn, updatedAt } from './_shared';
+import { createdAt, idColumn, nullableTimestamp, updatedAt } from './_shared';
 
-export { USER_STATUS, type UserStatus };
+export { IDENTITY_VERIFICATION_STATUS, type IdentityVerificationStatus, USER_STATUS, type UserStatus };
 
 /**
  * An authenticated PANDAM user.
@@ -21,6 +26,17 @@ export const users = sqliteTable(
     id: idColumn,
     email: text('email').notNull(),
     status: text('status', { enum: USER_STATUS }).notNull().default('active'),
+    /**
+     * One-time identity verification (see apps/worker/src/services/verification.ts).
+     * Only OUTCOMES are stored — never an ID number, document, OTP or image.
+     */
+    identityVerificationStatus: text('identity_verification_status', {
+      enum: IDENTITY_VERIFICATION_STATUS,
+    })
+      .notNull()
+      .default('not_started'),
+    governmentIdVerifiedAt: nullableTimestamp('government_id_verified_at'),
+    faceVerifiedAt: nullableTimestamp('face_verified_at'),
     createdAt,
     updatedAt,
   },

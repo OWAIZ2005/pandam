@@ -1,7 +1,12 @@
 import { eq, sql } from 'drizzle-orm';
 
 import { newId } from '../id';
-import { type UserRow, type UserStatus, users } from '../schema/users';
+import {
+  type IdentityVerificationStatus,
+  type UserRow,
+  type UserStatus,
+  users,
+} from '../schema/users';
 
 import { type Database, firstOrNull, one, touch } from './helpers';
 
@@ -30,6 +35,23 @@ export function usersRepository(db: Database) {
         .from(users)
         .where(sql`lower(${users.email}) = lower(${email.trim()})`)
         .limit(1);
+      return firstOrNull(rows);
+    },
+
+    /** Record identity-verification progress (outcomes/timestamps only). */
+    async setIdentityVerification(
+      id: string,
+      patch: {
+        identityVerificationStatus: IdentityVerificationStatus;
+        governmentIdVerifiedAt?: number;
+        faceVerifiedAt?: number;
+      },
+    ): Promise<UserRow | null> {
+      const rows = await db
+        .update(users)
+        .set({ ...patch, ...touch() })
+        .where(eq(users.id, id))
+        .returning();
       return firstOrNull(rows);
     },
 

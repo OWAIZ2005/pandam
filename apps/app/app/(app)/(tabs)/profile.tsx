@@ -204,6 +204,14 @@ export default function ProfileScreen() {
               <Text variant="bodySm" tone="muted" numberOfLines={1}>
                 {profile.username ? `@${profile.username}` : user?.email}
               </Text>
+              {user?.identityVerification?.status === 'verified' ? (
+                <Row gap="xs" style={{ marginTop: 2 }}>
+                  <Ionicons name="shield-checkmark" size={12} color={colors.match} />
+                  <Text variant="caption" tone="match" style={{ fontWeight: '700' }}>
+                    Identity Verified ✓
+                  </Text>
+                </Row>
+              ) : null}
               {location ? (
                 <Row gap="xs" style={{ marginTop: 2 }}>
                   <Ionicons name="location-outline" size={12} color={colors.textMuted} />

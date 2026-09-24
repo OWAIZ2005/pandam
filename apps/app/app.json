@@ -42,7 +42,14 @@
       ],
       "expo-image-picker",
       "expo-web-browser",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "PANDAM uses your front camera for a one-time face verification selfie.",
+          "recordAudioAndroid": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

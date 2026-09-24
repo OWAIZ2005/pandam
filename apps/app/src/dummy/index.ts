@@ -74,3 +74,33 @@ export function demoPhoto(id: string): string | undefined {
 }
 
 export * from './data';
+
+/*
+ * Demo mode MERGES instead of replacing wherever real members' content must
+ * show up: real items first, then the demo showcase (deduped by id). Without
+ * this, a listing someone really posts is saved but never visible in demo
+ * mode, because the demo list would stand in for the live result.
+ */
+
+type WithId = { id: string };
+
+/** A live list (e.g. `useMyItems`) plus the demo list. */
+export function demoMergeList<Q extends { data?: unknown }>(query: Q, demo: WithId[]): Q {
+  if (!IS_DEMO_DATA) return query;
+  const live = (query.data as WithId[] | undefined) ?? [];
+  const seen = new Set(live.map((i) => i.id));
+  return demoQuery(query, [...live, ...demo.filter((d) => !seen.has(d.id))] as NonNullable<Q['data']>);
+}
+
+/** A live infinite query (e.g. `useDiscover`) plus demo pages. */
+export function demoMergePages<Q extends { data?: unknown }>(
+  query: Q,
+  demo: { pages: { items: WithId[] }[] },
+): Q {
+  if (!IS_DEMO_DATA) return query;
+  const live =
+    (query.data as { pages: { items: WithId[] }[] } | undefined)?.pages.flatMap((p) => p.items) ?? [];
+  const seen = new Set(live.map((i) => i.id));
+  const extra = demo.pages.flatMap((p) => p.items).filter((d) => !seen.has(d.id));
+  return demoQuery(query, demoPages([...live, ...extra]) as NonNullable<Q['data']>);
+}

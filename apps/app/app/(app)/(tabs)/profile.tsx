@@ -4,7 +4,6 @@ import { View } from 'react-native';
 
 import { type MarketItem } from '@pandam/types';
 import {
-  Avatar,
   Badge,
   Button,
   Card,
@@ -24,17 +23,20 @@ import {
   radii,
   spacing,
   shadows,
+  useToast,
 } from '@pandam/ui';
 
-import { IS_DEMO_DATA, demoMyListings, demoMyNeeds, demoQuery } from '@/dummy';
+import { IS_DEMO_DATA, demoMergeList, demoMyListings, demoMyNeeds } from '@/dummy';
 import { useTransactions } from '@/lib/hooks/useTransactions';
 import { AppHeader } from '@/components/AppHeader';
+import { AvatarPicker } from '@/components/AvatarPicker';
 import { ItemCard } from '@/components/ItemCard';
 import { ErrorState } from '@/components/states';
 import { type MarketKind } from '@/lib/api/market';
 import { mediaSrc } from '@/lib/api/media';
 import { useLogout, useSession } from '@/lib/auth/hooks';
 import { useMyItems } from '@/lib/hooks/useMarket';
+import { useUploadAvatar } from '@/lib/hooks/useMedia';
 import { useUnreadNotificationCount } from '@/lib/hooks/useNotifications';
 
 function MyItemsSection({
@@ -46,7 +48,7 @@ function MyItemsSection({
   onOpen: (item: MarketItem) => void;
   onAdd: () => void;
 }) {
-  const q = demoQuery(useMyItems(kind), kind === 'listing' ? demoMyListings : demoMyNeeds);
+  const q = demoMergeList(useMyItems(kind), kind === 'listing' ? demoMyListings : demoMyNeeds);
   const isHave = kind === 'listing';
   const items = q.data ?? [];
   const live = items.filter((i) => i.status === 'published').length;
@@ -131,12 +133,14 @@ function CountBadge({ count }: { count: number }) {
 }
 
 export default function ProfileScreen() {
+  const uploadAvatar = useUploadAvatar();
+  const avatarToast = useToast();
   const router = useRouter();
   const { user, profile } = useSession();
   const logout = useLogout();
   const unread = useUnreadNotificationCount();
-  const myHave = demoQuery(useMyItems('listing'), demoMyListings);
-  const myNeed = demoQuery(useMyItems('need'), demoMyNeeds);
+  const myHave = demoMergeList(useMyItems('listing'), demoMyListings);
+  const myNeed = demoMergeList(useMyItems('need'), demoMyNeeds);
   const trades = useTransactions();
   const tradeCount = IS_DEMO_DATA
     ? 4
@@ -193,7 +197,18 @@ export default function ProfileScreen() {
             <View
               style={{ borderRadius: radii.pill, borderWidth: 3, borderColor: colors.accentSoft }}
             >
-              <Avatar name={profile.displayName} size={72} uri={mediaSrc(profile.avatarUrl)} />
+              <AvatarPicker
+                name={profile.displayName}
+                size={72}
+                uri={mediaSrc(profile.avatarUrl)}
+                busy={uploadAvatar.isPending}
+                onPicked={(uri) =>
+                  uploadAvatar.mutate(uri, {
+                    onSuccess: () => avatarToast.success('Photo updated.'),
+                    onError: () => avatarToast.error('That photo could not be uploaded. Please try again.'),
+                  })
+                }
+              />
             </View>
 
             <View style={{ flex: 1, minWidth: 0, gap: 2, paddingTop: spacing.xs }}>

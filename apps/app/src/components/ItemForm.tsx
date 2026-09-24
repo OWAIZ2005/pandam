@@ -31,6 +31,7 @@ import {
 } from '@pandam/ui';
 import { boundedString, itemTypeSchema, z } from '@pandam/validation';
 
+import { AddCategorySheet } from '@/components/AddCategorySheet';
 import { GuideRail } from '@/components/brand/GuideRail';
 import { PhotoPicker } from '@/components/PhotoPicker';
 import { ApiError } from '@/lib/api/client';
@@ -149,7 +150,8 @@ export function ItemForm({ kind, mode, initial, submitting, error, onSubmit }: I
   const categories = useCategories();
   const [photos, setPhotos] = useState<string[]>([]);
 
-  const { control, handleSubmit, formState, watch } = useForm<FormValues>({
+  const [addingCategory, setAddingCategory] = useState(false);
+  const { control, handleSubmit, formState, watch, setValue } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       categoryId: initial?.category.id ?? '',
@@ -242,6 +244,14 @@ export function ItemForm({ kind, mode, initial, submitting, error, onSubmit }: I
                       onPress={() => field.onChange(c.id)}
                     />
                   ))}
+                  {/* Nothing fits? Members can add a category right here. */}
+                  <Chip
+                    label="New category"
+                    tone={tone}
+                    selected={false}
+                    icon={<Ionicons name="add" size={14} color={colors.accent} />}
+                    onPress={() => setAddingCategory(true)}
+                  />
                 </Row>
                 {fieldState.error ? (
                   <Text variant="caption" tone="danger">
@@ -252,6 +262,14 @@ export function ItemForm({ kind, mode, initial, submitting, error, onSubmit }: I
             )}
           />
         </View>
+
+        <AddCategorySheet
+          visible={addingCategory}
+          onClose={() => setAddingCategory(false)}
+          existing={categories.data ?? []}
+          onCreated={(c) => setValue('categoryId', c.id, { shouldValidate: true })}
+          onUseExisting={(id) => setValue('categoryId', id, { shouldValidate: true })}
+        />
 
         {/* ----------------------------------------------------------- type -- */}
         <View>

@@ -28,7 +28,7 @@ import {
 import { AppHeader } from '@/components/AppHeader';
 import { TradeStage } from '@/components/brand/TradeStage';
 import { ErrorState } from '@/components/states';
-import { IS_DEMO_DATA, demoItem, demoMyListings, demoQuery } from '@/dummy';
+import { IS_DEMO_DATA, demoItem, demoMergeList, demoMyListings, demoQuery } from '@/dummy';
 import { ApiError } from '@/lib/api/client';
 import { primaryImage } from '@/lib/api/media';
 import { TYPE_LABEL } from '@/lib/format';
@@ -129,7 +129,7 @@ export default function NewOfferScreen() {
   const liveRequested = useItem('listing', requestedListingId);
   const demoRequested = IS_DEMO_DATA ? demoItem(requestedListingId ?? '') : undefined;
   const requested = demoRequested ? demoQuery(liveRequested, demoRequested) : liveRequested;
-  const mine = demoQuery(useMyItems('listing'), demoMyListings);
+  const mine = demoMergeList(useMyItems('listing'), demoMyListings);
   const create = useCreateOffer();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);

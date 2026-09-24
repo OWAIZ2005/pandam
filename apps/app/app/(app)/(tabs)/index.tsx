@@ -32,6 +32,8 @@ import {
   demoMyListings,
   demoMyNeeds,
   demoOthersListings,
+  demoMergeList,
+  demoMergePages,
   demoPages,
   demoQuery,
 } from '@/dummy';
@@ -94,9 +96,9 @@ export default function HomeScreen() {
   const categories = useBrowseCategories();
   const [addingCategory, setAddingCategory] = useState(false);
   const matches = demoQuery(useMatches(), demoMatches);
-  const recent = demoQuery(useDiscover('listing', { limit: 8 }), demoPages(demoOthersListings));
-  const myHave = demoQuery(useMyItems('listing'), demoMyListings);
-  const myNeed = demoQuery(useMyItems('need'), demoMyNeeds);
+  const recent = demoMergePages(useDiscover('listing', { limit: 8 }), demoPages(demoOthersListings));
+  const myHave = demoMergeList(useMyItems('listing'), demoMyListings);
+  const myNeed = demoMergeList(useMyItems('need'), demoMyNeeds);
 
   const goDiscover = useCallback(
     (categoryId?: string) =>

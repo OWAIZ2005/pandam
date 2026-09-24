@@ -14,7 +14,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Text, colors, palette, radii, spacing, useMotionOK } from '@pandam/ui';
+import { Text, colors, palette, radii, spacing, useMotionOK, ALLOW_3D } from '@pandam/ui';
 
 import { brandImages, type BrandImageKey } from './imagery';
 import { OrganicShape } from './OrganicShape';
@@ -180,8 +180,8 @@ function Layer({
         { translateX: px.value * 14 * spec.depth },
         { translateY: (1 - enter.value) * 60 + py.value * 10 * spec.depth - f * 6 * spec.depth },
         { scale: 0.82 + enter.value * 0.18 },
-        { rotateY: `${spec.ry + px.value * 8}deg` },
-        { rotateX: `${-py.value * 6}deg` },
+        { rotateY: `${ALLOW_3D ? spec.ry + px.value * 8 : 0}deg` },
+        { rotateX: `${ALLOW_3D ? -py.value * 6 : 0}deg` },
         { rotateZ: `${spec.rz + (1 - enter.value) * spec.rz * 2 + f * 1.5}deg` },
       ],
     };

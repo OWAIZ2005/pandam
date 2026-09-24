@@ -12,7 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Text, colors, palette, radii, spacing, useMotionOK } from '@pandam/ui';
+import { Text, colors, palette, radii, spacing, useMotionOK, ALLOW_3D } from '@pandam/ui';
 
 import { OrganicShape } from './OrganicShape';
 import { ParticleBurst } from './ParticleBurst';
@@ -38,7 +38,7 @@ function Obj({
       { perspective: 800 },
       { translateX: d * interpolate(meet.value, [0, 1], [size * 1.2, size * 0.58]) },
       { translateY: interpolate(meet.value, [0, 1], [30, 0]) },
-      { rotateY: `${d * interpolate(meet.value, [0, 1], [60, 18])}deg` },
+      { rotateY: `${ALLOW_3D ? d * interpolate(meet.value, [0, 1], [60, 18]) : 0}deg` },
       { rotateZ: `${d * interpolate(meet.value, [0, 1], [18, 5])}deg` },
       { scale: interpolate(meet.value, [0, 1], [0.7, 1]) },
     ],

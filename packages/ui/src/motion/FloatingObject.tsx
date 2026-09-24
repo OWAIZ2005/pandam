@@ -12,6 +12,7 @@ import Animated, {
 
 import { ambient } from '../tokens';
 
+import { ALLOW_3D } from './allow3d';
 import { useMotionOK } from './useMotionOK';
 
 export interface FloatingObjectProps {
@@ -60,7 +61,7 @@ export function FloatingObject({
         { perspective: 800 },
         { translateY: -amplitude * k },
         { rotateZ: `${rotate * k}deg` },
-        { rotateY: `${rotate * 2 * k}deg` },
+        { rotateY: `${ALLOW_3D ? rotate * 2 * k : 0}deg` },
       ],
     };
   });

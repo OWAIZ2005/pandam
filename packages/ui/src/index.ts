@@ -55,6 +55,7 @@ export {
 } from './components/Skeleton';
 export {
   useMotionOK,
+  ALLOW_3D,
   TiltCard,
   FloatingObject,
   Reveal,

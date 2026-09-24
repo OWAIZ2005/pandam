@@ -13,7 +13,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Press, Text, colors, palette, radii, shadows, spacing, useMotionOK } from '@pandam/ui';
+import { Press, Text, colors, palette, radii, shadows, spacing, useMotionOK, ALLOW_3D } from '@pandam/ui';
 
 import { OrganicShape } from './OrganicShape';
 import { PhotoObject } from './PhotoObject';
@@ -74,7 +74,7 @@ function Side({
       { perspective: 800 },
       { translateX: charge.value * 16 * dir },
       { translateY: -charge.value * 6 },
-      { rotateY: `${(have ? 14 : -14) - charge.value * 10 * dir}deg` },
+      { rotateY: `${ALLOW_3D ? (have ? 14 : -14) - charge.value * 10 * dir : 0}deg` },
       { rotateZ: `${(have ? -6 : 6) + charge.value * 5 * dir}deg` },
       { scale: 1 + charge.value * 0.04 },
     ],

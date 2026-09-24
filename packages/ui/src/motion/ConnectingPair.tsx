@@ -15,6 +15,7 @@ import Animated, {
 
 import { ambient, colors, shadows, springs } from '../tokens';
 
+import { ALLOW_3D } from './allow3d';
 import { useMotionOK } from './useMotionOK';
 
 export interface ConnectingPairProps {
@@ -63,7 +64,7 @@ export function ConnectingPair({ left, right, link, size = 96, style }: Connecti
     transform: [
       { perspective: 700 },
       { translateX: interpolate(enter.value, [0, 1], [-size * 0.6, 0]) },
-      { rotateY: `${interpolate(enter.value, [0, 1], [-50, 14])}deg` },
+      { rotateY: `${ALLOW_3D ? interpolate(enter.value, [0, 1], [-50, 14]) : 0}deg` },
       { rotateZ: `${interpolate(enter.value, [0, 1], [-10, -4])}deg` },
     ],
   }));
@@ -72,7 +73,7 @@ export function ConnectingPair({ left, right, link, size = 96, style }: Connecti
     transform: [
       { perspective: 700 },
       { translateX: interpolate(enter.value, [0, 1], [size * 0.6, 0]) },
-      { rotateY: `${interpolate(enter.value, [0, 1], [50, -14])}deg` },
+      { rotateY: `${ALLOW_3D ? interpolate(enter.value, [0, 1], [50, -14]) : 0}deg` },
       { rotateZ: `${interpolate(enter.value, [0, 1], [10, 4])}deg` },
     ],
   }));

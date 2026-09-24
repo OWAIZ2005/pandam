@@ -9,6 +9,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-na
 
 import { springs } from '../tokens';
 
+import { ALLOW_3D } from './allow3d';
 import { useMotionOK } from './useMotionOK';
 
 export interface TiltCardProps {
@@ -62,7 +63,7 @@ export function TiltCard({ children, maxTilt = 6, perspective = 900, style }: Ti
   }, [rx, ry]);
 
   const animated = useAnimatedStyle(() => ({
-    transform: [{ perspective }, { rotateX: `${rx.value}deg` }, { rotateY: `${ry.value}deg` }],
+    transform: [{ perspective }, { rotateX: `${ALLOW_3D ? rx.value : 0}deg` }, { rotateY: `${ALLOW_3D ? ry.value : 0}deg` }],
   }));
 
   return (

@@ -13,7 +13,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Text, colors, palette, radii, spacing, useMotionOK } from '@pandam/ui';
+import { Text, colors, palette, radii, spacing, useMotionOK, ALLOW_3D } from '@pandam/ui';
 
 import { OrganicShape } from './OrganicShape';
 import { ParticleBurst } from './ParticleBurst';
@@ -99,7 +99,7 @@ export function TradeStage({
       { perspective: 800 },
       { translateX: pull.get() * 22 },
       { scale: 0.6 + giveIn.get() * 0.4 },
-      { rotateY: `${14 - pull.get() * 10}deg` },
+      { rotateY: `${ALLOW_3D ? 14 - pull.get() * 10 : 0}deg` },
       { rotateZ: `${-6 + (1 - giveIn.get()) * -18}deg` },
     ],
   }));
@@ -107,7 +107,7 @@ export function TradeStage({
     transform: [
       { perspective: 800 },
       { translateX: -pull.get() * 22 },
-      { rotateY: `${-14 + pull.get() * 10}deg` },
+      { rotateY: `${ALLOW_3D ? -14 + pull.get() * 10 : 0}deg` },
       { rotateZ: '6deg' },
     ],
   }));

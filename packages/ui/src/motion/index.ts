@@ -11,3 +11,4 @@ export { TiltCard, type TiltCardProps } from './TiltCard';
 export { FloatingObject, type FloatingObjectProps } from './FloatingObject';
 export { Reveal, type RevealProps } from './Reveal';
 export { ConnectingPair, type ConnectingPairProps } from './ConnectingPair';
+export { ALLOW_3D } from './allow3d';

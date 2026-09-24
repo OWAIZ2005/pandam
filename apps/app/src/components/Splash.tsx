@@ -16,7 +16,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Button, Gradient, Text, colors, gradients, palette, useMotionOK } from '@pandam/ui';
+import { Button, Gradient, Text, colors, gradients, palette, useMotionOK, ALLOW_3D } from '@pandam/ui';
 
 import { brandImages, type BrandImageKey } from '@/components/brand/imagery';
 import { PhotoObject } from '@/components/brand/PhotoObject';
@@ -91,7 +91,7 @@ function Tile({
         { translateX: x },
         { translateY: y + (1 - enter.value) * 40 },
         { perspective: 700 },
-        { rotateY: `${(1 - enter.value) * 50 * spec.corner[0]}deg` },
+        { rotateY: `${ALLOW_3D ? (1 - enter.value) * 50 * spec.corner[0] : 0}deg` },
         { rotateZ: `${spec.tilt * (1 - p) + o * (i % 2 ? 14 : -14)}deg` },
         { scale: (0.55 + enter.value * 0.45) * (1 - c * 0.85) },
       ],

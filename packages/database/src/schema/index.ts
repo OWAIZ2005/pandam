@@ -17,6 +17,7 @@ export { ITEM_TYPE, PUBLICATION_STATUS, type ItemType, type PublicationStatus } 
 export * from './meta';
 export * from './users';
 export * from './credentials';
+export * from './oauth-identities';
 export * from './sessions';
 export * from './profiles';
 export * from './categories';

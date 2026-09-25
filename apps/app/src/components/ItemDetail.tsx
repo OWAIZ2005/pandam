@@ -15,6 +15,7 @@ import {
   MetaItem,
   Notice,
   Press,
+  Reveal,
   Row,
   Screen,
   SkeletonList,
@@ -23,10 +24,12 @@ import {
   colors,
   layout,
   radii,
+  shadows,
   spacing,
 } from '@pandam/ui';
 
 import { ErrorState } from '@/components/states';
+import { IS_DEMO_DATA, demoItem, demoQuery } from '@/dummy';
 import { ApiError } from '@/lib/api/client';
 import { type MarketKind } from '@/lib/api/market';
 import { mediaSrc } from '@/lib/api/media';
@@ -56,8 +59,8 @@ function PhotoTag({ children }: { children: React.ReactNode }) {
     <Row
       gap="xs"
       style={{
-        backgroundColor: 'rgba(18,22,25,0.5)',
-        borderRadius: radii.sm,
+        backgroundColor: 'rgba(36,27,22,0.55)',
+        borderRadius: radii.pill,
         paddingHorizontal: spacing.sm,
         paddingVertical: 4,
       }}
@@ -70,7 +73,9 @@ function PhotoTag({ children }: { children: React.ReactNode }) {
 export function ItemDetail({ kind, id }: { kind: MarketKind; id: string }) {
   const router = useRouter();
   const { user } = useSession();
-  const query = useItem(kind, id);
+  const liveQuery = useItem(kind, id);
+  const demo = IS_DEMO_DATA ? demoItem(id) : undefined;
+  const query = demo ? demoQuery(liveQuery, demo) : liveQuery;
   const setStatus = useSetItemStatus(kind);
   const createPayment = useCreatePayment();
   const isHave = kind === 'listing';
@@ -152,6 +157,17 @@ export function ItemDetail({ kind, id }: { kind: MarketKind; id: string }) {
               }
               leftIcon={<Ionicons name="create-outline" size={16} color={colors.textInverse} />}
             />
+            {!isHave ? (
+              // Your own request: the offers people sent for it live in Offers.
+              <Button
+                label="View offers"
+                variant="secondary"
+                size="lg"
+                fullWidth
+                onPress={() => router.push('/(app)/offers')}
+                leftIcon={<Ionicons name="mail-open-outline" size={16} color={colors.textPrimary} />}
+              />
+            ) : null}
             <Row gap="sm">
               {STATUS_ACTIONS[item.status].map((a) => (
                 <Button
@@ -176,7 +192,7 @@ export function ItemDetail({ kind, id }: { kind: MarketKind; id: string }) {
             */}
             {canBarter ? (
               <Button
-                label="Offer a trade"
+                label="Propose a trade"
                 size="lg"
                 fullWidth
                 onPress={() => router.push(`/(app)/offer/new?requestedListingId=${item.id}`)}
@@ -212,17 +228,22 @@ export function ItemDetail({ kind, id }: { kind: MarketKind; id: string }) {
           </Stack>
         ) : (
           <Stack gap="sm">
+            {/* Someone else's I NEED request: fulfil it with something you have. */}
             <Button
-              label={`See ${item.owner.displayName.split(' ')[0]}’s listings`}
+              label="Offer a trade"
               variant="need"
               size="lg"
               fullWidth
-              onPress={() => router.push(`/(app)/(tabs)/discover?owner=${item.ownerId}`)}
-              leftIcon={<Ionicons name="storefront-outline" size={17} color={colors.textInverse} />}
+              onPress={() => router.push(`/(app)/offer/new?requestedNeedId=${item.id}`)}
+              leftIcon={<Ionicons name="swap-horizontal" size={17} color={colors.textInverse} />}
             />
-            <Text variant="caption" tone="muted" center>
-              A request is fulfilled by offering one of your own listings against theirs.
-            </Text>
+            <Button
+              label={`See ${item.owner.displayName.split(' ')[0]}’s listings`}
+              variant="quiet"
+              size="sm"
+              fullWidth
+              onPress={() => router.push(`/(app)/(tabs)/discover?owner=${item.ownerId}`)}
+            />
           </Stack>
         )
       }
@@ -230,7 +251,7 @@ export function ItemDetail({ kind, id }: { kind: MarketKind; id: string }) {
       {/* ------------------------------------------------------------ cover -- */}
       <CoverTile
         seed={item.id}
-        height={260}
+        height={380}
         radius="none"
         uri={mediaSrc(gallery[0]?.url)}
         icon={
@@ -243,7 +264,8 @@ export function ItemDetail({ kind, id }: { kind: MarketKind; id: string }) {
         style={{
           paddingTop: spacing['3xl'],
           paddingHorizontal: layout.gutter,
-          paddingBottom: spacing.lg,
+          // Room at the bottom for the sheet that overlaps the photo.
+          paddingBottom: spacing['3xl'] + spacing.lg,
           justifyContent: 'space-between',
         }}
       >
@@ -296,172 +318,212 @@ export function ItemDetail({ kind, id }: { kind: MarketKind; id: string }) {
       </CoverTile>
 
       {/* ------------------------------------------------------------- body -- */}
+      {/*
+        The body is a rounded cream sheet pulled up over the photo, so the
+        item reads as an object resting on the page rather than a banner
+        stacked above a form.
+      */}
       <View
         style={{
-          width: '100%',
-          maxWidth: layout.contentMaxWidth,
-          alignSelf: 'center',
-          paddingHorizontal: layout.gutter,
-          paddingVertical: spacing['2xl'],
+          marginTop: -spacing['3xl'],
+          backgroundColor: colors.background,
+          borderTopLeftRadius: radii['2xl'],
+          borderTopRightRadius: radii['2xl'],
+          ...shadows.lg,
+          shadowOpacity: 0.08,
         }}
       >
-        <Stack gap="2xl">
-          {/* ------------------------------------------------------ title -- */}
-          <Stack gap="md">
-            {mine ? (
-              <Badge label={STATUS_LABEL[item.status]} kind={statusBadgeKind(item.status)} dot />
-            ) : null}
+        <View
+          style={{
+            width: '100%',
+            maxWidth: layout.contentMaxWidth,
+            alignSelf: 'center',
+            paddingHorizontal: layout.gutter,
+            paddingVertical: spacing['2xl'],
+          }}
+        >
+          <Reveal>
+            <Stack gap="2xl">
+              {/* ------------------------------------------------------ title -- */}
+              <Stack gap="md">
+                {mine ? (
+                  <Badge
+                    label={STATUS_LABEL[item.status]}
+                    kind={statusBadgeKind(item.status)}
+                    dot
+                  />
+                ) : null}
 
-            <Text variant="display">{item.title}</Text>
+                <Text variant="display">{item.title}</Text>
 
-            {/*
+                {/*
               Price on its own line under the title, not beside it. Beside it,
               a long title and a long price fought for one line and something
               always truncated; underneath, the price gets the emphasis of its
               own line and the title can run as long as it needs to.
             */}
-            {pricing && pricing.priceAmount != null ? (
-              <Row gap="sm" align="baseline">
-                <Text variant="numericLarge" numeric tone="need">
-                  {formatMoney(pricing.priceAmount, pricing.priceCurrency)}
+                {pricing && pricing.priceAmount != null ? (
+                  <Row gap="sm" align="baseline">
+                    <Text variant="numericLarge" numeric tone="need">
+                      {formatMoney(pricing.priceAmount, pricing.priceCurrency)}
+                    </Text>
+                    {pricing.transactionType === 'both' ? (
+                      <Text variant="bodySm" tone="muted">
+                        or trade for it
+                      </Text>
+                    ) : null}
+                  </Row>
+                ) : null}
+
+                <Meta wrap>
+                  <MetaItem
+                    icon={
+                      <Ionicons
+                        name={categoryIcon(item.category.slug)}
+                        size={12}
+                        color={colors.textMuted}
+                      />
+                    }
+                    label={item.category.name}
+                  />
+                  <MetaItem
+                    icon={
+                      <Ionicons name={typeIcon(item.type)} size={12} color={colors.textMuted} />
+                    }
+                    label={TYPE_LABEL[item.type]}
+                  />
+                  {item.owner.locationCity ? (
+                    <MetaItem
+                      icon={<Ionicons name="location-outline" size={12} color={colors.textMuted} />}
+                      label={item.owner.locationCity}
+                    />
+                  ) : null}
+                  <MetaItem label={timeAgo(item.createdAt)} />
+                </Meta>
+              </Stack>
+
+              {/* ---------------------------------------------------- gallery -- */}
+              {gallery.length > 1 ? (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={{ marginHorizontal: -layout.gutter }}
+                  contentContainerStyle={{ gap: spacing.sm, paddingHorizontal: layout.gutter }}
+                >
+                  {/* The first photo is already the hero above, so the strip shows
+                  the rest rather than repeating it. */}
+                  {gallery.slice(1).map((image) => (
+                    <Image
+                      key={image.id}
+                      source={{ uri: mediaSrc(image.url) }}
+                      style={{
+                        width: 96,
+                        height: 96,
+                        borderRadius: radii.lg,
+                        backgroundColor: colors.surfaceMuted,
+                      }}
+                      contentFit="cover"
+                      transition={150}
+                    />
+                  ))}
+                </ScrollView>
+              ) : null}
+
+              {/* ------------------------------------------------ description -- */}
+              <Stack gap="sm">
+                <Text variant="label" tone="muted">
+                  Description
                 </Text>
-                {pricing.transactionType === 'both' ? (
-                  <Text variant="bodySm" tone="muted">
-                    or trade for it
+                <Text variant="body" style={{ lineHeight: 23, maxWidth: layout.proseMaxWidth }}>
+                  {item.description}
+                </Text>
+              </Stack>
+
+              <Divider tone="soft" />
+
+              {/* ------------------------------------------------------ owner -- */}
+              <Row
+                gap="md"
+                style={{
+                  backgroundColor: colors.surface,
+                  borderRadius: radii.xl,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  padding: spacing.lg,
+                  ...shadows.xs,
+                }}
+              >
+                <Avatar
+                  name={item.owner.displayName}
+                  size={48}
+                  uri={mediaSrc(item.owner.avatarUrl)}
+                />
+                <View style={{ flex: 1, minWidth: 0, gap: 1 }}>
+                  <Text variant="caption" tone="muted">
+                    {mine ? 'Listed by you' : isHave ? 'Offered by' : 'Requested by'}
                   </Text>
+                  <Text variant="bodyStrong" numberOfLines={1}>
+                    {item.owner.displayName}
+                  </Text>
+                  {(item.owner.locationCity ?? item.owner.username) ? (
+                    <Text variant="caption" tone="muted" numberOfLines={1}>
+                      {item.owner.locationCity ?? `@${item.owner.username}`}
+                    </Text>
+                  ) : null}
+                </View>
+                {!mine ? (
+                  <Button
+                    label="Similar"
+                    variant="tertiary"
+                    size="sm"
+                    onPress={() =>
+                      router.push(`/(app)/(tabs)/discover?category=${item.category.id}`)
+                    }
+                  />
                 ) : null}
               </Row>
-            ) : null}
 
-            <Meta wrap>
-              <MetaItem
+              {/* ------------------------------------------------------ safety -- */}
+              <Notice
+                kind={canBuy ? 'info' : 'neutral'}
                 icon={
                   <Ionicons
-                    name={categoryIcon(item.category.slug)}
-                    size={12}
-                    color={colors.textMuted}
+                    name="shield-checkmark-outline"
+                    size={15}
+                    color={canBuy ? colors.info : colors.textMuted}
                   />
                 }
-                label={item.category.name}
-              />
-              <MetaItem
-                icon={<Ionicons name={typeIcon(item.type)} size={12} color={colors.textMuted} />}
-                label={TYPE_LABEL[item.type]}
-              />
-              {item.owner.locationCity ? (
-                <MetaItem
-                  icon={<Ionicons name="location-outline" size={12} color={colors.textMuted} />}
-                  label={item.owner.locationCity}
-                />
+              >
+                {canBuy
+                  ? 'Payment is handled securely by Razorpay — PANDAM never sees or stores your card or bank details.'
+                  : 'PANDAM never handles money. Agree the swap directly with the other person and trade goods for goods.'}
+              </Notice>
+
+              {!mine ? (
+                <Press
+                  scale="sm"
+                  accessibilityRole="button"
+                  accessibilityLabel={`Report this ${isHave ? 'listing' : 'request'}`}
+                  hitSlop={8}
+                  onPress={() =>
+                    router.push(
+                      `/(app)/report?subjectType=${isHave ? 'listing' : 'need'}&subjectId=${item.id}` +
+                        `&label=${encodeURIComponent(item.title)}`,
+                    )
+                  }
+                  style={{ alignSelf: 'center', padding: spacing.sm, borderRadius: radii.sm }}
+                >
+                  <Row gap="xs">
+                    <Ionicons name="flag-outline" size={12} color={colors.textMuted} />
+                    <Text variant="caption" tone="muted">
+                      Report this {isHave ? 'listing' : 'request'}
+                    </Text>
+                  </Row>
+                </Press>
               ) : null}
-              <MetaItem label={timeAgo(item.createdAt)} />
-            </Meta>
-          </Stack>
-
-          {/* ---------------------------------------------------- gallery -- */}
-          {gallery.length > 1 ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={{ marginHorizontal: -layout.gutter }}
-              contentContainerStyle={{ gap: spacing.sm, paddingHorizontal: layout.gutter }}
-            >
-              {/* The first photo is already the hero above, so the strip shows
-                  the rest rather than repeating it. */}
-              {gallery.slice(1).map((image) => (
-                <Image
-                  key={image.id}
-                  source={{ uri: mediaSrc(image.url) }}
-                  style={{
-                    width: 96,
-                    height: 96,
-                    borderRadius: radii.md,
-                    backgroundColor: colors.surfaceMuted,
-                  }}
-                  contentFit="cover"
-                  transition={150}
-                />
-              ))}
-            </ScrollView>
-          ) : null}
-
-          {/* ------------------------------------------------ description -- */}
-          <Stack gap="sm">
-            <Text variant="label" tone="muted">
-              Description
-            </Text>
-            <Text variant="body" style={{ lineHeight: 23, maxWidth: layout.proseMaxWidth }}>
-              {item.description}
-            </Text>
-          </Stack>
-
-          <Divider tone="soft" />
-
-          {/* ------------------------------------------------------ owner -- */}
-          <Row gap="md">
-            <Avatar name={item.owner.displayName} size={44} uri={mediaSrc(item.owner.avatarUrl)} />
-            <View style={{ flex: 1, minWidth: 0, gap: 1 }}>
-              <Text variant="caption" tone="muted">
-                {mine ? 'Listed by you' : isHave ? 'Offered by' : 'Requested by'}
-              </Text>
-              <Text variant="bodyStrong" numberOfLines={1}>
-                {item.owner.displayName}
-              </Text>
-              {(item.owner.locationCity ?? item.owner.username) ? (
-                <Text variant="caption" tone="muted" numberOfLines={1}>
-                  {item.owner.locationCity ?? `@${item.owner.username}`}
-                </Text>
-              ) : null}
-            </View>
-            {!mine ? (
-              <Button
-                label="Similar"
-                variant="tertiary"
-                size="sm"
-                onPress={() => router.push(`/(app)/(tabs)/discover?category=${item.category.id}`)}
-              />
-            ) : null}
-          </Row>
-
-          {/* ------------------------------------------------------ safety -- */}
-          <Notice
-            kind={canBuy ? 'info' : 'neutral'}
-            icon={
-              <Ionicons
-                name="shield-checkmark-outline"
-                size={15}
-                color={canBuy ? colors.info : colors.textMuted}
-              />
-            }
-          >
-            {canBuy
-              ? 'Payment is handled securely by Razorpay — PANDAM never sees or stores your card or bank details.'
-              : 'PANDAM never handles money. Agree the swap directly with the other person and trade goods for goods.'}
-          </Notice>
-
-          {!mine ? (
-            <Press
-              scale="sm"
-              accessibilityRole="button"
-              accessibilityLabel={`Report this ${isHave ? 'listing' : 'request'}`}
-              hitSlop={8}
-              onPress={() =>
-                router.push(
-                  `/(app)/report?subjectType=${isHave ? 'listing' : 'need'}&subjectId=${item.id}` +
-                    `&label=${encodeURIComponent(item.title)}`,
-                )
-              }
-              style={{ alignSelf: 'center', padding: spacing.sm, borderRadius: radii.sm }}
-            >
-              <Row gap="xs">
-                <Ionicons name="flag-outline" size={12} color={colors.textMuted} />
-                <Text variant="caption" tone="muted">
-                  Report this {isHave ? 'listing' : 'request'}
-                </Text>
-              </Row>
-            </Press>
-          ) : null}
-        </Stack>
+            </Stack>
+          </Reveal>
+        </View>
       </View>
     </Screen>
   );

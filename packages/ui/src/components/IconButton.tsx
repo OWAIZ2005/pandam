@@ -28,7 +28,7 @@ const SPEC: Record<
   filled: {
     bg: colors.surfaceMuted,
     hover: colors.surfaceHover,
-    pressed: '#E8E9E6',
+    pressed: colors.surfacePressed,
   },
   surface: {
     bg: colors.surface,

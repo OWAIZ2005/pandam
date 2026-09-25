@@ -14,11 +14,16 @@ import { type ReactNode, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { ToastProvider } from '@pandam/ui';
+import { ScreenBackdropProvider, ToastProvider } from '@pandam/ui';
+
+import { PandamBackground } from '@/components/brand/PandamBackground';
 
 import { AnalyticsProvider } from '@/lib/analytics';
 import { AuthBootstrap } from '@/lib/auth/AuthBootstrap';
 import { createQueryClient } from '@/lib/query';
+
+/** The one ambient background every standard screen paints (see Screen). */
+const APP_BACKDROP = <PandamBackground variant="glow" />;
 
 export function AppProviders({ children }: { children: ReactNode }) {
   // Lazy state initialiser → one stable QueryClient for the component's life.
@@ -30,7 +35,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
         <QueryClientProvider client={queryClient}>
           <AnalyticsProvider>
             <ToastProvider>
-              <AuthBootstrap>{children}</AuthBootstrap>
+              <ScreenBackdropProvider value={APP_BACKDROP}>
+                <AuthBootstrap>{children}</AuthBootstrap>
+              </ScreenBackdropProvider>
             </ToastProvider>
           </AnalyticsProvider>
         </QueryClientProvider>

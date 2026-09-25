@@ -20,7 +20,10 @@ import {
   spacing,
 } from '@pandam/ui';
 
+import { IS_DEMO_DATA, demoConversations, demoMessages, demoQuery } from '@/dummy';
 import { ErrorState } from '@/components/states';
+import { TradeContextCard, tradeSubtitle } from '@/components/TradeContextCard';
+import { useOffer } from '@/lib/hooks/useOffers';
 import { mediaSrc } from '@/lib/api/media';
 import { dayLabel, timeOfDay } from '@/lib/format';
 import {
@@ -142,8 +145,15 @@ function DaySeparator({ label }: { label: string }) {
 export default function ChatScreen() {
   const router = useRouter();
   const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
-  const conversation = useConversation(conversationId);
-  const messages = useMessages(conversationId);
+  const liveConversation = useConversation(conversationId);
+  const liveMessages = useMessages(conversationId);
+  const demoConv = IS_DEMO_DATA
+    ? demoConversations.find((c) => c.id === conversationId)
+    : undefined;
+  const conversation = demoConv ? demoQuery(liveConversation, demoConv) : liveConversation;
+  const messages = demoConv
+    ? demoQuery(liveMessages, demoMessages[demoConv.id] ?? [])
+    : liveMessages;
   const send = useSendMessage(conversationId!);
   const markRead = useMarkConversationRead(conversationId!);
   const [draft, setDraft] = useState('');
@@ -156,6 +166,8 @@ export default function ChatScreen() {
   }, [conversationId]);
 
   const person = conversation.data?.participants[0];
+  // The trade this chat belongs to (every trade chat is tied to one offer).
+  const offer = useOffer(conversation.data?.offerId ?? undefined);
   const name = person?.displayName ?? 'Chat';
   const rendered = useMemo(() => group(messages.data ?? []), [messages.data]);
   const canSend = !!draft.trim() && !send.isPending;
@@ -212,12 +224,29 @@ export default function ChatScreen() {
                 {name}
               </Text>
               <Text variant="caption" tone="muted" numberOfLines={1}>
-                Trade agreed — arrange the swap
+                {tradeSubtitle(offer.data)}
               </Text>
             </View>
           </Row>
         </Press>
       </Row>
+
+      {offer.data ? (
+        <View
+          style={{
+            width: '100%',
+            maxWidth: layout.contentMaxWidth,
+            alignSelf: 'center',
+            paddingHorizontal: layout.gutter,
+            paddingTop: spacing.md,
+          }}
+        >
+          <TradeContextCard
+            offer={offer.data}
+            onOpen={() => router.push(`/(app)/offer/${offer.data!.id}`)}
+          />
+        </View>
+      ) : null}
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -299,7 +328,7 @@ export default function ChatScreen() {
             accessibilityLabel="Send message"
             disabled={!canSend}
             onPress={handleSend}
-            // Filled emerald only once there is something to send: a live-looking
+            // Filled terracotta only once there is something to send: a live-looking
             // send button on an empty composer is a promise the app cannot keep.
             style={
               canSend ? { backgroundColor: colors.accent, borderColor: colors.accent } : undefined

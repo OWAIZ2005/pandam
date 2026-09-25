@@ -26,6 +26,11 @@ export function toSafeUser(user: User): SafeUser {
     status: user.status,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
+    identityVerification: {
+      status: user.identityVerificationStatus,
+      governmentId: user.governmentIdVerifiedAt ? 'verified' : 'not_started',
+      face: user.faceVerifiedAt ? 'verified' : 'not_started',
+    },
   };
 }
 

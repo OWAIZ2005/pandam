@@ -5,6 +5,8 @@ import { FlatList, View } from 'react-native';
 import {
   Badge,
   EmptyState,
+  FloatingObject,
+  Reveal,
   Notice,
   Screen,
   SkeletonList,
@@ -14,18 +16,28 @@ import {
 } from '@pandam/ui';
 
 import { AppHeader } from '@/components/AppHeader';
+import { ObjectCluster } from '@/components/brand/ObjectCluster';
 import { MatchCard } from '@/components/MatchCard';
 import { ErrorState } from '@/components/states';
+import { demoMatches, demoQuery } from '@/dummy';
 import { useMatches } from '@/lib/hooks/useMatches';
 
 export default function MatchesScreen() {
   const router = useRouter();
-  const matches = useMatches();
+  const matches = demoQuery(useMatches(), demoMatches);
   const count = matches.data?.length ?? 0;
 
   return (
     <Screen padded={false}>
-      <View style={{ paddingHorizontal: layout.gutter, paddingTop: spacing.lg }}>
+      <View
+        style={{
+          paddingHorizontal: layout.gutter,
+          paddingTop: spacing.lg,
+          width: '100%',
+          maxWidth: layout.contentMaxWidth,
+          alignSelf: 'center',
+        }}
+      >
         <AppHeader
           title="Matches"
           subtitle="You have what they need, they have what you need."
@@ -43,16 +55,21 @@ export default function MatchesScreen() {
           paddingHorizontal: layout.gutter,
           paddingTop: spacing.sm,
           paddingBottom: layout.tabBarInset,
+          width: '100%',
+          maxWidth: layout.contentMaxWidth,
+          alignSelf: 'center',
           gap: spacing.lg,
           flexGrow: 1,
         }}
         refreshing={matches.isRefetching}
         onRefresh={() => void matches.refetch()}
-        renderItem={({ item }) => (
-          <MatchCard
-            match={item}
-            onPress={() => router.push(`/(app)/match/${encodeURIComponent(item.key)}`)}
-          />
+        renderItem={({ item, index }) => (
+          <Reveal index={index}>
+            <MatchCard
+              match={item}
+              onPress={() => router.push(`/(app)/match/${encodeURIComponent(item.key)}`)}
+            />
+          </Reveal>
         )}
         ListEmptyComponent={
           matches.isPending ? (
@@ -61,8 +78,13 @@ export default function MatchesScreen() {
             <ErrorState error={matches.error} onRetry={() => void matches.refetch()} />
           ) : (
             <EmptyState
+              art={<ObjectCluster left="camera" right="laptop" icon="sparkles" />}
               tone="match"
-              icon={<Ionicons name="sparkles" size={24} color={colors.match} />}
+              icon={
+                <FloatingObject>
+                  <Ionicons name="sparkles" size={24} color={colors.match} />
+                </FloatingObject>
+              }
               title="No barter match yet"
               body="Add what you have and what you need. When someone is the mirror of you, they appear here — no money, just a fair swap."
               actionLabel="Explore what others have"

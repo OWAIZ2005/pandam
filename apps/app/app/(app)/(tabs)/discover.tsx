@@ -20,11 +20,14 @@ import {
   spacing,
 } from '@pandam/ui';
 
-import { CategoryFilter } from '@/components/CategoryFilter';
+import { AddCategorySheet } from '@/components/AddCategorySheet';
+import { CategoryRail } from '@/components/CategoryFilter';
 import { ItemCard } from '@/components/ItemCard';
 import { ErrorState } from '@/components/states';
+import { demoCities, demoDiscover, demoMergePages, demoQuery } from '@/dummy';
 import { type MarketKind } from '@/lib/api/market';
-import { useCategories } from '@/lib/hooks/useCategories';
+import { useSession } from '@/lib/auth/hooks';
+import { useBrowseCategories } from '@/lib/hooks/useCategories';
 import { useDebounced } from '@/lib/hooks/useDebounced';
 import { useDiscover, useListingCities } from '@/lib/hooks/useMarket';
 
@@ -42,8 +45,9 @@ export default function DiscoverScreen() {
   const [city, setCity] = useState<string | null>(params.city ?? null);
   const q = useDebounced(rawQuery.trim(), 350);
 
-  const categories = useCategories();
-  const cities = useListingCities();
+  const categories = useBrowseCategories();
+  const [addingCategory, setAddingCategory] = useState(false);
+  const cities = demoQuery(useListingCities(), demoCities() as never);
   const filters = useMemo(
     () => ({
       category: categoryId ?? undefined,
@@ -54,8 +58,16 @@ export default function DiscoverScreen() {
     }),
     [categoryId, q, params.owner, city],
   );
-  const discover = useDiscover(kind, filters);
-  const items = discover.data?.pages.flatMap((p) => p.items) ?? [];
+  const discover = demoMergePages(useDiscover(kind, filters), demoDiscover(kind, filters));
+  const { user: me } = useSession();
+  // Discover is for OTHER people's items — your own listing or request is not
+  // an opportunity for you (it lives on your Profile instead).
+  const items = (discover.data?.pages.flatMap((p) => p.items) ?? []).filter(
+    (i) => i.ownerId !== me?.id,
+  );
+  // Marketplace rhythm: the freshest item leads as a large feature card.
+  const featured = items.length > 3 ? items[0] : null;
+  const gridItems = featured ? items.slice(1) : items;
 
   /*
    * Column count follows the WIDTH, not the platform. Two columns inside a
@@ -90,9 +102,8 @@ export default function DiscoverScreen() {
     // centred column as the grid, so nothing is left hanging on a wide screen.
     <View
       style={{
-        backgroundColor: colors.background,
         borderBottomWidth: 1,
-        borderBottomColor: colors.border,
+        borderBottomColor: colors.borderSoft,
       }}
     >
       <View
@@ -106,6 +117,12 @@ export default function DiscoverScreen() {
           gap: spacing.md,
         }}
       >
+        <View style={{ gap: 2 }}>
+          <Text variant="overline" tone={tone}>
+            {isHave ? 'What people have' : 'What people need'}
+          </Text>
+          <Text variant="display">Discover</Text>
+        </View>
         <SearchInput
           icon={<Ionicons name="search" size={17} color={colors.textMuted} />}
           placeholder={isHave ? 'Search what people have' : 'Search what people need'}
@@ -123,17 +140,18 @@ export default function DiscoverScreen() {
   const scrollingHeader = (
     <Stack gap="lg" style={{ paddingBottom: spacing.lg }}>
       {categories.data ? (
-        <CategoryFilter
+        <CategoryRail
           categories={categories.data}
           selectedId={categoryId}
           onSelect={setCategoryId}
           tone={tone}
+          onAdd={() => setAddingCategory(true)}
         />
       ) : (
         <Row gap="sm">
-          <Skeleton width={64} height={36} radius={radii.pill} />
-          <Skeleton width={92} height={36} radius={radii.pill} />
-          <Skeleton width={78} height={36} radius={radii.pill} />
+          {[0, 1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} width={72} height={58} radius={radii.md} />
+          ))}
         </Row>
       )}
 
@@ -176,6 +194,16 @@ export default function DiscoverScreen() {
         </ScrollView>
       ) : null}
 
+      {featured ? (
+        <ItemCard
+          item={featured}
+          variant="feature"
+          onPress={() =>
+            router.push(isHave ? `/(app)/listing/${featured.id}` : `/(app)/need/${featured.id}`)
+          }
+        />
+      ) : null}
+
       {items.length > 0 ? (
         <Row justify="space-between">
           <Text variant="caption" tone="muted" numeric>
@@ -197,7 +225,7 @@ export default function DiscoverScreen() {
       {pinned}
 
       <FlatList
-        data={items}
+        data={gridItems}
         key={`${kind}-${columns}`}
         keyExtractor={(it) => it.id}
         numColumns={columns}
@@ -215,13 +243,15 @@ export default function DiscoverScreen() {
         }}
         ListHeaderComponent={scrollingHeader}
         renderItem={({ item }) => (
-          <ItemCard
-            item={item}
-            variant="grid"
-            onPress={() =>
-              router.push(isHave ? `/(app)/listing/${item.id}` : `/(app)/need/${item.id}`)
-            }
-          />
+          <View style={{ flex: 1 / columns }}>
+            <ItemCard
+              item={item}
+              variant="grid"
+              onPress={() =>
+                router.push(isHave ? `/(app)/listing/${item.id}` : `/(app)/need/${item.id}`)
+              }
+            />
+          </View>
         )}
         onEndReachedThreshold={0.4}
         onEndReached={() => {
@@ -283,6 +313,13 @@ export default function DiscoverScreen() {
             </Row>
           ) : null
         }
+      />
+      <AddCategorySheet
+        visible={addingCategory}
+        onClose={() => setAddingCategory(false)}
+        existing={categories.data ?? []}
+        onCreated={(c) => setCategoryId(c.id)}
+        onUseExisting={(id) => setCategoryId(id)}
       />
     </Screen>
   );

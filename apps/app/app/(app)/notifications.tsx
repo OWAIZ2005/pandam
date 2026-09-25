@@ -19,6 +19,7 @@ import {
   spacing,
 } from '@pandam/ui';
 
+import { demoMergeList, demoNotifications } from '@/dummy';
 import { AppHeader } from '@/components/AppHeader';
 import { ErrorState } from '@/components/states';
 import { timeAgo } from '@/lib/format';
@@ -34,8 +35,8 @@ type Tone = 'accent' | 'need' | 'match' | 'neutral';
 /**
  * What each notification type says and looks like.
  *
- * The tone is the semantic one — an offer is emerald because it is about
- * something you have, a review is neutral, a match would be violet. That
+ * The tone is the semantic one — an offer is terracotta because it is about
+ * something you have, a review is neutral, a match would be sage. That
  * keeps the colour language consistent all the way down to a list row.
  */
 const COPY: Record<
@@ -127,7 +128,7 @@ function PushOptIn() {
 
 export default function NotificationsScreen() {
   const router = useRouter();
-  const notifications = useNotifications();
+  const notifications = demoMergeList(useNotifications(), demoNotifications);
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
   const items = notifications.data ?? [];

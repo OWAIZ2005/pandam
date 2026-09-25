@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { loginSchema, type LoginInput } from '@pandam/validation';
 import { Link, useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 
 import {
   Button,
@@ -15,11 +15,10 @@ import {
   Stack,
   Text,
   colors,
-  layout,
-  spacing,
 } from '@pandam/ui';
 
-import { AuthHero } from '@/components/AuthHero';
+import { AuthShell } from '@/components/brand/AuthShell';
+import { OAuthButtons, OAuthDivider } from '@/components/brand/OAuthButtons';
 import { ApiError } from '@/lib/api/client';
 import { useLogin } from '@/lib/auth/hooks';
 
@@ -48,7 +47,7 @@ export default function LoginScreen() {
         : null;
 
   return (
-    <Screen padded={false} edges={['bottom']}>
+    <Screen padded={false} edges={['top', 'bottom']} contentStyle={{ maxWidth: '100%' }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -60,27 +59,14 @@ export default function LoginScreen() {
           keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
         >
-          <AuthHero />
-
-          <View
-            style={{
-              width: '100%',
-              maxWidth: layout.contentMaxWidth,
-              alignSelf: 'center',
-              paddingHorizontal: layout.gutter,
-              paddingTop: spacing['2xl'],
-              paddingBottom: spacing['3xl'],
-            }}
+          <AuthShell
+            title="Welcome back"
+            subtitle="Continue trading what you have for what you need."
           >
             <Stack gap="2xl">
-              <View style={{ gap: spacing.xxs }}>
-                <Text variant="h1">Welcome back</Text>
-                <Text variant="bodySm" tone="secondary">
-                  Sign in to pick up where you left off.
-                </Text>
-              </View>
-
               <Stack gap="lg">
+                <OAuthButtons onSuccess={() => router.replace('/(app)/(tabs)')} />
+                <OAuthDivider />
                 <Controller
                   control={control}
                   name="email"
@@ -159,7 +145,7 @@ export default function LoginScreen() {
                 </Link>
               </Row>
             </Stack>
-          </View>
+          </AuthShell>
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>

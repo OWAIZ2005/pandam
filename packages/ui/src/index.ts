@@ -11,6 +11,9 @@ export { cx } from './cx';
 
 export { Text, Heading, type TextProps } from './components/Text';
 export { Button, type ButtonProps } from './components/Button';
+export { Sheet, type SheetProps } from './components/Sheet';
+export { ScreenBackdropProvider } from './components/Screen';
+export { CountBadge, type CountBadgeProps } from './components/CountBadge';
 export { IconButton, type IconButtonProps } from './components/IconButton';
 export { Press, type PressProps, type PressStateStyles } from './components/Press';
 export { Gradient, type GradientProps } from './components/Gradient';
@@ -53,3 +56,15 @@ export {
   SkeletonGrid,
   type SkeletonProps,
 } from './components/Skeleton';
+export {
+  useMotionOK,
+  ALLOW_3D,
+  TiltCard,
+  FloatingObject,
+  Reveal,
+  ConnectingPair,
+  type TiltCardProps,
+  type FloatingObjectProps,
+  type RevealProps,
+  type ConnectingPairProps,
+} from './motion';

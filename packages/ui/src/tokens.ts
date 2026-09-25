@@ -8,19 +8,19 @@
  * ---------------------------------------------------------------------------
  * ART DIRECTION
  *
- * PANDAM is about two people agreeing a fair exchange. The product should feel
- * like a well-kept ledger, not a casino: warm neutral ground, near-black ink,
- * hairline rules, and type carrying the hierarchy. Colour is reserved for
- * MEANING, never used as wallpaper:
+ * PANDAM is a warm, premium marketplace, not a SaaS dashboard: cream ground,
+ * espresso-brown ink, terracotta as the one confident brand colour, and sage
+ * reserved for positive/success moments. Colour is reserved for MEANING, never
+ * used as wallpaper:
  *
- *   emerald (`accent*`)  "I HAVE"   — the thing you are offering
- *   tangerine (`need*`)  "I NEED"   — the thing you are asking for
- *   violet (`match*`)    RECIPROCAL — they want yours, you want theirs
+ *   terracotta (`accent*`)  primary brand — "I HAVE", the main action
+ *   clay (`need*`)          "I NEED"      — the thing you are asking for
+ *   sage (`match*`)         RECIPROCAL    — they want yours, you want theirs
  *
- * That last one is the moment the whole product exists for, so it is the ONE
- * place allowed to use a gradient and a coloured glow. A filled button, a
- * card, an avatar and a badge are all flat: if everything shouts, the match
- * moment cannot.
+ * The reciprocal match is the moment the whole product exists for, so it is
+ * the ONE place allowed to use a gradient and a coloured glow. A filled
+ * button, a card, an avatar and a badge are all flat: if everything shouts,
+ * the match moment cannot.
  *
  * Screens should reach for the semantic names (`colors.accent`), never a raw
  * hex and never a `palette.*` ramp value.
@@ -32,65 +32,64 @@
 /* -------------------------------------------------------------------------- */
 
 export const palette = {
-  // Emerald — "I HAVE", primary actions.
-  emerald50: '#ECF7F1',
-  emerald100: '#CFEBDC',
-  emerald200: '#A3D8BE',
-  emerald400: '#2FB278',
-  emerald500: '#12A163',
-  emerald600: '#088352',
-  emerald700: '#05653F',
-  emerald900: '#043D28',
+  // Terracotta — primary brand, "I HAVE", primary actions.
+  terracotta50: '#FBEFE7',
+  terracotta100: '#F3D7C2',
+  terracotta200: '#E6C5A8',
+  terracotta400: '#C7774F',
+  terracotta500: '#AD5B37',
+  terracotta600: '#9A4828',
+  terracotta700: '#7A3820',
+  terracotta900: '#4C2313',
 
-  // Tangerine — "I NEED".
-  amber50: '#FDF2E9',
-  amber100: '#FADEC6',
-  amber200: '#F4BE93',
-  amber400: '#E8802F',
-  amber500: '#D2650F',
-  amber600: '#B0500A',
-  amber700: '#8A3D06',
+  // Clay — "I NEED". A warm ochre that sits beside terracotta without competing.
+  clay50: '#FBF1E4',
+  clay100: '#F3DCB6',
+  clay200: '#E8C489',
+  clay400: '#C68A3D',
+  clay500: '#AD7328',
+  clay600: '#8C5C1E',
+  clay700: '#6B4517',
 
-  // Violet — reciprocal matches. The product's one moment of spectacle.
-  violet50: '#F2EEFD',
-  violet100: '#E2D8FB',
-  violet200: '#C6B3F7',
-  violet400: '#8F63F0',
-  violet500: '#7340E0',
-  violet600: '#5B2CC2',
-  violet700: '#441F94',
+  // Sage — reciprocal barter matches. The product's one moment of spectacle.
+  sage50: '#F1F4ED',
+  sage100: '#DEE6D3',
+  sage200: '#C1D0AE',
+  sage400: '#8FA377',
+  sage500: '#7E9168',
+  sage600: '#647550',
+  sage700: '#4C593D',
 
   /*
-   * Neutrals, warm-leaning so the canvas never reads clinical.
+   * Neutrals, warm cream-leaning so the canvas never reads clinical.
    *
-   * `ground` sits a perceptible step below `white`: the previous canvas was
-   * only ~1% off white, so every card needed a shadow just to be seen as a
-   * surface. With real separation a hairline border is enough, which is what
-   * lets the shadows come down to almost nothing.
+   * `ground` (#F7F0E7) is the warm creamy background; `surface` (#FFFDF9) sits
+   * a perceptible step above it, so a card is legible from a hairline border
+   * alone without needing a shadow just to read as a surface.
    */
-  ink: '#121619',
-  slate800: '#1E262C',
-  slate700: '#39434B',
-  slate600: '#4A555E',
-  /** Lightest neutral that still passes AA for small text on white (4.6:1). */
-  slate500: '#6B7680',
+  ink: '#241B16',
+  espresso800: '#3A2B22',
+  espresso700: '#4E3B2F',
+  espresso600: '#5F493A',
+  /** Lightest neutral that still passes AA for small text on the cream ground. */
+  espresso500: '#75675C',
   /** Decorative only — fails AA for body copy. See `colors.textFaint`. */
-  slate400: '#98A2AB',
-  slate300: '#C4CBD1',
-  line: '#E3E7E9',
-  lineSoft: '#EDF0F1',
-  mist: '#F1F2F0',
-  ground: '#F6F6F4',
-  white: '#FFFFFF',
+  espresso400: '#9C8E80',
+  espresso300: '#C2B6A6',
+  line: '#E6DCCB',
+  lineSoft: '#EFE7D9',
+  mist: '#EFE5D8',
+  ground: '#F7F0E7',
+  white: '#FFFDF9',
 
   // Feedback. Text-safe by default: these appear on small labels constantly.
-  red600: '#C22F35',
-  red700: '#9B2126',
-  red50: '#FDEDED',
+  red600: '#B23A2E',
+  red700: '#8C2C22',
+  red50: '#FBEBE7',
   yellow700: '#8A5D06',
-  yellow50: '#FDF4E3',
-  blue600: '#0A6FBF',
-  blue50: '#E9F2FA',
+  yellow50: '#FBF1DE',
+  blue600: '#3D6E8C',
+  blue50: '#E9F1F5',
 } as const;
 
 /* -------------------------------------------------------------------------- */
@@ -100,12 +99,14 @@ export const palette = {
 export const colors = {
   /** App background. */
   background: palette.ground,
+  /** Secondary background — elevated section fills, alternating rows. */
+  backgroundSecondary: palette.mist,
   /** Default card / sheet surface — one perceptible step above `background`. */
   surface: palette.white,
   /** Subtle filled surface (inputs at rest, chips, skeletons). */
   surfaceMuted: palette.mist,
   /** Pressed/hovered state for a surface that is interactive. */
-  surfaceHover: '#F0F1EE',
+  surfaceHover: '#EFE3D3',
   /** Deep surface used behind hero headers. */
   surfaceInverse: palette.ink,
 
@@ -114,48 +115,48 @@ export const colors = {
   /** Even quieter divider, for rules inside an already-bordered container. */
   borderSoft: palette.lineSoft,
   /** Border on a control that has focus or is selected. */
-  borderStrong: palette.slate300,
+  borderStrong: palette.espresso300,
 
   textPrimary: palette.ink,
-  textSecondary: palette.slate600,
-  /** Supporting copy. AA-compliant, unlike the old muted grey. */
-  textMuted: palette.slate500,
+  textSecondary: palette.espresso500,
+  /** Supporting copy. AA-compliant, unlike a low-contrast grey. */
+  textMuted: palette.espresso500,
   /**
    * Deliberately below AA — only for decoration that repeats information
    * already available elsewhere (a chevron, a separator dot, a placeholder
    * glyph). Never the only carrier of meaning, never body copy.
    */
-  textFaint: palette.slate400,
+  textFaint: palette.espresso400,
   textInverse: palette.white,
 
   /** Brand / primary action / "I HAVE". */
-  accent: palette.emerald600,
-  accentStrong: palette.emerald700,
-  accentBright: palette.emerald500,
-  accentSoft: palette.emerald50,
-  accentBorder: palette.emerald200,
-  /** Use when emerald carries small text — passes AA on white and on tints. */
-  accentText: palette.emerald700,
+  accent: palette.terracotta600,
+  accentStrong: palette.terracotta700,
+  accentBright: palette.terracotta400,
+  accentSoft: palette.terracotta50,
+  accentBorder: palette.terracotta200,
+  /** Use when terracotta carries small text — passes AA on white and on tints. */
+  accentText: palette.terracotta700,
 
   /** "I NEED". */
-  need: palette.amber500,
-  needStrong: palette.amber700,
-  needBright: palette.amber400,
-  needSoft: palette.amber50,
-  needBorder: palette.amber200,
-  needText: palette.amber700,
+  need: palette.clay500,
+  needStrong: palette.clay700,
+  needBright: palette.clay400,
+  needSoft: palette.clay50,
+  needBorder: palette.clay200,
+  needText: palette.clay700,
 
   /** Reciprocal barter match. */
-  match: palette.violet500,
-  matchStrong: palette.violet700,
-  matchBright: palette.violet400,
-  matchSoft: palette.violet50,
-  matchBorder: palette.violet200,
-  matchText: palette.violet700,
+  match: palette.sage500,
+  matchStrong: palette.sage700,
+  matchBright: palette.sage400,
+  matchSoft: palette.sage50,
+  matchBorder: palette.sage200,
+  matchText: palette.sage700,
 
-  success: palette.emerald600,
-  successSoft: palette.emerald50,
-  successText: palette.emerald700,
+  success: palette.sage600,
+  successSoft: palette.sage50,
+  successText: palette.sage700,
   warning: palette.yellow700,
   warningSoft: palette.yellow50,
   warningText: palette.yellow700,
@@ -166,11 +167,16 @@ export const colors = {
   info: palette.blue600,
   infoSoft: palette.blue50,
   infoText: palette.blue600,
+  infoBorder: '#C4D8E3',
+  warningBorder: '#EAD3A6',
+  dangerBorder: '#EDC3B9',
+  /** Deeper pressed fill for a muted control. */
+  surfacePressed: '#E6D8C6',
 
   /** Keyboard focus ring. Deliberately the brand colour, never the OS blue. */
-  focus: palette.emerald500,
+  focus: palette.terracotta500,
   /** Scrim behind a modal or sheet. */
-  scrim: 'rgba(18, 22, 25, 0.44)',
+  scrim: 'rgba(36, 27, 22, 0.44)',
 } as const;
 
 /* -------------------------------------------------------------------------- */
@@ -187,9 +193,9 @@ export const colors = {
  * job is to make a wall of imageless cards look varied rather than broken.
  */
 export const gradients = {
-  match: [palette.violet400, palette.violet600],
-  hero: [palette.emerald600, palette.emerald900],
-  ink: [palette.slate800, palette.ink],
+  match: [palette.sage400, palette.sage600],
+  hero: [palette.terracotta600, palette.terracotta900],
+  ink: [palette.espresso800, palette.ink],
   /*
    * Deterministic covers for items that have no photograph.
    *
@@ -197,15 +203,15 @@ export const gradients = {
    * a grid of them read as a colour-swatch page: the covers shouted over the
    * titles, and — worse — a real photograph looked washed out next to them.
    * The fallback has to be quieter than the thing it stands in for, so these
-   * are low-saturation slate/stone tints that give each card a distinct
+   * are low-saturation warm-neutral tints that give each card a distinct
    * identity without competing for attention.
    */
-  cover1: ['#5E7A6E', '#3A5249'],
-  cover2: ['#7E7263', '#544A3E'],
-  cover3: ['#6E6A84', '#464360'],
-  cover4: ['#5D7480', '#384B55'],
-  cover5: ['#80666C', '#554043'],
-  cover6: ['#647084', '#3E4857'],
+  cover1: ['#8A7A64', '#5C4E3B'],
+  cover2: ['#9C7A5C', '#6B4E37'],
+  cover3: ['#8A7E8C', '#5A4E5C'],
+  cover4: ['#7E8A80', '#4E5C50'],
+  cover5: ['#9C7470', '#6B4740'],
+  cover6: ['#847A6E', '#54493E'],
 } as const;
 
 export type GradientToken = keyof typeof gradients;
@@ -243,7 +249,7 @@ export const spacing = {
 /**
  * Radius. Controls and containers are deliberately DIFFERENT: a button at the
  * same radius as the card holding it makes both read as stickers. Controls sit
- * tighter (10), containers a little softer (14), and the full pill is reserved
+ * tighter (12), containers generously soft (18), and the full pill is reserved
  * for things that are genuinely pill-shaped — filter chips, badges, avatars.
  */
 export const radii = {
@@ -252,11 +258,11 @@ export const radii = {
   /** Inline marks: badges on a dense row, tags, small swatches. */
   sm: 8,
   /** Controls: buttons, inputs, segmented controls. */
-  md: 10,
-  /** Containers: cards, sheets, tiles. */
-  lg: 14,
-  xl: 20,
-  '2xl': 26,
+  md: 12,
+  /** Containers: cards, sheets, tiles. Generous — the warm redesign is soft-cornered. */
+  lg: 18,
+  xl: 24,
+  '2xl': 30,
   pill: 999,
 } as const;
 
@@ -312,39 +318,42 @@ export type TypographyVariant = keyof typeof typography;
  * only job is to say "this floats above the page" — sheets, sticky bars, menus.
  * Everything is a tight, near-vertical, low-opacity shadow; nothing blooms.
  */
+/** Warm espresso shadow colour — a black shadow on cream reads grey and dirty. */
+const SHADOW = '#5A3A22';
+
 export const shadows = {
   none: {},
   /** Barely there. A card that should feel attached to the page. */
   xs: {
-    shadowColor: palette.ink,
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
+    shadowColor: SHADOW,
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
     shadowOffset: { width: 0, height: 1 },
     elevation: 1,
   },
-  /** A card that has lifted — pressed, dragged, or selected. */
+  /** A resting card on the cream ground — soft, warm, slightly diffused. */
   sm: {
-    shadowColor: palette.ink,
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  /** Menus, popovers, sticky footers. */
-  md: {
-    shadowColor: palette.ink,
+    shadowColor: SHADOW,
     shadowOpacity: 0.08,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
+    elevation: 3,
   },
-  /** Modals and sheets only. */
-  lg: {
-    shadowColor: palette.ink,
+  /** A lifted card — hovered, held, or a hero tile. */
+  md: {
+    shadowColor: SHADOW,
     shadowOpacity: 0.12,
-    shadowRadius: 24,
+    shadowRadius: 22,
     shadowOffset: { width: 0, height: 10 },
-    elevation: 12,
+    elevation: 8,
+  },
+  /** Modals, sheets, floating objects. */
+  lg: {
+    shadowColor: SHADOW,
+    shadowOpacity: 0.16,
+    shadowRadius: 36,
+    shadowOffset: { width: 0, height: 18 },
+    elevation: 14,
   },
 } as const;
 
@@ -386,7 +395,16 @@ export const timings = { instant: 90, fast: 140, base: 200, slow: 240 } as const
 export const springs = {
   press: { damping: 22, stiffness: 380, mass: 0.5 },
   enter: { damping: 24, stiffness: 200, mass: 0.8 },
+  /** Soft settle for tilt/depth returning to rest. */
+  tilt: { damping: 16, stiffness: 160, mass: 0.7 },
 } as const;
+
+/**
+ * Ambient motion (ms). The ONE exception to the 240ms ceiling: slow idle loops
+ * on decorative objects (empty states, the match moment). Never on controls,
+ * and always disabled under reduced motion.
+ */
+export const ambient = { float: 3200, drift: 5200, pulse: 1800 } as const;
 
 /* -------------------------------------------------------------------------- */
 /* Layout                                                                     */
@@ -404,11 +422,12 @@ export const layout = {
   /** Tighter gutter for dense rows inside an already-padded container. */
   gutterTight: spacing.lg,
   /**
-   * Comfortable breathing room under the last item on a scrollable tab
-   * screen. The tab bar is docked (not floating), so React Navigation already
-   * reserves its own space — this is padding, not overlap avoidance.
+   * Bottom padding on every tab screen. The tab bar FLOATS over the content
+   * (see apps/app/src/components/nav/PandamTabBar.tsx: 68 tall, lifted by the
+   * safe-area inset or 12), so the last item needs this much room to scroll
+   * clear of it.
    */
-  tabBarInset: 28,
+  tabBarInset: 116,
   /** Hairline width. One value, so borders never disagree across components. */
   hairline: 1,
 } as const;
@@ -428,5 +447,6 @@ export const tokens = {
   focusRing,
   timings,
   springs,
+  ambient,
   layout,
 } as const;

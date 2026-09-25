@@ -2,6 +2,8 @@
  * Authentication input schemas — shared by the Expo auth forms and the Worker
  * auth routes so both enforce the exact same rules.
  */
+import { OAUTH_PROVIDER } from '@pandam/database/enums';
+
 import { boundedString, usernameSchema, z } from './common';
 
 export { usernameSchema };
@@ -42,3 +44,34 @@ export const loginSchema = z.object({
   password: z.string().min(1).max(128),
 });
 export type LoginInput = z.infer<typeof loginSchema>;
+
+/**
+ * "Sign in with Google/Apple". The client never sends a password — only the
+ * provider's signed ID token, which the Worker verifies against the
+ * provider's own public keys (see `apps/worker/src/lib/oauth.ts`). `nonce` is
+ * the same random value the client embedded in the sign-in request; the
+ * Worker checks it against the token's `nonce` claim so a token cannot be
+ * replayed from a different sign-in attempt.
+ *
+ * `displayName` is only ever used the first time this identity is seen (a new
+ * account) — Apple hands back a name exactly once, on the very first
+ * authorization, so the client must capture and forward it right then.
+ */
+export const oauthLoginSchema = z.object({
+  provider: z.enum(OAUTH_PROVIDER),
+  idToken: z.string().min(1).max(4096),
+  nonce: z.string().min(16).max(256),
+  displayName: boundedString(1, 80).optional(),
+});
+export type OAuthLoginInput = z.infer<typeof oauthLoginSchema>;
+
+/**
+ * One identity-verification step. Only `demo` exists today: a simulated
+ * DigiLocker / face check used for client demos. A production provider will
+ * add its own mode here (e.g. an authorization code the Worker exchanges with
+ * the provider itself) — the client never asserts "I am verified" in production.
+ */
+export const verificationStepSchema = z.object({
+  mode: z.literal('demo'),
+});
+export type VerificationStepInput = z.infer<typeof verificationStepSchema>;

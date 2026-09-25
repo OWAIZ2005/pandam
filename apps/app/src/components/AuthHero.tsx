@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { View } from 'react-native';
 
-import { Gradient, Text, colors, radii, spacing } from '@pandam/ui';
+import { FloatingObject, Gradient, Text, colors, radii, shadows, spacing } from '@pandam/ui';
 
 /**
  * The header on the two unauthenticated screens.
@@ -26,9 +26,23 @@ export function AuthHero() {
         paddingBottom: spacing['3xl'],
       }}
     >
-      <Text variant="overline" caps style={{ color: 'rgba(255,255,255,0.62)' }}>
-        Pandam
-      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+        <View
+          style={{
+            width: 26,
+            height: 26,
+            borderRadius: radii.sm,
+            backgroundColor: 'rgba(255,253,249,0.16)',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Ionicons name="swap-horizontal" size={14} color={colors.textInverse} />
+        </View>
+        <Text variant="h3" tone="inverse" style={{ letterSpacing: 0.2 }}>
+          Pandam
+        </Text>
+      </View>
       <Text variant="hero" tone="inverse" style={{ marginTop: spacing.sm }}>
         Trade what you have
       </Text>
@@ -45,20 +59,25 @@ export function AuthHero() {
           marginTop: spacing['2xl'],
         }}
       >
-        <SwapToken icon="cube-outline" label="Your camera" />
+        <FloatingObject style={{ flex: 1 }} amplitude={4} rotate={2}>
+          <SwapToken icon="camera-outline" label="Your camera" />
+        </FloatingObject>
         <View
           style={{
-            width: 26,
-            height: 26,
+            width: 30,
+            height: 30,
             borderRadius: radii.pill,
-            backgroundColor: 'rgba(255,255,255,0.16)',
+            backgroundColor: colors.match,
+            ...shadows.sm,
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
           <Ionicons name="swap-horizontal" size={14} color={colors.textInverse} />
         </View>
-        <SwapToken icon="color-palette-outline" label="Their design work" />
+        <FloatingObject style={{ flex: 1 }} amplitude={4} rotate={2} delay={900}>
+          <SwapToken icon="laptop-outline" label="Their MacBook" />
+        </FloatingObject>
       </View>
 
       <Text variant="caption" style={{ color: 'rgba(255,255,255,0.6)', marginTop: spacing.lg }}>
@@ -73,14 +92,13 @@ function SwapToken({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; labe
   return (
     <View
       style={{
-        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.sm,
-        backgroundColor: 'rgba(255,255,255,0.1)',
+        backgroundColor: 'rgba(255,253,249,0.12)',
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.16)',
-        borderRadius: radii.md,
+        borderColor: 'rgba(255,253,249,0.2)',
+        borderRadius: radii.lg,
         paddingVertical: spacing.sm,
         paddingHorizontal: spacing.md,
       }}

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Alert, View } from 'react-native';
+import { Alert, Image, Platform, View } from 'react-native';
 
 import { type OfferView } from '@pandam/types';
 import {
@@ -25,6 +25,7 @@ import {
 
 import { AppHeader } from '@/components/AppHeader';
 import { ErrorState } from '@/components/states';
+import { IS_DEMO_DATA, demoOffers, demoQuery } from '@/dummy';
 import { ApiError } from '@/lib/api/client';
 import { mediaSrc } from '@/lib/api/media';
 import { TYPE_LABEL, timeAgo } from '@/lib/format';
@@ -96,7 +97,9 @@ export default function OfferDetailScreen() {
   const router = useRouter();
   const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const offer = useOffer(id);
+  const liveOffer = useOffer(id);
+  const demoOffer = IS_DEMO_DATA ? demoOffers.find((o) => o.id === id) : undefined;
+  const offer = demoOffer ? demoQuery(liveOffer, demoOffer) : liveOffer;
   const respond = useRespondToOffer();
 
   const respondError =
@@ -132,27 +135,46 @@ export default function OfferDetailScreen() {
   /* Accepting is irreversible and creates a transaction plus a chat, so it
      asks first. Declining and withdrawing are recoverable — you can always
      make the offer again — so those act immediately. */
-  const confirmAccept = () =>
-    Alert.alert(
-      'Accept this trade?',
-      `You and ${person.displayName} will both be committed. Your two items come off the marketplace and a chat opens so you can arrange the swap.`,
-      [
-        { text: 'Not yet', style: 'cancel' },
-        {
-          text: 'Accept trade',
-          onPress: () =>
-            respond.mutate(
-              { id: o.id, action: 'accept' },
-              {
-                onSuccess: () => {
-                  toast.success('Trade agreed — a chat is open in Messages.');
-                  router.push('/(app)/transactions');
-                },
-              },
-            ),
-        },
-      ],
+  const closesWhat =
+    o.requestedKind === 'need'
+      ? 'The offered listing comes off the marketplace and the request closes.'
+      : 'Both items come off the marketplace.';
+  const doAccept = () =>
+    respond.mutate(
+      { id: o.id, action: 'accept' },
+      { onSuccess: () => toast.success('Trade accepted. Keep chatting to arrange the swap.') },
     );
+  // Accepting is irreversible, so it asks first. React Native's Alert is a
+  // no-op on web, so the browser's own confirm is used there.
+  const confirmAccept = () => {
+    const title = 'Accept this trade?';
+    const body = `You and ${person.displayName} will both be committed. ${closesWhat}`;
+    if (Platform.OS === 'web') {
+      if (globalThis.confirm?.(`${title}\n\n${body}`)) doAccept();
+      return;
+    }
+    Alert.alert(title, body, [
+      { text: 'Not yet', style: 'cancel' },
+      { text: 'Accept trade', onPress: doAccept },
+    ]);
+  };
+
+  const chatButton = o.conversationId ? (
+    <Button
+      label={`Chat with ${person.displayName.split(' ')[0]}`}
+      variant={canRespond && iAmRecipient ? 'secondary' : o.status === 'accepted' ? 'secondary' : 'primary'}
+      size="lg"
+      fullWidth
+      onPress={() => router.push(`/(app)/chat/${o.conversationId}`)}
+      leftIcon={
+        <Ionicons
+          name="chatbubbles-outline"
+          size={17}
+          color={canRespond && iAmRecipient ? colors.textPrimary : o.status === 'accepted' ? colors.textPrimary : colors.textInverse}
+        />
+      }
+    />
+  ) : null;
 
   return (
     <Screen
@@ -171,6 +193,7 @@ export default function OfferDetailScreen() {
                 onPress={confirmAccept}
                 leftIcon={<Ionicons name="checkmark" size={17} color={colors.textInverse} />}
               />
+              {chatButton}
               <Button
                 label="Decline"
                 variant="quiet"
@@ -185,28 +208,39 @@ export default function OfferDetailScreen() {
               />
             </Stack>
           ) : (
-            <Button
-              label="Withdraw offer"
-              variant="quiet"
-              fullWidth
-              loading={respond.isPending}
-              onPress={() =>
-                respond.mutate(
-                  { id: o.id, action: 'cancel' },
-                  { onSuccess: () => toast.show({ message: 'Offer withdrawn.' }) },
-                )
-              }
-            />
+            <Stack gap="sm">
+              {chatButton}
+              <Button
+                label="Withdraw offer"
+                variant="quiet"
+                fullWidth
+                loading={respond.isPending}
+                onPress={() =>
+                  respond.mutate(
+                    { id: o.id, action: 'cancel' },
+                    { onSuccess: () => toast.show({ message: 'Offer withdrawn.' }) },
+                  )
+                }
+              />
+            </Stack>
           )
         ) : o.status === 'accepted' ? (
-          <Button
-            label="Open transaction"
-            size="lg"
-            fullWidth
-            onPress={() => router.push('/(app)/transactions')}
-            leftIcon={<Ionicons name="repeat" size={17} color={colors.textInverse} />}
-          />
-        ) : undefined
+          <Stack gap="sm">
+            <Notice kind="success" icon={<Ionicons name="checkmark-circle" size={16} color={colors.match} />}>
+              Trade Accepted
+            </Notice>
+            <Button
+              label="Open transaction"
+              size="lg"
+              fullWidth
+              onPress={() => router.push('/(app)/transactions')}
+              leftIcon={<Ionicons name="repeat" size={17} color={colors.textInverse} />}
+            />
+            {chatButton}
+          </Stack>
+        ) : (
+          chatButton ?? undefined
+        )
       }
     >
       <View
@@ -277,6 +311,22 @@ export default function OfferDetailScreen() {
               tone="need"
             />
           </Stack>
+
+          {o.imageUrl ? (
+            <Card padded>
+              <Stack gap="sm">
+                <Text variant="label" tone="muted">
+                  {o.isMine ? 'Photo you attached' : 'Photo attached'}
+                </Text>
+                <Image
+                  source={{ uri: mediaSrc(o.imageUrl) }}
+                  style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: 12, backgroundColor: colors.surfaceMuted }}
+                  resizeMode="cover"
+                  accessibilityLabel="Photo attached to this offer"
+                />
+              </Stack>
+            </Card>
+          ) : null}
 
           {o.message ? (
             <Card padded>

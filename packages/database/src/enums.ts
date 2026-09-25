@@ -11,6 +11,17 @@
 export const USER_STATUS = ['active', 'suspended', 'deleted'] as const;
 export type UserStatus = (typeof USER_STATUS)[number];
 
+/** Social sign-in providers PANDAM accepts, beyond email+password. */
+export const OAUTH_PROVIDER = ['google', 'apple'] as const;
+export type OAuthProvider = (typeof OAUTH_PROVIDER)[number];
+
+/**
+ * First-time identity verification. `in_progress` = at least one step done;
+ * `verified` = every required step done. Only ever moves forward.
+ */
+export const IDENTITY_VERIFICATION_STATUS = ['not_started', 'in_progress', 'verified'] as const;
+export type IdentityVerificationStatus = (typeof IDENTITY_VERIFICATION_STATUS)[number];
+
 export const CATEGORY_STATUS = ['active', 'inactive'] as const;
 export type CategoryStatus = (typeof CATEGORY_STATUS)[number];
 

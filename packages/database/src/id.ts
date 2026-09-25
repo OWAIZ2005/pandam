@@ -13,6 +13,7 @@
 export const ID_PREFIXES = {
   user: 'usr',
   credential: 'crd',
+  oauthIdentity: 'oid',
   session: 'ses',
   profile: 'prf',
   category: 'cat',

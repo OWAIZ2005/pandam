@@ -66,17 +66,22 @@ const SPEC: Record<Kind, { soft: string; border: string; fg: string; solid: stri
   },
   warning: {
     soft: colors.warningSoft,
-    border: '#F0DFB4',
+    border: colors.warningBorder,
     fg: colors.warningText,
     solid: colors.warning,
   },
   danger: {
     soft: colors.dangerSoft,
-    border: '#F6C9C9',
+    border: colors.dangerBorder,
     fg: colors.dangerText,
     solid: colors.danger,
   },
-  info: { soft: colors.infoSoft, border: '#C3DDF2', fg: colors.infoText, solid: colors.info },
+  info: {
+    soft: colors.infoSoft,
+    border: colors.infoBorder,
+    fg: colors.infoText,
+    solid: colors.info,
+  },
 };
 
 /**

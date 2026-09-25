@@ -62,3 +62,8 @@ export const mediaApi = {
   uploadAvatar: async (uri: string) =>
     api.upload<{ profile: PublicProfile }>('/api/v1/profiles/me/avatar', await imageForm(uri)),
 };
+
+/** Upload the optional photo for a trade offer; pass the returned key to `offersApi.create`. */
+export async function uploadOfferImage(uri: string) {
+  return api.upload<{ imageKey: string; imageUrl: string }>('/api/v1/offers/attachments', await imageForm(uri));
+}

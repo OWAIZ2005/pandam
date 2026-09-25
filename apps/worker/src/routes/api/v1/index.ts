@@ -27,6 +27,7 @@ import { reportsRoute } from './reports';
 import { reviewsRoute } from './reviews';
 import { transactionsRoute } from './transactions';
 import { usersRoute } from './users';
+import { verificationRoute } from './verification';
 
 const IMPLEMENTED = [
   {
@@ -125,6 +126,7 @@ const IMPLEMENTED = [
 /** Route groups that talk to the database — they get the request context. */
 const DB_GROUPS = [
   'auth',
+  'verification',
   'users',
   'profiles',
   'categories',
@@ -164,6 +166,7 @@ export function createApiV1(deps: AppDeps = {}) {
   );
 
   apiV1.route('/auth', authRoute);
+  apiV1.route('/verification', verificationRoute);
   apiV1.route('/users', usersRoute);
   apiV1.route('/profiles', profilesRoute);
   apiV1.route('/categories', categoriesRoute);

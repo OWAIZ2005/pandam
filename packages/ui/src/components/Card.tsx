@@ -72,7 +72,16 @@ export function Card({
   accessibilityLabel,
   style,
 }: CardProps) {
-  const depth: Elevation = elevated === true ? 'xs' : elevated === false ? 'none' : elevated;
+  // Plain surface cards rest on a faint warm shadow — on cream a border alone
+  // reads flat; the soft shadow is what makes the redesign feel tactile.
+  const depth: Elevation =
+    elevated === true
+      ? 'sm'
+      : elevated === false
+        ? tone === 'surface' && bordered
+          ? 'xs'
+          : 'none'
+        : elevated;
 
   const base: StyleProp<ViewStyle> = [
     styles.card,
@@ -93,6 +102,7 @@ export function Card({
   return (
     <Press
       scale="sm"
+      lift
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
@@ -101,7 +111,7 @@ export function Card({
         // Hover raises the border rather than the shadow: on a list of cards,
         // twelve shadows fading in and out is noise, one darkening edge is a
         // pointer telling you what you are about to open.
-        hover: { borderColor: colors.borderStrong, ...shadows.sm },
+        hover: { borderColor: colors.borderStrong },
         pressed: { backgroundColor: tone === 'surface' ? colors.surfaceHover : undefined },
       }}
     >

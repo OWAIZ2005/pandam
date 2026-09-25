@@ -2,7 +2,22 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 
-import { Card, Divider, Row, Screen, Stack, Text, colors, radii, spacing } from '@pandam/ui';
+import {
+  Card,
+  Divider,
+  FloatingObject,
+  Press,
+  Reveal,
+  Row,
+  Screen,
+  Stack,
+  Text,
+  TiltCard,
+  colors,
+  radii,
+  shadows,
+  spacing,
+} from '@pandam/ui';
 
 import { AppHeader } from '@/components/AppHeader';
 
@@ -35,41 +50,69 @@ function BigChoice({
   const border = edge === 'accent' ? colors.accentBorder : colors.needBorder;
 
   return (
-    <Card onPress={onPress} accessibilityLabel={title} edge={edge} padded={false}>
-      <View style={{ padding: spacing.xl, gap: spacing.lg }}>
-        <Row justify="space-between" align="flex-start">
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: radii.md,
-              backgroundColor: tint,
-              borderWidth: 1,
-              borderColor: border,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Ionicons name={icon} size={20} color={color} />
+    <TiltCard maxTilt={4}>
+      <Press
+        scale="sm"
+        lift
+        accessibilityRole="button"
+        accessibilityLabel={title}
+        onPress={onPress}
+        style={{
+          backgroundColor: tint,
+          borderRadius: radii.xl,
+          borderWidth: 1,
+          borderColor: border,
+          overflow: 'hidden',
+          ...shadows.sm,
+        }}
+      >
+        <View style={{ padding: spacing.xl, gap: spacing.lg }}>
+          <Row justify="space-between" align="flex-start">
+            <FloatingObject amplitude={4} rotate={4}>
+              <View
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: radii.lg,
+                  backgroundColor: color,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  ...shadows.md,
+                }}
+              >
+                <Ionicons name={icon} size={26} color={colors.textInverse} />
+              </View>
+            </FloatingObject>
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: radii.pill,
+                backgroundColor: colors.surface,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="arrow-forward" size={17} color={color} />
+            </View>
+          </Row>
+
+          <View style={{ gap: spacing.xs }}>
+            <Text variant="h1">{title}</Text>
+            <Text variant="bodySm" tone="secondary">
+              {body}
+            </Text>
           </View>
-          <Ionicons name="arrow-forward" size={17} color={colors.textFaint} />
-        </Row>
 
-        <View style={{ gap: spacing.xs }}>
-          <Text variant="h1">{title}</Text>
-          <Text variant="bodySm" tone="secondary">
-            {body}
-          </Text>
-        </View>
-
-        {/* Examples as plain text, not as pill badges. Three pills for three
+          {/* Examples as plain text, not as pill badges. Three pills for three
             nouns reads as a feature list on a pricing page; a quiet line of
             examples reads as help. */}
-        <Text variant="caption" tone="muted">
-          {examples.join(' · ')}
-        </Text>
-      </View>
-    </Card>
+          <Text variant="caption" tone="muted">
+            {examples.join(' · ')}
+          </Text>
+        </View>
+      </Press>
+    </TiltCard>
   );
 }
 
@@ -113,25 +156,29 @@ export default function CreateScreen() {
       />
 
       <Stack gap="xl">
-        <BigChoice
-          edge="accent"
-          icon="cube-outline"
-          title="I have"
-          body="Something you can put on the table — an object, your time, or a skill."
-          examples={['A camera', 'Two hours of tutoring', 'Logo design']}
-          onPress={() => router.push('/(app)/new-listing')}
-        />
+        <Reveal index={0}>
+          <BigChoice
+            edge="accent"
+            icon="cube-outline"
+            title="I have"
+            body="Something you can put on the table — an object, your time, or a skill."
+            examples={['A camera', 'Two hours of tutoring', 'Logo design']}
+            onPress={() => router.push('/(app)/new-listing')}
+          />
+        </Reveal>
 
-        <BigChoice
-          edge="need"
-          icon="search-outline"
-          title="I need"
-          body="Something you are looking for. We watch for people who have it and want what you offer."
-          examples={['A bike repair', 'Wedding photos', 'Help moving flat']}
-          onPress={() => router.push('/(app)/new-need')}
-        />
+        <Reveal index={1}>
+          <BigChoice
+            edge="need"
+            icon="search-outline"
+            title="I need"
+            body="Something you are looking for. We watch for people who have it and want what you offer."
+            examples={['A bike repair', 'Wedding photos', 'Help moving flat']}
+            onPress={() => router.push('/(app)/new-need')}
+          />
+        </Reveal>
 
-        <Card padded>
+        <Card padded radius="xl">
           <Stack gap="lg">
             <Row gap="sm">
               <Ionicons name="sparkles" size={15} color={colors.match} />

@@ -23,10 +23,10 @@ const SPEC: Record<
   NoticeKind,
   { bg: string; border: string; tone: 'danger' | 'warning' | 'success' | 'secondary' | 'muted' }
 > = {
-  info: { bg: colors.infoSoft, border: '#C3DDF2', tone: 'secondary' },
+  info: { bg: colors.infoSoft, border: colors.infoBorder, tone: 'secondary' },
   success: { bg: colors.successSoft, border: colors.accentBorder, tone: 'success' },
-  warning: { bg: colors.warningSoft, border: '#F0DFB4', tone: 'warning' },
-  danger: { bg: colors.dangerSoft, border: '#F6C9C9', tone: 'danger' },
+  warning: { bg: colors.warningSoft, border: colors.warningBorder, tone: 'warning' },
+  danger: { bg: colors.dangerSoft, border: colors.dangerBorder, tone: 'danger' },
   neutral: { bg: colors.surfaceMuted, border: colors.border, tone: 'muted' },
 };
 

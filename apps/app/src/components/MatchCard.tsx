@@ -5,6 +5,8 @@ import { type ReciprocalMatchView } from '@pandam/types';
 import {
   Avatar,
   Badge,
+  ConnectingPair,
+  CoverTile,
   Gradient,
   Press,
   Row,
@@ -15,6 +17,7 @@ import {
   spacing,
 } from '@pandam/ui';
 
+import { demoPhoto } from '@/dummy';
 import { mediaSrc } from '@/lib/api/media';
 import { categoryIcon } from '@/lib/icons';
 
@@ -79,6 +82,20 @@ function Leg({
   );
 }
 
+/** An item as a physical object on the match stage: its photo, or its cover. */
+function ObjectFace({ id, slug }: { id: string; slug: string }) {
+  return (
+    <CoverTile
+      seed={id}
+      uri={demoPhoto(id)}
+      height={200}
+      radius="none"
+      icon={<Ionicons name={categoryIcon(slug)} size={52} color="rgba(255,253,249,0.6)" />}
+      style={{ flex: 1 }}
+    />
+  );
+}
+
 export interface MatchCardProps {
   match: ReciprocalMatchView;
   onPress?: () => void;
@@ -100,20 +117,38 @@ export function MatchCard({ match, onPress }: MatchCardProps) {
   return (
     <Press
       scale="sm"
+      lift
       accessibilityLabel={`Barter match with ${them}`}
       onPress={onPress}
       style={[
         {
           backgroundColor: colors.surface,
-          borderRadius: radii.lg,
+          borderRadius: radii.xl,
           borderWidth: 1,
           borderColor: colors.matchBorder,
           overflow: 'hidden',
         },
         shadows.sm,
       ]}
-      states={{ hover: { borderColor: colors.match, ...shadows.md } }}
+      states={{ hover: { borderColor: colors.match } }}
     >
+      {/*
+        The stage: your thing and their thing, as objects, tilting in toward
+        each other and joined by a pulsing exchange link. This is the moment
+        the product exists for, so it is the one place with real 3D motion.
+      */}
+      <Gradient
+        colors={[colors.matchSoft, colors.surface]}
+        direction="vertical"
+        style={{ paddingTop: spacing.lg, paddingBottom: spacing.md }}
+      >
+        <ConnectingPair
+          size={96}
+          left={<ObjectFace id={match.you.have.id} slug={match.you.have.category.slug} />}
+          right={<ObjectFace id={match.them.have.id} slug={match.them.have.category.slug} />}
+          link={<Ionicons name="swap-horizontal" size={18} color={colors.textInverse} />}
+        />
+      </Gradient>
       <Gradient
         token="match"
         direction="horizontal"

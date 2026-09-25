@@ -12,6 +12,19 @@ type ClientEnv = {
   sentryDsn: string | null;
   posthogKey: string | null;
   posthogHost: string;
+  /**
+   * OAuth *client* ids — not secrets, they are meant to be embedded in the
+   * app bundle (the security boundary is server-side ID-token verification,
+   * see `apps/worker/src/lib/oauth.ts`). `null` cleanly disables that
+   * provider's sign-in button rather than sending a request that can only
+   * fail. See `@/lib/auth/oauth` for how each is used.
+   */
+  googleOAuthClientId: {
+    /** Used on web (the redirect-based flow runs in the browser itself). */
+    web: string | null;
+    /** Used on iOS/Android (the system-browser flow via `expo-auth-session`). */
+    native: string | null;
+  };
 };
 
 /** Worker port used by `pnpm dev:worker`. */
@@ -48,4 +61,8 @@ export const clientEnv: ClientEnv = {
   sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN || null,
   posthogKey: process.env.EXPO_PUBLIC_POSTHOG_KEY || null,
   posthogHost: required(process.env.EXPO_PUBLIC_POSTHOG_HOST, 'https://us.i.posthog.com'),
+  googleOAuthClientId: {
+    web: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB || null,
+    native: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_NATIVE || null,
+  },
 };

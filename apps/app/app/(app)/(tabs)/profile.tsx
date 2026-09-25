@@ -4,7 +4,6 @@ import { View } from 'react-native';
 
 import { type MarketItem } from '@pandam/types';
 import {
-  Avatar,
   Badge,
   Button,
   Card,
@@ -23,15 +22,21 @@ import {
   layout,
   radii,
   spacing,
+  shadows,
+  useToast,
 } from '@pandam/ui';
 
+import { IS_DEMO_DATA, demoMergeList, demoMyListings, demoMyNeeds } from '@/dummy';
+import { useTransactions } from '@/lib/hooks/useTransactions';
 import { AppHeader } from '@/components/AppHeader';
+import { AvatarPicker } from '@/components/AvatarPicker';
 import { ItemCard } from '@/components/ItemCard';
 import { ErrorState } from '@/components/states';
 import { type MarketKind } from '@/lib/api/market';
 import { mediaSrc } from '@/lib/api/media';
 import { useLogout, useSession } from '@/lib/auth/hooks';
 import { useMyItems } from '@/lib/hooks/useMarket';
+import { useUploadAvatar } from '@/lib/hooks/useMedia';
 import { useUnreadNotificationCount } from '@/lib/hooks/useNotifications';
 
 function MyItemsSection({
@@ -43,7 +48,7 @@ function MyItemsSection({
   onOpen: (item: MarketItem) => void;
   onAdd: () => void;
 }) {
-  const q = useMyItems(kind);
+  const q = demoMergeList(useMyItems(kind), kind === 'listing' ? demoMyListings : demoMyNeeds);
   const isHave = kind === 'listing';
   const items = q.data ?? [];
   const live = items.filter((i) => i.status === 'published').length;
@@ -103,7 +108,7 @@ function MyItemsSection({
 /**
  * The unread count on a settings row.
  *
- * Tangerine rather than emerald: emerald means "I HAVE" everywhere else in
+ * Clay rather than terracotta: terracotta means "I HAVE" everywhere else in
  * the product, and a green count here would read as a quantity of something
  * rather than as something needing attention.
  */
@@ -128,10 +133,18 @@ function CountBadge({ count }: { count: number }) {
 }
 
 export default function ProfileScreen() {
+  const uploadAvatar = useUploadAvatar();
+  const avatarToast = useToast();
   const router = useRouter();
   const { user, profile } = useSession();
   const logout = useLogout();
   const unread = useUnreadNotificationCount();
+  const myHave = demoMergeList(useMyItems('listing'), demoMyListings);
+  const myNeed = demoMergeList(useMyItems('need'), demoMyNeeds);
+  const trades = useTransactions();
+  const tradeCount = IS_DEMO_DATA
+    ? 4
+    : (trades.data?.filter((t) => t.status === 'completed').length ?? 0);
 
   const open = (item: MarketItem) =>
     router.push(item.kind === 'listing' ? `/(app)/listing/${item.id}` : `/(app)/need/${item.id}`);
@@ -169,17 +182,50 @@ export default function ProfileScreen() {
           the avatar and the name are the strongest things on screen, which is
           what a profile should lead with.
         */}
-        <Stack gap="2xl">
+        <Stack
+          gap="2xl"
+          style={{
+            backgroundColor: colors.surface,
+            borderRadius: radii['2xl'],
+            borderWidth: 1,
+            borderColor: colors.border,
+            padding: spacing.xl,
+            ...shadows.sm,
+          }}
+        >
           <Row gap="lg" align="flex-start">
-            <Avatar name={profile.displayName} size={64} uri={mediaSrc(profile.avatarUrl)} />
+            <View
+              style={{ borderRadius: radii.pill, borderWidth: 3, borderColor: colors.accentSoft }}
+            >
+              <AvatarPicker
+                name={profile.displayName}
+                size={72}
+                uri={mediaSrc(profile.avatarUrl)}
+                busy={uploadAvatar.isPending}
+                onPicked={(uri) =>
+                  uploadAvatar.mutate(uri, {
+                    onSuccess: () => avatarToast.success('Photo updated.'),
+                    onError: () => avatarToast.error('That photo could not be uploaded. Please try again.'),
+                  })
+                }
+              />
+            </View>
 
             <View style={{ flex: 1, minWidth: 0, gap: 2, paddingTop: spacing.xs }}>
-              <Text variant="h1" numberOfLines={1}>
+              <Text variant="display" numberOfLines={1}>
                 {profile.displayName}
               </Text>
               <Text variant="bodySm" tone="muted" numberOfLines={1}>
                 {profile.username ? `@${profile.username}` : user?.email}
               </Text>
+              {user?.identityVerification?.status === 'verified' ? (
+                <Row gap="xs" style={{ marginTop: 2 }}>
+                  <Ionicons name="shield-checkmark" size={12} color={colors.match} />
+                  <Text variant="caption" tone="match" style={{ fontWeight: '700' }}>
+                    Identity Verified ✓
+                  </Text>
+                </Row>
+              ) : null}
               {location ? (
                 <Row gap="xs" style={{ marginTop: 2 }}>
                   <Ionicons name="location-outline" size={12} color={colors.textMuted} />
@@ -196,6 +242,43 @@ export default function ProfileScreen() {
               size="sm"
               onPress={() => router.push('/(app)/edit-profile')}
             />
+          </Row>
+
+          {/* Marketplace identity: what you bring, what you seek, what you've done. */}
+          <Row style={{ marginHorizontal: -spacing.xs }}>
+            {[
+              { n: myHave.data?.length ?? 0, l: 'Listed', tone: colors.accent },
+              { n: myNeed.data?.length ?? 0, l: 'Wanted', tone: colors.needText },
+              { n: tradeCount, l: 'Trades done', tone: colors.matchText },
+            ].map((st) => (
+              <View
+                key={st.l}
+                style={{
+                  flex: 1,
+                  marginHorizontal: spacing.xs,
+                  paddingVertical: spacing.md,
+                  borderRadius: radii.lg,
+                  backgroundColor: colors.background,
+                  alignItems: 'center',
+                  gap: 2,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 24,
+                    lineHeight: 28,
+                    fontWeight: '800',
+                    letterSpacing: -0.6,
+                    color: st.tone,
+                  }}
+                >
+                  {st.n}
+                </Text>
+                <Text variant="caption" tone="muted">
+                  {st.l}
+                </Text>
+              </View>
+            ))}
           </Row>
 
           {profile.bio ? (

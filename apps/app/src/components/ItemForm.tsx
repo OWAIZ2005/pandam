@@ -26,10 +26,13 @@ import {
   Text,
   colors,
   layout,
+  radii,
   spacing,
 } from '@pandam/ui';
 import { boundedString, itemTypeSchema, z } from '@pandam/validation';
 
+import { AddCategorySheet } from '@/components/AddCategorySheet';
+import { GuideRail } from '@/components/brand/GuideRail';
 import { PhotoPicker } from '@/components/PhotoPicker';
 import { ApiError } from '@/lib/api/client';
 import { TYPE_LABEL } from '@/lib/format';
@@ -109,10 +112,28 @@ export interface ItemFormProps {
 function StepLabel({ n, label, hint }: { n: number; label: string; hint?: string }) {
   return (
     <Row gap="md" align="flex-start" style={{ marginBottom: spacing.md }}>
-      <Text variant="numeric" numeric tone="accent" style={{ marginTop: 1, minWidth: 14 }}>
-        {n}
-      </Text>
+      {/* A numbered stop on the guided path: a warm disc that reads as a
+          progress marker, not a form-field decoration. */}
+      <View
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: radii.pill,
+          backgroundColor: colors.accentSoft,
+          borderWidth: 1,
+          borderColor: colors.accentBorder,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Text variant="label" numeric tone="accent" style={{ fontWeight: '700' }}>
+          {n}
+        </Text>
+      </View>
       <View style={{ flex: 1, gap: 1 }}>
+        <Text variant="overline" tone="muted">
+          Step {n}
+        </Text>
         <Text variant="h3">{label}</Text>
         {hint ? (
           <Text variant="bodySm" tone="secondary">
@@ -129,7 +150,8 @@ export function ItemForm({ kind, mode, initial, submitting, error, onSubmit }: I
   const categories = useCategories();
   const [photos, setPhotos] = useState<string[]>([]);
 
-  const { control, handleSubmit, formState, watch } = useForm<FormValues>({
+  const [addingCategory, setAddingCategory] = useState(false);
+  const { control, handleSubmit, formState, watch, setValue } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       categoryId: initial?.category.id ?? '',
@@ -146,6 +168,10 @@ export function ItemForm({ kind, mode, initial, submitting, error, onSubmit }: I
   const title = watch('title');
   const description = watch('description');
   const transactionType = watch('transactionType');
+  const categoryId = watch('categoryId');
+  // Guided path progress (visual only): how far down the form the user is.
+  const detailsDone = (title?.trim().length ?? 0) >= 3 && (description?.trim().length ?? 0) >= 10;
+  const guideDone = !categoryId ? 0 : isHave && photos.length === 0 ? 1 : !detailsDone ? 2 : 3;
 
   const submit = handleSubmit((v) => {
     const isBarter = v.transactionType === 'barter';
@@ -183,6 +209,16 @@ export function ItemForm({ kind, mode, initial, submitting, error, onSubmit }: I
       }}
     >
       <Stack gap="2xl">
+        {mode === 'create' ? (
+          <GuideRail
+            steps={
+              isHave
+                ? ['Item', 'Photos', 'Details', 'Want', 'Publish']
+                : ['Need', 'Kind', 'Details', 'Trade', 'Publish']
+            }
+            done={guideDone}
+          />
+        ) : null}
         {/* ------------------------------------------------------- category -- */}
         <View>
           <StepLabel n={1} label="Pick a category" hint="This is what matching keys off." />
@@ -208,6 +244,14 @@ export function ItemForm({ kind, mode, initial, submitting, error, onSubmit }: I
                       onPress={() => field.onChange(c.id)}
                     />
                   ))}
+                  {/* Nothing fits? Members can add a category right here. */}
+                  <Chip
+                    label="New category"
+                    tone={tone}
+                    selected={false}
+                    icon={<Ionicons name="add" size={14} color={colors.accent} />}
+                    onPress={() => setAddingCategory(true)}
+                  />
                 </Row>
                 {fieldState.error ? (
                   <Text variant="caption" tone="danger">
@@ -218,6 +262,14 @@ export function ItemForm({ kind, mode, initial, submitting, error, onSubmit }: I
             )}
           />
         </View>
+
+        <AddCategorySheet
+          visible={addingCategory}
+          onClose={() => setAddingCategory(false)}
+          existing={categories.data ?? []}
+          onCreated={(c) => setValue('categoryId', c.id, { shouldValidate: true })}
+          onUseExisting={(id) => setValue('categoryId', id, { shouldValidate: true })}
+        />
 
         {/* ----------------------------------------------------------- type -- */}
         <View>

@@ -46,6 +46,7 @@ import type {
   TransactionType,
   UserRow,
   UserStatus,
+  IdentityVerificationStatus,
 } from '@pandam/database/schema';
 
 /* -------------------------------------------------------------------------- */
@@ -121,6 +122,7 @@ export type {
   ReportSubjectType,
   TransactionType,
   UserStatus,
+  IdentityVerificationStatus,
 };
 
 /* -------------------------------------------------------------------------- */
@@ -164,6 +166,16 @@ export interface SafeUser {
   status: UserStatus;
   createdAt: number;
   updatedAt: number;
+  /** First-time identity verification progress. Outcomes only — no ID data. */
+  identityVerification: IdentityVerification;
+}
+
+export type IdentityVerificationStepStatus = 'not_started' | 'verified';
+
+export interface IdentityVerification {
+  status: IdentityVerificationStatus;
+  governmentId: IdentityVerificationStepStatus;
+  face: IdentityVerificationStepStatus;
 }
 
 /** A user's public profile as returned by the API. */
@@ -300,8 +312,14 @@ export interface OfferView {
   toUser: OwnerRef;
   /** The `fromUser`'s HAVE being offered. */
   offered: ItemRef;
-  /** The `toUser`'s HAVE being requested. */
+  /** What the offer is for: the `toUser`'s HAVE, or their I NEED request. */
   requested: ItemRef;
+  /** Whether `requested` is a listing (I HAVE) or a need (I NEED request). */
+  requestedKind: 'listing' | 'need';
+  /** Optional photo the sender attached, ready to fetch. */
+  imageUrl: string | null;
+  /** The trade conversation between the two parties (opens when the offer is sent). */
+  conversationId: string | null;
   message: string | null;
   matchId: string | null;
   expiresAt: number | null;

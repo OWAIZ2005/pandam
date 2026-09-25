@@ -141,9 +141,9 @@ const FRAME: Record<NonNullable<IconFrameProps['tone']>, { bg: string; border: s
   need: { bg: colors.needSoft, border: colors.needBorder },
   match: { bg: colors.matchSoft, border: colors.matchBorder },
   neutral: { bg: colors.surfaceMuted, border: colors.border },
-  danger: { bg: colors.dangerSoft, border: '#F6C9C9' },
-  warning: { bg: colors.warningSoft, border: '#F0DFB4' },
-  info: { bg: colors.infoSoft, border: '#C3DDF2' },
+  danger: { bg: colors.dangerSoft, border: colors.dangerBorder },
+  warning: { bg: colors.warningSoft, border: colors.warningBorder },
+  info: { bg: colors.infoSoft, border: colors.infoBorder },
 };
 
 /**

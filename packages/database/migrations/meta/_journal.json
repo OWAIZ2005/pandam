@@ -36,6 +36,27 @@
       "when": 1789226990671,
       "tag": "0004_swift_wildside",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1790169374811,
+      "tag": "0005_sharp_punisher",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1790240368945,
+      "tag": "0006_mysterious_adam_warlock",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1790245141253,
+      "tag": "0007_aspiring_whiplash",
+      "breakpoints": true
     }
   ]
 }

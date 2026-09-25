@@ -3,19 +3,21 @@
  *
  *   POST /register   create account + profile + session
  *   POST /login      authenticate + session
+ *   POST /oauth      "Sign in with Google/Apple" + session (new or existing)
  *   POST /logout      revoke the current session (idempotent)
  *   GET  /me          the authenticated user + profile
  *
- * Responses never contain a password hash or a session token hash. `register`
- * and `login` return the raw session `token` once (for native clients) AND set
- * the HttpOnly `pandam_session` cookie (for web).
+ * Responses never contain a password hash or a session token hash. `register`,
+ * `login` and `oauth` return the raw session `token` once (for native clients)
+ * AND set the HttpOnly `pandam_session` cookie (for web).
  */
 import { type AuthSession, type AuthenticatedUser } from '@pandam/types';
-import { loginSchema, registerSchema } from '@pandam/validation';
+import { loginSchema, oauthLoginSchema, registerSchema } from '@pandam/validation';
 import { Hono } from 'hono';
 
 import { clearSessionCookie, setSessionCookie } from '../../../lib/cookies';
 import { sendOk } from '../../../lib/http';
+import { verifyAppleIdToken, verifyGoogleIdToken } from '../../../lib/oauth';
 import { toPublicProfile, toSafeUser } from '../../../lib/serialize';
 import { parseBody } from '../../../lib/validate';
 import { authMiddleware, getAuth, requireAuth } from '../../../middleware/auth';
@@ -52,6 +54,34 @@ authRoute.post('/login', async (c) => {
   const { user, session, token } = await service.login(input, {
     userAgent: c.req.header('User-Agent') ?? null,
   });
+  const profile = await repos.profiles.findByUserId(user.id);
+
+  setSessionCookie(c, token, session.expiresAt);
+  const body: AuthSession = {
+    user: toSafeUser(user),
+    profile: toPublicProfile(profile),
+    token,
+    expiresAt: session.expiresAt,
+  };
+  return sendOk(c, body);
+});
+
+authRoute.post('/oauth', async (c) => {
+  const input = await parseBody(c, oauthLoginSchema);
+  const { repos } = c.get('ctx');
+
+  const verified =
+    input.provider === 'google'
+      ? await verifyGoogleIdToken(input.idToken, input.nonce, c.env)
+      : await verifyAppleIdToken(input.idToken, input.nonce, c.env);
+
+  const service = createAuthService(repos);
+  const { user, session, token } = await service.loginWithOAuth(
+    input.provider,
+    verified,
+    { userAgent: c.req.header('User-Agent') ?? null },
+    input.displayName,
+  );
   const profile = await repos.profiles.findByUserId(user.id);
 
   setSessionCookie(c, token, session.expiresAt);

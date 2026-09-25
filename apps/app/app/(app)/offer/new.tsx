@@ -203,7 +203,9 @@ export default function NewOfferScreen() {
         imageKey = (await uploadOfferImage(photo)).imageKey;
         setPhotoKey(imageKey);
       } catch {
-        setUploadError('The photo could not be uploaded. Try again, or remove it and send without it.');
+        setUploadError(
+          'The photo could not be uploaded. Try again, or remove it and send without it.',
+        );
         return;
       } finally {
         setUploading(false);
@@ -308,18 +310,30 @@ export default function NewOfferScreen() {
       footer={
         <Stack gap="sm">
           {formError ? (
-            <Notice kind="danger" icon={<Ionicons name="alert-circle" size={16} color={colors.danger} />}>
+            <Notice
+              kind="danger"
+              icon={<Ionicons name="alert-circle" size={16} color={colors.danger} />}
+            >
               {formError}
             </Notice>
           ) : null}
           {!targetIsReal ? (
-            <Notice kind="neutral" icon={<Ionicons name="information-circle" size={16} color={colors.textMuted} />}>
+            <Notice
+              kind="neutral"
+              icon={<Ionicons name="information-circle" size={16} color={colors.textMuted} />}
+            >
               This item isn&apos;t accepting offers right now.
             </Notice>
           ) : null}
           <Button
             label={
-              sentOffer ? 'Sent' : uploading ? 'Uploading photo…' : create.isPending ? 'Sending…' : 'Send offer'
+              sentOffer
+                ? 'Sent'
+                : uploading
+                  ? 'Uploading photo…'
+                  : create.isPending
+                    ? 'Sending…'
+                    : 'Send offer'
             }
             size="lg"
             fullWidth
@@ -434,7 +448,12 @@ export default function NewOfferScreen() {
               <View style={{ width: 120, height: 120 }}>
                 <Image
                   source={{ uri: photo }}
-                  style={{ width: 120, height: 120, borderRadius: radii.lg, backgroundColor: colors.surfaceMuted }}
+                  style={{
+                    width: 120,
+                    height: 120,
+                    borderRadius: radii.lg,
+                    backgroundColor: colors.surfaceMuted,
+                  }}
                   resizeMode="cover"
                   accessibilityLabel="Photo attached to your offer"
                 />
@@ -488,7 +507,10 @@ export default function NewOfferScreen() {
           </View>
 
           {selected && requested.data ? (
-            <Notice kind="success" icon={<Ionicons name="swap-horizontal" size={16} color={colors.accent} />}>
+            <Notice
+              kind="success"
+              icon={<Ionicons name="swap-horizontal" size={16} color={colors.accent} />}
+            >
               You give “{selected.title}” for “{requested.data.title}”.
             </Notice>
           ) : null}

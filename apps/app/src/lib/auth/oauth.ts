@@ -57,7 +57,9 @@ function unsafeReadName(idToken: string): string | undefined {
     if (!payloadB64) return undefined;
     const json = atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'));
     const payload = JSON.parse(json) as { name?: unknown };
-    return typeof payload.name === 'string' && payload.name.trim() ? payload.name.trim() : undefined;
+    return typeof payload.name === 'string' && payload.name.trim()
+      ? payload.name.trim()
+      : undefined;
   } catch {
     return undefined;
   }
@@ -72,7 +74,9 @@ function unsafeReadName(idToken: string): string | undefined {
  */
 export async function signInWithGoogle(): Promise<OAuthSignInResult> {
   const clientId =
-    Platform.OS === 'web' ? clientEnv.googleOAuthClientId.web : clientEnv.googleOAuthClientId.native;
+    Platform.OS === 'web'
+      ? clientEnv.googleOAuthClientId.web
+      : clientEnv.googleOAuthClientId.native;
   if (!clientId) {
     throw new Error('Google sign-in is not configured for this build yet.');
   }
@@ -146,5 +150,9 @@ export async function signInWithApple(): Promise<OAuthSignInResult> {
     ? [credential.fullName.givenName, credential.fullName.familyName].filter(Boolean).join(' ')
     : undefined;
 
-  return { idToken: credential.identityToken, nonce: hashedNonce, displayName: displayName || undefined };
+  return {
+    idToken: credential.identityToken,
+    nonce: hashedNonce,
+    displayName: displayName || undefined,
+  };
 }

@@ -70,8 +70,17 @@ export function TradeContextCard({ offer, onOpen }: { offer: OfferView; onOpen: 
           <Text variant="caption" tone="muted" style={{ fontWeight: '700' }}>
             {offer.requestedKind === 'need' ? 'Offer for a request' : 'Trade offer'}
           </Text>
-          <View style={{ paddingHorizontal: 6, paddingVertical: 1, borderRadius: radii.sm, backgroundColor: s.bg }}>
-            <Text style={{ fontSize: 10.5, lineHeight: 14, fontWeight: '800', color: s.fg }}>{s.label}</Text>
+          <View
+            style={{
+              paddingHorizontal: 6,
+              paddingVertical: 1,
+              borderRadius: radii.sm,
+              backgroundColor: s.bg,
+            }}
+          >
+            <Text style={{ fontSize: 10.5, lineHeight: 14, fontWeight: '800', color: s.fg }}>
+              {s.label}
+            </Text>
           </View>
         </Row>
         <Text variant="bodyStrong" numberOfLines={1}>

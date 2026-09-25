@@ -1,6 +1,11 @@
 import { type ReactNode, useEffect } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { useMotionOK } from '../motion/useMotionOK';
 import { colors, radii, shadows, spacing } from '../tokens';
@@ -23,20 +28,35 @@ export interface SheetProps {
  * at 520 wide so it reads as a sheet (not a banner) on web/tablet. Tapping the
  * scrim or the hardware back button closes it.
  */
-export function Sheet({ visible, onClose, title, subtitle, children, bottomInset = 0 }: SheetProps) {
+export function Sheet({
+  visible,
+  onClose,
+  title,
+  subtitle,
+  children,
+  bottomInset = 0,
+}: SheetProps) {
   const motionOK = useMotionOK();
   const y = useSharedValue(visible ? 0 : 1);
 
   useEffect(() => {
     if (!visible) return;
     y.set(1);
-    y.set(motionOK ? withSpring(0, { damping: 22, stiffness: 240 }) : withTiming(0, { duration: 0 }));
+    y.set(
+      motionOK ? withSpring(0, { damping: 22, stiffness: 240 }) : withTiming(0, { duration: 0 }),
+    );
   }, [visible, motionOK, y]);
 
   const sheet = useAnimatedStyle(() => ({ transform: [{ translateY: y.get() * 420 }] }));
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+      statusBarTranslucent
+    >
       <KeyboardAvoidingView
         style={{ flex: 1, justifyContent: 'flex-end' }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -75,7 +95,14 @@ export function Sheet({ visible, onClose, title, subtitle, children, bottomInset
               marginBottom: spacing.md,
             }}
           />
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, marginBottom: spacing.lg }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'flex-start',
+              gap: spacing.md,
+              marginBottom: spacing.lg,
+            }}
+          >
             <View style={{ flex: 1, gap: 2 }}>
               <Text variant="h2">{title}</Text>
               {subtitle ? (

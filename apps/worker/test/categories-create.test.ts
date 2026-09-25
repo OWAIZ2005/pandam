@@ -18,7 +18,11 @@ async function token(app: ReturnType<TestDb['makeApp']>) {
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'c@example.com', password: 'correct horse 7', displayName: 'C' }),
+      body: JSON.stringify({
+        email: 'c@example.com',
+        password: 'correct horse 7',
+        displayName: 'C',
+      }),
     },
     testEnv,
   );
@@ -30,7 +34,10 @@ function create(app: ReturnType<TestDb['makeApp']>, name: string, t?: string) {
     '/api/v1/categories',
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(t ? { Authorization: `Bearer ${t}` } : {}) },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(t ? { Authorization: `Bearer ${t}` } : {}),
+      },
       body: JSON.stringify({ name }),
     },
     testEnv,
@@ -55,7 +62,9 @@ describe('POST /api/v1/categories', () => {
   it('rejects a duplicate regardless of case/spacing and points at the existing one', async () => {
     const app = ctx.makeApp();
     const t = await token(app);
-    const first = ((await (await create(app, 'Pottery Classes', t)).json()) as Ok<{ category: Category }>).data.category;
+    const first = (
+      (await (await create(app, 'Pottery Classes', t)).json()) as Ok<{ category: Category }>
+    ).data.category;
     const dup = await create(app, 'POTTERY   classes', t);
     expect(dup.status).toBe(409);
     expect(((await dup.json()) as Err).error.details?.existingId).toEqual([first.id]);

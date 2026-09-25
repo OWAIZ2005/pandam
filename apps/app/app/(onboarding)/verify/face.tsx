@@ -5,14 +5,26 @@ import { useEffect, useRef, useState } from 'react';
 import { Image, Linking, Platform, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button, Row, Screen, Stack, Text, colors, layout, palette, radii, spacing } from '@pandam/ui';
+import {
+  Button,
+  Row,
+  Screen,
+  Stack,
+  Text,
+  colors,
+  layout,
+  palette,
+  radii,
+  spacing,
+} from '@pandam/ui';
 
 import { AppHeader } from '@/components/AppHeader';
 import { CheckRow, StatusState, StepIcon } from '@/components/verification/parts';
 import { useSession } from '@/lib/auth/hooks';
 import { faceVerifier, useApplyVerification } from '@/lib/verification';
 
-type Step = 'intro' | 'camera' | 'preview' | 'working' | 'success' | 'denied' | 'captureError' | 'failed';
+type Step =
+  'intro' | 'camera' | 'preview' | 'working' | 'success' | 'denied' | 'captureError' | 'failed';
 type CamStage = 'position' | 'detected' | 'checking' | 'capturing';
 
 const CAM_PROMPT: Record<CamStage, string> = {
@@ -112,7 +124,10 @@ export default function FaceVerificationScreen() {
           onMountError={() => setStep('captureError')}
         />
         {/* dim the edges so the face guide reads */}
-        <View pointerEvents="none" style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(20,14,10,0.35)' }} />
+        <View
+          pointerEvents="none"
+          style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(20,14,10,0.35)' }}
+        />
 
         <View
           style={{
@@ -145,7 +160,10 @@ export default function FaceVerificationScreen() {
           <View style={{ width: 40 }} />
         </View>
 
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }} pointerEvents="none">
+        <View
+          style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+          pointerEvents="none"
+        >
           <View
             style={{
               width: 240,
@@ -157,7 +175,13 @@ export default function FaceVerificationScreen() {
           />
         </View>
 
-        <View style={{ paddingBottom: insets.bottom + spacing['2xl'], alignItems: 'center', gap: spacing.sm }}>
+        <View
+          style={{
+            paddingBottom: insets.bottom + spacing['2xl'],
+            alignItems: 'center',
+            gap: spacing.sm,
+          }}
+        >
           <View
             style={{
               flexDirection: 'row',
@@ -213,7 +237,12 @@ export default function FaceVerificationScreen() {
             <Text variant="caption" tone="muted">
               Your photo is used only for this verification.
             </Text>
-            <Button label="Start Face Verification" size="lg" fullWidth onPress={() => void openCamera()} />
+            <Button
+              label="Start Face Verification"
+              size="lg"
+              fullWidth
+              onPress={() => void openCamera()}
+            />
           </Stack>
         ) : null}
 
@@ -222,7 +251,12 @@ export default function FaceVerificationScreen() {
             <AppHeader title="Check your photo" />
             <Image
               source={{ uri: photo }}
-              style={{ width: 240, height: 310, borderRadius: 150, backgroundColor: colors.surfaceMuted }}
+              style={{
+                width: 240,
+                height: 310,
+                borderRadius: 150,
+                backgroundColor: colors.surfaceMuted,
+              }}
               resizeMode="cover"
               accessibilityLabel="Your captured selfie"
             />
@@ -231,7 +265,13 @@ export default function FaceVerificationScreen() {
             </Text>
             <Row gap="md" style={{ alignSelf: 'stretch' }}>
               <View style={{ flex: 1 }}>
-                <Button label="Retake" variant="secondary" size="lg" fullWidth onPress={() => void openCamera()} />
+                <Button
+                  label="Retake"
+                  variant="secondary"
+                  size="lg"
+                  fullWidth
+                  onPress={() => void openCamera()}
+                />
               </View>
               <View style={{ flex: 1 }}>
                 <Button label="Continue" size="lg" fullWidth onPress={() => void submit()} />
@@ -241,14 +281,15 @@ export default function FaceVerificationScreen() {
         ) : null}
 
         {step === 'working' ? (
-          <StatusState kind="working" title="Verifying..." body="This usually takes a few seconds." />
+          <StatusState
+            kind="working"
+            title="Verifying..."
+            body="This usually takes a few seconds."
+          />
         ) : null}
 
         {step === 'success' ? (
-          <StatusState
-            kind="success"
-            title="Face Verification Complete"
-          >
+          <StatusState kind="success" title="Face Verification Complete">
             <Button
               label="Continue"
               size="lg"
@@ -273,7 +314,12 @@ export default function FaceVerificationScreen() {
             {canAskAgain || Platform.OS === 'web' ? (
               <Button label="Allow camera" size="lg" fullWidth onPress={() => void openCamera()} />
             ) : (
-              <Button label="Open settings" size="lg" fullWidth onPress={() => void Linking.openSettings()} />
+              <Button
+                label="Open settings"
+                size="lg"
+                fullWidth
+                onPress={() => void Linking.openSettings()}
+              />
             )}
             <Button label="Back to verification" variant="quiet" fullWidth onPress={toHub} />
           </StatusState>
@@ -297,7 +343,12 @@ export default function FaceVerificationScreen() {
             body="We couldn't complete face verification. Please try again."
           >
             <Button label="Try again" size="lg" fullWidth onPress={() => void submit()} />
-            <Button label="Retake photo" variant="quiet" fullWidth onPress={() => void openCamera()} />
+            <Button
+              label="Retake photo"
+              variant="quiet"
+              fullWidth
+              onPress={() => void openCamera()}
+            />
           </StatusState>
         ) : null}
       </View>

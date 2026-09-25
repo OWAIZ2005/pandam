@@ -10,7 +10,12 @@
  *  - session tokens are random 256-bit values; only their SHA-256 hash is stored
  *  - a suspended/deleted user cannot authenticate even with a live session
  */
-import { type OAuthProvider, type Repositories, type SessionRow, type UserRow } from '@pandam/database';
+import {
+  type OAuthProvider,
+  type Repositories,
+  type SessionRow,
+  type UserRow,
+} from '@pandam/database';
 import { type LoginInput, type RegisterInput } from '@pandam/validation';
 
 import {

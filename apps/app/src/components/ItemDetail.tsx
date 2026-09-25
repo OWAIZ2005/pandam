@@ -165,7 +165,9 @@ export function ItemDetail({ kind, id }: { kind: MarketKind; id: string }) {
                 size="lg"
                 fullWidth
                 onPress={() => router.push('/(app)/offers')}
-                leftIcon={<Ionicons name="mail-open-outline" size={16} color={colors.textPrimary} />}
+                leftIcon={
+                  <Ionicons name="mail-open-outline" size={16} color={colors.textPrimary} />
+                }
               />
             ) : null}
             <Row gap="sm">

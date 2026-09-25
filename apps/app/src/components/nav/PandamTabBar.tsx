@@ -77,7 +77,12 @@ function TabItem({
 
   const press = () => {
     if (motionOK) {
-      pop.set(withSequence(withTiming(0.82, { duration: 70 }), withSpring(1, { damping: 8, stiffness: 320 })));
+      pop.set(
+        withSequence(
+          withTiming(0.82, { duration: 70 }),
+          withSpring(1, { damping: 8, stiffness: 320 }),
+        ),
+      );
     }
     tap();
     onPress();
@@ -90,7 +95,13 @@ function TabItem({
       accessibilityLabel={LABELS[name]}
       onPress={press}
       onLongPress={onLongPress}
-      style={{ flex: 1, alignItems: 'center', justifyContent: 'center', height: TAB_BAR_HEIGHT, gap: 3 }}
+      style={{
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: TAB_BAR_HEIGHT,
+        gap: 3,
+      }}
     >
       <Animated.View style={icon}>
         <Ionicons
@@ -132,7 +143,9 @@ function CreateButton({ focused, onPress }: { focused: boolean; onPress: () => v
   const press = useSharedValue(1);
 
   useEffect(() => {
-    on.set(motionOK ? withSpring(focused ? 1 : 0, { damping: 12, stiffness: 180 }) : focused ? 1 : 0);
+    on.set(
+      motionOK ? withSpring(focused ? 1 : 0, { damping: 12, stiffness: 180 }) : focused ? 1 : 0,
+    );
   }, [focused, motionOK, on]);
 
   const disc = useAnimatedStyle(() => ({

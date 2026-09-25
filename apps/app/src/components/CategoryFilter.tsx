@@ -89,7 +89,8 @@ const LABEL_LINE_HEIGHT = 15;
  */
 export function CategoryGrid({ categories, onSelect, limit, onAdd }: CategoryGridProps) {
   const [width, setWidth] = useState(0);
-  const columns = width === 0 ? 4 : width < 260 ? 3 : Math.min(8, Math.max(4, Math.floor(width / 96)));
+  const columns =
+    width === 0 ? 4 : width < 260 ? 3 : Math.min(8, Math.max(4, Math.floor(width / 96)));
   const tileW = width ? Math.floor((width - GRID_GAP * (columns - 1)) / columns) : 0;
 
   const room = limit ? limit - (onAdd ? 1 : 0) : categories.length;
@@ -192,7 +193,13 @@ const RAIL_BOX = 58;
  * so it stays compact above the results. "All" leads, the selected tile fills
  * with the current HAVE/NEED colour, and an Add tile ends the row.
  */
-export function CategoryRail({ categories, selectedId, onSelect, tone = 'accent', onAdd }: CategoryRailProps) {
+export function CategoryRail({
+  categories,
+  selectedId,
+  onSelect,
+  tone = 'accent',
+  onAdd,
+}: CategoryRailProps) {
   const fill = tone === 'need' ? colors.need : colors.accent;
   const text = tone === 'need' ? colors.needText : colors.accentText;
 
@@ -229,7 +236,9 @@ export function CategoryRail({ categories, selectedId, onSelect, tone = 'accent'
         <Ionicons
           name={icon}
           size={variant === 'add' ? 26 : 23}
-          color={variant === 'add' ? colors.accent : selected ? colors.textInverse : colors.textSecondary}
+          color={
+            variant === 'add' ? colors.accent : selected ? colors.textInverse : colors.textSecondary
+          }
         />
       </View>
       <Text

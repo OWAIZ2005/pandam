@@ -65,5 +65,8 @@ export const mediaApi = {
 
 /** Upload the optional photo for a trade offer; pass the returned key to `offersApi.create`. */
 export async function uploadOfferImage(uri: string) {
-  return api.upload<{ imageKey: string; imageUrl: string }>('/api/v1/offers/attachments', await imageForm(uri));
+  return api.upload<{ imageKey: string; imageUrl: string }>(
+    '/api/v1/offers/attachments',
+    await imageForm(uri),
+  );
 }

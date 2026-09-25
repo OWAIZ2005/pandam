@@ -13,7 +13,17 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Press, Text, colors, palette, radii, shadows, spacing, useMotionOK, ALLOW_3D } from '@pandam/ui';
+import {
+  Press,
+  Text,
+  colors,
+  palette,
+  radii,
+  shadows,
+  spacing,
+  useMotionOK,
+  ALLOW_3D,
+} from '@pandam/ui';
 
 import { OrganicShape } from './OrganicShape';
 import { PhotoObject } from './PhotoObject';

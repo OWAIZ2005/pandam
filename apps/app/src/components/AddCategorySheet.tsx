@@ -123,13 +123,21 @@ export function AddCategorySheet({
             maxLength={MAX}
             error={fieldError}
           />
-          <Text variant="caption" tone="muted" style={{ alignSelf: 'flex-end', marginTop: 4 }} numeric>
+          <Text
+            variant="caption"
+            tone="muted"
+            style={{ alignSelf: 'flex-end', marginTop: 4 }}
+            numeric
+          >
             {clean.length}/{MAX}
           </Text>
         </View>
 
         {dupId ? (
-          <Notice kind="neutral" icon={<Ionicons name="information-circle" size={16} color={colors.textMuted} />}>
+          <Notice
+            kind="neutral"
+            icon={<Ionicons name="information-circle" size={16} color={colors.textMuted} />}
+          >
             <Text variant="bodySm">
               {duplicate ? `“${duplicate.name}”` : 'That category'} already exists.
             </Text>
@@ -137,7 +145,10 @@ export function AddCategorySheet({
         ) : null}
 
         {serverError ? (
-          <Notice kind="danger" icon={<Ionicons name="alert-circle" size={16} color={colors.danger} />}>
+          <Notice
+            kind="danger"
+            icon={<Ionicons name="alert-circle" size={16} color={colors.danger} />}
+          >
             {serverError}
           </Notice>
         ) : null}

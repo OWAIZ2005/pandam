@@ -18,7 +18,11 @@ async function signUp(app: ReturnType<TestDb['makeApp']>) {
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'v@example.com', password: 'correct horse 7', displayName: 'V' }),
+      body: JSON.stringify({
+        email: 'v@example.com',
+        password: 'correct horse 7',
+        displayName: 'V',
+      }),
     },
     testEnv,
   );
@@ -86,8 +90,14 @@ describe('identity verification', () => {
     const s = await signUp(app);
     const res = await step(app, s.token, 'face');
     expect(res.status).toBe(409);
-    const me = await app.request('/api/v1/auth/me', { headers: { Authorization: `Bearer ${s.token}` } }, testEnv);
-    expect(((await me.json()) as Ok<AuthenticatedUser>).data.user.identityVerification.status).toBe('not_started');
+    const me = await app.request(
+      '/api/v1/auth/me',
+      { headers: { Authorization: `Bearer ${s.token}` } },
+      testEnv,
+    );
+    expect(((await me.json()) as Ok<AuthenticatedUser>).data.user.identityVerification.status).toBe(
+      'not_started',
+    );
   });
 
   it('demo mode is refused in production', async () => {
@@ -101,7 +111,11 @@ describe('identity verification', () => {
   it('requires a session', async () => {
     const res = await ctx.makeApp().request(
       '/api/v1/verification/government-id',
-      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"mode":"demo"}' },
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{"mode":"demo"}',
+      },
       testEnv,
     );
     expect(res.status).toBe(401);

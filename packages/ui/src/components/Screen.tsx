@@ -59,7 +59,8 @@ export function Screen({
   backdrop,
 }: ScreenProps) {
   const fallback = useContext(DefaultBackdrop);
-  const layer = backdrop !== undefined ? backdrop : background === colors.background ? fallback : null;
+  const layer =
+    backdrop !== undefined ? backdrop : background === colors.background ? fallback : null;
   const inner: StyleProp<ViewStyle> = [
     { width: '100%', maxWidth: layout.contentMaxWidth, alignSelf: 'center', flexGrow: 1 },
     padded && { paddingHorizontal: layout.gutter, paddingVertical: spacing.lg },

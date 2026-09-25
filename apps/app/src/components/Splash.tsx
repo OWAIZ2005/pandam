@@ -16,7 +16,16 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Button, Gradient, Text, colors, gradients, palette, useMotionOK, ALLOW_3D } from '@pandam/ui';
+import {
+  Button,
+  Gradient,
+  Text,
+  colors,
+  gradients,
+  palette,
+  useMotionOK,
+  ALLOW_3D,
+} from '@pandam/ui';
 
 import { brandImages, type BrandImageKey } from '@/components/brand/imagery';
 import { PhotoObject } from '@/components/brand/PhotoObject';
@@ -106,7 +115,13 @@ function Tile({
         style,
       ]}
     >
-      <PhotoObject uri={brandImages[spec.img]} seed={spec.img} style={{ flex: 1 }} radius={16} frame={4} />
+      <PhotoObject
+        uri={brandImages[spec.img]}
+        seed={spec.img}
+        style={{ flex: 1 }}
+        radius={16}
+        frame={4}
+      />
     </Animated.View>
   );
 }
@@ -191,11 +206,23 @@ export function Splash() {
       const ease = Easing.bezier(0.65, 0, 0.35, 1);
       enter.value = withSpring(1, { damping: 13, stiffness: 120 });
       orbit.value = withDelay(420, withTiming(1, { duration: 900, easing: ease }));
-      collapse.value = withDelay(1250, withTiming(1, { duration: 360, easing: Easing.in(Easing.cubic) }));
+      collapse.value = withDelay(
+        1250,
+        withTiming(1, { duration: 360, easing: Easing.in(Easing.cubic) }),
+      );
       mark.value = withDelay(1450, withSpring(1, { damping: 9, stiffness: 150 }));
-      spin.value = withDelay(1450, withTiming(1, { duration: 650, easing: Easing.out(Easing.back(1.4)) }));
-      ring.value = withDelay(1480, withTiming(1, { duration: 750, easing: Easing.out(Easing.cubic) }));
-      reveal.value = withDelay(1600, withTiming(2, { duration: 700, easing: Easing.out(Easing.cubic) }));
+      spin.value = withDelay(
+        1450,
+        withTiming(1, { duration: 650, easing: Easing.out(Easing.back(1.4)) }),
+      );
+      ring.value = withDelay(
+        1480,
+        withTiming(1, { duration: 750, easing: Easing.out(Easing.cubic) }),
+      );
+      reveal.value = withDelay(
+        1600,
+        withTiming(2, { duration: 700, easing: Easing.out(Easing.cubic) }),
+      );
       tagline.value = withDelay(2050, withTiming(1, { duration: 500 }));
     }
     if (motionOK) {
@@ -205,14 +232,31 @@ export function Splash() {
       );
       progress.value = withDelay(
         play ? INTRO_MS : 0,
-        withRepeat(withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.cubic) }), -1, false),
+        withRepeat(
+          withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.cubic) }),
+          -1,
+          false,
+        ),
       );
     }
     return () => {
       cancelAnimation(breathe);
       cancelAnimation(progress);
     };
-  }, [play, motionOK, enter, orbit, collapse, mark, spin, ring, reveal, tagline, breathe, progress]);
+  }, [
+    play,
+    motionOK,
+    enter,
+    orbit,
+    collapse,
+    mark,
+    spin,
+    ring,
+    reveal,
+    tagline,
+    breathe,
+    progress,
+  ]);
 
   const retry = () => {
     setTimedOut(false);

@@ -10,7 +10,12 @@ import {
 
 import { createdAt, idColumn, nullableTimestamp, updatedAt } from './_shared';
 
-export { IDENTITY_VERIFICATION_STATUS, type IdentityVerificationStatus, USER_STATUS, type UserStatus };
+export {
+  IDENTITY_VERIFICATION_STATUS,
+  type IdentityVerificationStatus,
+  USER_STATUS,
+  type UserStatus,
+};
 
 /**
  * An authenticated PANDAM user.

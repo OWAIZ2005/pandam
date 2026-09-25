@@ -35,11 +35,14 @@ export function createVerificationService(repos: Repositories, opts: { demoAllow
       }
 
       const governmentIdVerifiedAt =
-        step === 'governmentId' ? (user.governmentIdVerifiedAt ?? now) : user.governmentIdVerifiedAt;
+        step === 'governmentId'
+          ? (user.governmentIdVerifiedAt ?? now)
+          : user.governmentIdVerifiedAt;
       const faceVerifiedAt = step === 'face' ? (user.faceVerifiedAt ?? now) : user.faceVerifiedAt;
 
       const updated = await repos.users.setIdentityVerification(user.id, {
-        identityVerificationStatus: governmentIdVerifiedAt && faceVerifiedAt ? 'verified' : 'in_progress',
+        identityVerificationStatus:
+          governmentIdVerifiedAt && faceVerifiedAt ? 'verified' : 'in_progress',
         ...(governmentIdVerifiedAt ? { governmentIdVerifiedAt } : {}),
         ...(faceVerifiedAt ? { faceVerifiedAt } : {}),
       });

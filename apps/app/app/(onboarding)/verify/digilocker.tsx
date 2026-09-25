@@ -6,13 +6,13 @@ import { View } from 'react-native';
 import { Button, Notice, Screen, Stack, Text, colors, layout, radii, spacing } from '@pandam/ui';
 
 import { AppHeader } from '@/components/AppHeader';
-import {
-  CheckRow,
-  StatusState,
-  StepIcon,
-} from '@/components/verification/parts';
+import { CheckRow, StatusState, StepIcon } from '@/components/verification/parts';
 import { useSession } from '@/lib/auth/hooks';
-import { governmentIdVerifier, useApplyVerification, type VerificationStage } from '@/lib/verification';
+import {
+  governmentIdVerifier,
+  useApplyVerification,
+  type VerificationStage,
+} from '@/lib/verification';
 
 type Step = 'intro' | 'consent' | 'working' | 'success' | 'cancelled' | 'failed';
 
@@ -74,7 +74,10 @@ export default function DigiLockerScreen() {
               <CheckRow icon="hand-left">User-controlled consent</CheckRow>
               <CheckRow icon="checkmark-done">One-time verification</CheckRow>
             </Stack>
-            <Notice kind="neutral" icon={<Ionicons name="lock-closed" size={16} color={colors.textMuted} />}>
+            <Notice
+              kind="neutral"
+              icon={<Ionicons name="lock-closed" size={16} color={colors.textMuted} />}
+            >
               Your information is shared only with your consent and used only for verification.
             </Notice>
             <Button label="Continue" size="lg" fullWidth onPress={() => setStep('consent')} />
@@ -106,7 +109,13 @@ export default function DigiLockerScreen() {
             </View>
             <Stack gap="sm">
               <Button label="Allow & Continue" size="lg" fullWidth onPress={() => void run()} />
-              <Button label="Cancel" variant="quiet" size="lg" fullWidth onPress={() => setStep('cancelled')} />
+              <Button
+                label="Cancel"
+                variant="quiet"
+                size="lg"
+                fullWidth
+                onPress={() => setStep('cancelled')}
+              />
             </Stack>
           </Stack>
         ) : null}
@@ -120,10 +129,7 @@ export default function DigiLockerScreen() {
         ) : null}
 
         {step === 'success' ? (
-          <StatusState
-            kind="success"
-            title="Identity Verified"
-          >
+          <StatusState kind="success" title="Identity Verified">
             <Button
               label="Continue to face verification"
               size="lg"

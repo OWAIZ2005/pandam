@@ -205,7 +205,8 @@ export default function ProfileScreen() {
                 onPicked={(uri) =>
                   uploadAvatar.mutate(uri, {
                     onSuccess: () => avatarToast.success('Photo updated.'),
-                    onError: () => avatarToast.error('That photo could not be uploaded. Please try again.'),
+                    onError: () =>
+                      avatarToast.error('That photo could not be uploaded. Please try again.'),
                   })
                 }
               />

@@ -63,7 +63,11 @@ export function TiltCard({ children, maxTilt = 6, perspective = 900, style }: Ti
   }, [rx, ry]);
 
   const animated = useAnimatedStyle(() => ({
-    transform: [{ perspective }, { rotateX: `${ALLOW_3D ? rx.value : 0}deg` }, { rotateY: `${ALLOW_3D ? ry.value : 0}deg` }],
+    transform: [
+      { perspective },
+      { rotateX: `${ALLOW_3D ? rx.value : 0}deg` },
+      { rotateY: `${ALLOW_3D ? ry.value : 0}deg` },
+    ],
   }));
 
   return (

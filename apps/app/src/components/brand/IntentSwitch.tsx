@@ -6,10 +6,11 @@ import { Text, colors, palette, radii, shadows, spacing, useMotionOK } from '@pa
 
 type Side = 'have' | 'need';
 
-const COPY: Record<Side, { kicker: string; title: string; icon: keyof typeof Ionicons.glyphMap }> = {
-  have: { kicker: 'I HAVE', title: 'What I can offer', icon: 'cube' },
-  need: { kicker: 'I NEED', title: "What I'm looking for", icon: 'search' },
-};
+const COPY: Record<Side, { kicker: string; title: string; icon: keyof typeof Ionicons.glyphMap }> =
+  {
+    have: { kicker: 'I HAVE', title: 'What I can offer', icon: 'cube' },
+    need: { kicker: 'I NEED', title: "What I'm looking for", icon: 'search' },
+  };
 
 /**
  * I HAVE ⇄ I NEED as ONE connected control instead of two unrelated cards.
@@ -94,7 +95,15 @@ export function IntentSwitch({
             <Ionicons name={c.icon} size={18} color={palette.white} />
           </View>
           <View style={{ gap: 2, alignItems: isHave ? 'flex-start' : 'flex-end' }}>
-            <Text style={{ fontSize: 11, lineHeight: 14, fontWeight: '800', letterSpacing: 1, color: 'rgba(255,255,255,0.82)' }}>
+            <Text
+              style={{
+                fontSize: 11,
+                lineHeight: 14,
+                fontWeight: '800',
+                letterSpacing: 1,
+                color: 'rgba(255,255,255,0.82)',
+              }}
+            >
               {c.kicker}
             </Text>
             <Text
@@ -123,7 +132,9 @@ export function IntentSwitch({
               }}
             >
               <Ionicons name="add" size={12} color={palette.white} />
-              <Text style={{ fontSize: 11.5, lineHeight: 14, fontWeight: '700', color: palette.white }}>
+              <Text
+                style={{ fontSize: 11.5, lineHeight: 14, fontWeight: '700', color: palette.white }}
+              >
                 {count > 0 ? `${count} active` : 'Add first'}
               </Text>
             </View>
@@ -142,7 +153,15 @@ export function IntentSwitch({
       {/* The exchange token sits on the seam, joining the two halves. */}
       <View
         pointerEvents="none"
-        style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, alignItems: 'center', justifyContent: 'center' }}
+        style={{
+          position: 'absolute',
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
       >
         <Animated.View
           style={[

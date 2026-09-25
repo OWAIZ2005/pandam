@@ -16,7 +16,9 @@ let catId = '';
 beforeEach(async () => {
   ctx = await makeTestDb();
   catId = newId('category');
-  await ctx.db.insert(schema.categories).values([{ id: catId, name: 'Technology', slug: 'technology' }]);
+  await ctx.db
+    .insert(schema.categories)
+    .values([{ id: catId, name: 'Technology', slug: 'technology' }]);
 });
 afterEach(() => ctx.close());
 
@@ -45,11 +47,16 @@ async function newUser(app: App, name: string): Promise<AuthSession> {
 async function post(app: App, token: string, path: string, body: unknown) {
   return app.request(
     path,
-    { method: 'POST', headers: { 'Content-Type': 'application/json', ...bearer(token) }, body: JSON.stringify(body) },
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...bearer(token) },
+      body: JSON.stringify(body),
+    },
     testEnv,
   );
 }
-const get = (app: App, token: string, path: string) => app.request(path, { headers: bearer(token) }, testEnv);
+const get = (app: App, token: string, path: string) =>
+  app.request(path, { headers: bearer(token) }, testEnv);
 
 async function create(app: App, token: string, kind: 'listings' | 'needs', title: string) {
   const res = await post(app, token, `/api/v1/${kind}`, {
@@ -73,7 +80,9 @@ describe('request -> offer -> chat', () => {
     const need = await create(app, alice.token, 'needs', 'Beautiful website screenshots');
 
     // Bob discovers it.
-    const found = await json<Ok<{ items: MarketItem[] }>>(await get(app, bob.token, '/api/v1/needs?limit=50'));
+    const found = await json<Ok<{ items: MarketItem[] }>>(
+      await get(app, bob.token, '/api/v1/needs?limit=50'),
+    );
     expect(found.data.items.map((i) => i.id)).toContain(need.id);
 
     // Bob offers one of his listings for it (recipient NOT sent by the client).
@@ -93,16 +102,30 @@ describe('request -> offer -> chat', () => {
     expect(offer.conversationId).toBeTruthy();
 
     // Alice receives it: incoming list + notification.
-    const incoming = await json<Ok<{ items: OfferView[] }>>(await get(app, alice.token, '/api/v1/offers/incoming'));
+    const incoming = await json<Ok<{ items: OfferView[] }>>(
+      await get(app, alice.token, '/api/v1/offers/incoming'),
+    );
     expect(incoming.data.items.map((o) => o.id)).toContain(offer.id);
-    const notes = await json<Ok<{ items: { type: string }[] }>>(await get(app, alice.token, '/api/v1/notifications'));
+    const notes = await json<Ok<{ items: { type: string }[] }>>(
+      await get(app, alice.token, '/api/v1/notifications'),
+    );
     expect(notes.data.items.some((n) => n.type === 'offer_received')).toBe(true);
 
     // Both sides chat in the SAME conversation; messages persist.
     const conv = `/api/v1/conversations/${offer.conversationId}`;
-    expect((await post(app, bob.token, `${conv}/messages`, { body: 'Hey, I can create the screenshots.' })).status).toBe(201);
-    expect((await post(app, alice.token, `${conv}/messages`, { body: 'Great, what style?' })).status).toBe(201);
-    const thread = await json<Ok<{ items: { body: string }[] }>>(await get(app, alice.token, `${conv}/messages`));
+    expect(
+      (
+        await post(app, bob.token, `${conv}/messages`, {
+          body: 'Hey, I can create the screenshots.',
+        })
+      ).status,
+    ).toBe(201);
+    expect(
+      (await post(app, alice.token, `${conv}/messages`, { body: 'Great, what style?' })).status,
+    ).toBe(201);
+    const thread = await json<Ok<{ items: { body: string }[] }>>(
+      await get(app, alice.token, `${conv}/messages`),
+    );
     expect(thread.data.items.map((m) => m.body)).toEqual(
       expect.arrayContaining(['Hey, I can create the screenshots.', 'Great, what style?']),
     );
@@ -114,16 +137,25 @@ describe('request -> offer -> chat', () => {
 
     // Only Alice (the recipient) can accept; the thread is kept and the
     // fulfilled request leaves the market.
-    expect((await post(app, bob.token, `/api/v1/offers/${offer.id}/respond`, { action: 'accept' })).status).toBe(403);
-    const acc = await post(app, alice.token, `/api/v1/offers/${offer.id}/respond`, { action: 'accept' });
+    expect(
+      (await post(app, bob.token, `/api/v1/offers/${offer.id}/respond`, { action: 'accept' }))
+        .status,
+    ).toBe(403);
+    const acc = await post(app, alice.token, `/api/v1/offers/${offer.id}/respond`, {
+      action: 'accept',
+    });
     expect(acc.status).toBe(200);
     const accepted = (await json<Ok<{ offer: OfferView }>>(acc)).data.offer;
     expect(accepted.status).toBe('accepted');
     expect(accepted.conversationId).toBe(offer.conversationId);
-    const bobView = (await json<Ok<{ offer: OfferView }>>(await get(app, bob.token, `/api/v1/offers/${offer.id}`))).data.offer;
+    const bobView = (
+      await json<Ok<{ offer: OfferView }>>(await get(app, bob.token, `/api/v1/offers/${offer.id}`))
+    ).data.offer;
     expect(bobView.status).toBe('accepted');
     const needAfter = await get(app, bob.token, `/api/v1/needs?limit=50`);
-    expect((await json<Ok<{ items: MarketItem[] }>>(needAfter)).data.items.map((i) => i.id)).not.toContain(need.id);
+    expect(
+      (await json<Ok<{ items: MarketItem[] }>>(needAfter)).data.items.map((i) => i.id),
+    ).not.toContain(need.id);
   });
 
   it('never trusts a client-supplied recipient or someone else’s image', async () => {

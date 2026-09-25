@@ -1,7 +1,11 @@
 import { and, eq } from 'drizzle-orm';
 
 import { newId } from '../id';
-import { type OAuthIdentityRow, type OAuthProvider, oauthIdentities } from '../schema/oauth-identities';
+import {
+  type OAuthIdentityRow,
+  type OAuthProvider,
+  oauthIdentities,
+} from '../schema/oauth-identities';
 
 import { type Database, firstOrNull, one } from './helpers';
 

@@ -60,11 +60,7 @@ function KindMark({ isHave, onPhoto = false }: { isHave: boolean; onPhoto?: bool
           paddingVertical: 4,
         }}
       >
-        <Ionicons
-          name={isHave ? 'pricetag' : 'search'}
-          size={10}
-          color={colors.textInverse}
-        />
+        <Ionicons name={isHave ? 'pricetag' : 'search'} size={10} color={colors.textInverse} />
         <Text
           style={{
             fontSize: 10.5,
@@ -117,7 +113,9 @@ function TradePill({ isHave, compact = false }: { isHave: boolean; compact?: boo
     >
       <Ionicons name="swap-horizontal" size={14} color={color} />
       {compact ? null : (
-        <Text style={{ fontSize: 12, lineHeight: 15, fontWeight: '800', color, letterSpacing: 0.2 }}>
+        <Text
+          style={{ fontSize: 12, lineHeight: 15, fontWeight: '800', color, letterSpacing: 0.2 }}
+        >
           Trade
         </Text>
       )}
@@ -253,7 +251,11 @@ export function ItemCard({
                   size={20}
                   uri={mediaSrc(item.owner.avatarUrl)}
                 />
-                <Text variant="bodySm" style={{ color: 'rgba(255,253,249,0.92)' }} numberOfLines={1}>
+                <Text
+                  variant="bodySm"
+                  style={{ color: 'rgba(255,253,249,0.92)' }}
+                  numberOfLines={1}
+                >
                   {item.owner.displayName}
                   {place ? ` · ${place}` : ''}
                 </Text>
@@ -321,7 +323,9 @@ export function ItemCard({
           }}
           states={{ hover: { ...shadows.md, borderColor: colors.borderStrong } }}
         >
-          <View style={{ aspectRatio: 1.12, overflow: 'hidden', backgroundColor: colors.surfaceMuted }}>
+          <View
+            style={{ aspectRatio: 1.12, overflow: 'hidden', backgroundColor: colors.surfaceMuted }}
+          >
             <Animated.View style={[{ flex: 1 }, zoom]}>
               <CoverTile
                 seed={item.id}
@@ -366,7 +370,12 @@ export function ItemCard({
               </Text>
             </Row>
 
-            <Row justify="space-between" align="center" gap="sm" style={{ marginTop: 3, minHeight: 30 }}>
+            <Row
+              justify="space-between"
+              align="center"
+              gap="sm"
+              style={{ marginTop: 3, minHeight: 30 }}
+            >
               {price != null ? (
                 <Text
                   variant="numeric"

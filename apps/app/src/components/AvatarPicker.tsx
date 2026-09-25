@@ -22,7 +22,10 @@ async function fromCamera(): Promise<string | null> {
     Alert.alert('Camera access needed', 'Allow camera access in Settings to take a profile photo.');
     return null;
   }
-  const res = await ImagePicker.launchCameraAsync({ ...PICK_OPTIONS, cameraType: ImagePicker.CameraType.front });
+  const res = await ImagePicker.launchCameraAsync({
+    ...PICK_OPTIONS,
+    cameraType: ImagePicker.CameraType.front,
+  });
   return res.canceled ? null : (res.assets[0]?.uri ?? null);
 }
 

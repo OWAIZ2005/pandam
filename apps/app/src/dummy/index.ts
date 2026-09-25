@@ -89,7 +89,9 @@ export function demoMergeList<Q extends { data?: unknown }>(query: Q, demo: With
   if (!IS_DEMO_DATA) return query;
   const live = (query.data as WithId[] | undefined) ?? [];
   const seen = new Set(live.map((i) => i.id));
-  return demoQuery(query, [...live, ...demo.filter((d) => !seen.has(d.id))] as NonNullable<Q['data']>);
+  return demoQuery(query, [...live, ...demo.filter((d) => !seen.has(d.id))] as NonNullable<
+    Q['data']
+  >);
 }
 
 /** A live infinite query (e.g. `useDiscover`) plus demo pages. */
@@ -99,7 +101,8 @@ export function demoMergePages<Q extends { data?: unknown }>(
 ): Q {
   if (!IS_DEMO_DATA) return query;
   const live =
-    (query.data as { pages: { items: WithId[] }[] } | undefined)?.pages.flatMap((p) => p.items) ?? [];
+    (query.data as { pages: { items: WithId[] }[] } | undefined)?.pages.flatMap((p) => p.items) ??
+    [];
   const seen = new Set(live.map((i) => i.id));
   const extra = demo.pages.flatMap((p) => p.items).filter((d) => !seen.has(d.id));
   return demoQuery(query, demoPages([...live, ...extra]) as NonNullable<Q['data']>);

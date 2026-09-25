@@ -2,7 +2,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 
-import { Button, Row, Screen, Stack, Text, colors, layout, radii, shadows, spacing } from '@pandam/ui';
+import {
+  Button,
+  Row,
+  Screen,
+  Stack,
+  Text,
+  colors,
+  layout,
+  radii,
+  shadows,
+  spacing,
+} from '@pandam/ui';
 
 import { StepProgress } from '@/components/verification/parts';
 import { useLogout, useSession } from '@/lib/auth/hooks';
@@ -158,7 +169,9 @@ export default function VerifyIdentityScreen() {
               variant="caption"
               tone="accent"
               style={{ fontWeight: '700' }}
-              onPress={() => logout.mutate(undefined, { onSettled: () => router.replace('/(auth)/login') })}
+              onPress={() =>
+                logout.mutate(undefined, { onSettled: () => router.replace('/(auth)/login') })
+              }
             >
               Sign out
             </Text>

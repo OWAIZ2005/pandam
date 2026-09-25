@@ -269,7 +269,12 @@ export function TradeStage({
             </Animated.View>
           </Animated.View>
           <View
-            style={{ position: 'absolute', top: 24, alignItems: 'center', justifyContent: 'center' }}
+            style={{
+              position: 'absolute',
+              top: 24,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
             <ParticleBurst burst={burst} />
           </View>

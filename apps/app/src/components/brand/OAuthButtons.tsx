@@ -101,7 +101,10 @@ export function OAuthButtons({ onSuccess }: { onSuccess: () => void }) {
         ) : null}
       </Row>
       {error ? (
-        <Notice kind="danger" icon={<Ionicons name="alert-circle" size={16} color={colors.danger} />}>
+        <Notice
+          kind="danger"
+          icon={<Ionicons name="alert-circle" size={16} color={colors.danger} />}
+        >
           {error}
         </Notice>
       ) : null}

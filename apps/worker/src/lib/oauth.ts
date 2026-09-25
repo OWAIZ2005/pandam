@@ -111,7 +111,13 @@ export async function verifyAppleIdToken(
   env: { APPLE_OAUTH_AUDIENCES?: string },
 ): Promise<VerifiedOAuthIdentity> {
   const audiences = splitList(env.APPLE_OAUTH_AUDIENCES);
-  const payload = await verify(idToken, APPLE_JWKS, 'https://appleid.apple.com', audiences, 'Apple');
+  const payload = await verify(
+    idToken,
+    APPLE_JWKS,
+    'https://appleid.apple.com',
+    audiences,
+    'Apple',
+  );
   if (payload.nonce !== nonce) {
     throw new ApiError('unauthorized', 'Could not verify the Apple sign-in.');
   }

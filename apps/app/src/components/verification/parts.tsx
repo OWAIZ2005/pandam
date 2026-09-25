@@ -36,7 +36,13 @@ export function StepProgress({ current }: { current: 'identity' | 'complete' }) 
               {done ? (
                 <Ionicons name="checkmark" size={14} color={colors.textInverse} />
               ) : (
-                <Text style={{ fontSize: 11, fontWeight: '800', color: active ? colors.textInverse : colors.textMuted }}>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: '800',
+                    color: active ? colors.textInverse : colors.textMuted,
+                  }}
+                >
                   {i + 1}
                 </Text>
               )}
@@ -66,7 +72,13 @@ export function StepProgress({ current }: { current: 'identity' | 'complete' }) 
   );
 }
 
-export function CheckRow({ children, icon = 'checkmark-circle' }: { children: ReactNode; icon?: IconName }) {
+export function CheckRow({
+  children,
+  icon = 'checkmark-circle',
+}: {
+  children: ReactNode;
+  icon?: IconName;
+}) {
   return (
     <Row gap="sm" align="flex-start">
       <Ionicons name={icon} size={18} color={colors.match} style={{ marginTop: 1 }} />
@@ -78,11 +90,29 @@ export function CheckRow({ children, icon = 'checkmark-circle' }: { children: Re
 }
 
 /** Round icon badge used at the top of each step. */
-export function StepIcon({ name, tone = 'accent' }: { name: IconName; tone?: 'accent' | 'match' | 'danger' | 'muted' }) {
+export function StepIcon({
+  name,
+  tone = 'accent',
+}: {
+  name: IconName;
+  tone?: 'accent' | 'match' | 'danger' | 'muted';
+}) {
   const bg =
-    tone === 'match' ? colors.matchSoft : tone === 'danger' ? colors.dangerSoft : tone === 'muted' ? colors.surfaceMuted : colors.accentSoft;
+    tone === 'match'
+      ? colors.matchSoft
+      : tone === 'danger'
+        ? colors.dangerSoft
+        : tone === 'muted'
+          ? colors.surfaceMuted
+          : colors.accentSoft;
   const fg =
-    tone === 'match' ? colors.match : tone === 'danger' ? colors.danger : tone === 'muted' ? colors.textMuted : colors.accent;
+    tone === 'match'
+      ? colors.match
+      : tone === 'danger'
+        ? colors.danger
+        : tone === 'muted'
+          ? colors.textMuted
+          : colors.accent;
   return (
     <View
       style={{
@@ -154,7 +184,11 @@ export function StatusState({
           </Text>
         ) : null}
       </Stack>
-      {children ? <Stack gap="sm" style={{ alignSelf: 'stretch' }}>{children}</Stack> : null}
+      {children ? (
+        <Stack gap="sm" style={{ alignSelf: 'stretch' }}>
+          {children}
+        </Stack>
+      ) : null}
     </Stack>
   );
 }

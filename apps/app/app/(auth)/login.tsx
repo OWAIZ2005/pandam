@@ -5,17 +5,7 @@ import { Link, useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 
-import {
-  Button,
-  Field,
-  Notice,
-  PasswordField,
-  Row,
-  Screen,
-  Stack,
-  Text,
-  colors,
-} from '@pandam/ui';
+import { Button, Field, Notice, PasswordField, Row, Screen, Stack, Text, colors } from '@pandam/ui';
 
 import { AuthShell } from '@/components/brand/AuthShell';
 import { OAuthButtons, OAuthDivider } from '@/components/brand/OAuthButtons';

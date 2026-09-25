@@ -30,3 +30,18 @@ RAZORPAY_WEBHOOK_SECRET=
 # still delivered. A notification is always stored in the database first, so a
 # missing token here costs the interruption, never the notification.
 EXPO_ACCESS_TOKEN=
+
+# "Sign in with Google/Apple" (optional). Not secrets — these are OAuth
+# *client* ids, public by design; the real security boundary is the
+# provider's signature on the ID token, verified server-side. Without these
+# set, POST /api/v1/auth/oauth returns a clear "not configured" error rather
+# than accepting a token it cannot verify. See README "Social sign-in" and
+# apps/worker/src/lib/oauth.ts.
+#
+# GOOGLE_OAUTH_CLIENT_IDS: comma-separated — one PANDAM project has a
+# separate OAuth client per platform (Web/iOS/Android) in Google Cloud
+# Console, and every one of them must be accepted.
+GOOGLE_OAUTH_CLIENT_IDS=
+# APPLE_OAUTH_AUDIENCES: comma-separated — your iOS bundle id, plus a
+# Services ID if you also want Apple sign-in on web.
+APPLE_OAUTH_AUDIENCES=

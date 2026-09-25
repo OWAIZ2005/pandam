@@ -397,6 +397,14 @@ export const springs = {
   enter: { damping: 24, stiffness: 200, mass: 0.8 },
   /** Soft settle for tilt/depth returning to rest. */
   tilt: { damping: 16, stiffness: 160, mass: 0.7 },
+  /**
+   * Sheets/drawers — per the `apple-design` skill's own table ("Drawer /
+   * sheet: damping ~0.8"), a touch under-damped rather than critically
+   * damped: this is a gesture-driven surface, so a slight settle-bounce is
+   * expected once real drag velocity is handed off to it (see
+   * `Sheet.tsx`), not decoration bolted on afterwards.
+   */
+  sheet: { damping: 20, stiffness: 300, mass: 0.9 },
 } as const;
 
 /**

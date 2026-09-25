@@ -22,7 +22,12 @@ beforeEach(async () => {
 afterEach(() => ctx.close());
 
 function identity(overrides: Partial<VerifiedOAuthIdentity> = {}): VerifiedOAuthIdentity {
-  return { subject: 'google-subject-1', email: 'alice@example.com', emailVerified: true, ...overrides };
+  return {
+    subject: 'google-subject-1',
+    email: 'alice@example.com',
+    emailVerified: true,
+    ...overrides,
+  };
 }
 
 describe('AuthService#loginWithOAuth', () => {
@@ -30,12 +35,7 @@ describe('AuthService#loginWithOAuth', () => {
     const repos = createRepositories(ctx.db);
     const service = createAuthService(repos);
 
-    const { user, token } = await service.loginWithOAuth(
-      'google',
-      identity(),
-      {},
-      'Alice Example',
-    );
+    const { user, token } = await service.loginWithOAuth('google', identity(), {}, 'Alice Example');
 
     expect(user.email).toBe('alice@example.com');
     expect(token).toBeTruthy();

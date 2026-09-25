@@ -73,7 +73,9 @@ async function download(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`download ${res.status}`);
   const type = res.headers.get('content-type') || 'image/jpeg';
-  return new File([await res.arrayBuffer()], type.includes('png') ? 'photo.png' : 'photo.jpg', { type });
+  return new File([await res.arrayBuffer()], type.includes('png') ? 'photo.png' : 'photo.jpg', {
+    type,
+  });
 }
 
 async function uploadImage(path, token, url) {
@@ -88,14 +90,19 @@ async function uploadImage(path, token, url) {
 }
 
 /* --------------------------------------------------------------- accounts -- */
-const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '.').replace(/^\.|\.$/g, '');
+const slug = (s) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '.')
+    .replace(/^\.|\.$/g, '');
 
 async function account(owner) {
   const email = `showcase.${slug(owner.username ?? owner.displayName)}@pandam.local`;
   let r = await call('POST', '/auth/register', {
     body: { email, password: PASSWORD, displayName: owner.displayName },
   });
-  if (r.status === 409) r = await call('POST', '/auth/login', { body: { email, password: PASSWORD } });
+  if (r.status === 409)
+    r = await call('POST', '/auth/login', { body: { email, password: PASSWORD } });
   if (r.status >= 300) throw new Error(`account ${email}: ${JSON.stringify(r.json.error)}`);
   const token = r.json.data.token;
 
@@ -168,11 +175,15 @@ for (const item of items) {
   const newId = r.json.data.item.id;
   let photo = '';
   if (item.kind === 'listing' && item.images?.[0]?.url) {
-    photo = (await uploadImage(`/listings/${newId}/images`, token, item.images[0].url)) ? ' +photo' : ' (photo failed)';
+    photo = (await uploadImage(`/listings/${newId}/images`, token, item.images[0].url))
+      ? ' +photo'
+      : ' (photo failed)';
   }
   created++;
   console.log(`${item.kind.padEnd(9)} ${item.title}${photo}`);
 }
 
-console.log(`\nDone: ${accounts.size} accounts, ${created} items created, ${skipped} already existed.`);
+console.log(
+  `\nDone: ${accounts.size} accounts, ${created} items created, ${skipped} already existed.`,
+);
 console.log(`Showcase accounts sign in with password: ${PASSWORD}`);

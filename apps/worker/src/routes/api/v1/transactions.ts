@@ -126,7 +126,12 @@ async function hydrate(
           : Promise.resolve(null),
     ]);
     const toRef = (
-      item: { id: string; title: string; type: ItemRef['type']; category: ItemRef['category'] } | null,
+      item: {
+        id: string;
+        title: string;
+        type: ItemRef['type'];
+        category: ItemRef['category'];
+      } | null,
     ): ItemRef =>
       item
         ? { id: item.id, title: item.title, type: item.type, category: item.category }

@@ -26,7 +26,9 @@ export function useBrowseCategories() {
   const live = useCategories();
   if (!IS_DEMO_DATA) return live;
   const demoSlugs = new Set(demoCategoryList.map((c) => c.slug));
-  const added = (live.data ?? []).filter((c) => c.sortOrder === MEMBER_SORT && !demoSlugs.has(c.slug));
+  const added = (live.data ?? []).filter(
+    (c) => c.sortOrder === MEMBER_SORT && !demoSlugs.has(c.slug),
+  );
   return {
     ...live,
     data: [...(demoCategoryList as unknown as Category[]), ...added],

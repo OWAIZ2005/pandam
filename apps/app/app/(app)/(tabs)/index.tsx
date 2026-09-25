@@ -74,7 +74,12 @@ function StatChip({
       style={{ flex: 1, alignItems: 'center', paddingVertical: spacing.sm, gap: 1 }}
       states={{ hover: { backgroundColor: colors.surfaceHover } }}
     >
-      <Text variant="numericLarge" numeric tone={value === 0 ? 'faint' : tone} style={{ fontWeight: '800' }}>
+      <Text
+        variant="numericLarge"
+        numeric
+        tone={value === 0 ? 'faint' : tone}
+        style={{ fontWeight: '800' }}
+      >
         {value}
       </Text>
       <Text variant="caption" tone="muted">
@@ -96,7 +101,10 @@ export default function HomeScreen() {
   const categories = useBrowseCategories();
   const [addingCategory, setAddingCategory] = useState(false);
   const matches = demoQuery(useMatches(), demoMatches);
-  const recent = demoMergePages(useDiscover('listing', { limit: 8 }), demoPages(demoOthersListings));
+  const recent = demoMergePages(
+    useDiscover('listing', { limit: 8 }),
+    demoPages(demoOthersListings),
+  );
   const myHave = demoMergeList(useMyItems('listing'), demoMyListings);
   const myNeed = demoMergeList(useMyItems('need'), demoMyNeeds);
 
@@ -154,7 +162,11 @@ export default function HomeScreen() {
               onPress={() => router.push('/(app)/(tabs)/profile')}
               style={{ borderRadius: radii.pill }}
             >
-              <Avatar name={profile?.displayName ?? 'You'} size={46} uri={mediaSrc(profile?.avatarUrl)} />
+              <Avatar
+                name={profile?.displayName ?? 'You'}
+                size={46}
+                uri={mediaSrc(profile?.avatarUrl)}
+              />
             </Press>
           </Row>
 
@@ -228,7 +240,9 @@ export default function HomeScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text variant="bodyStrong" tone="match" style={{ fontWeight: '800' }}>
-                {matchCount > 0 ? `${matchCount} barter match${matchCount === 1 ? '' : 'es'}` : 'No matches yet'}
+                {matchCount > 0
+                  ? `${matchCount} barter match${matchCount === 1 ? '' : 'es'}`
+                  : 'No matches yet'}
               </Text>
               <Text variant="caption" tone="secondary" numberOfLines={1}>
                 {matchCount > 0 ? 'Someone wants what you have' : 'List items to find your mirror'}
@@ -277,7 +291,11 @@ export default function HomeScreen() {
               ) : (
                 <Stack gap="md">
                   {matches.data!.slice(0, 2).map((m) => (
-                    <MatchCard key={m.key} match={m} onPress={() => router.push('/(app)/(tabs)/matches')} />
+                    <MatchCard
+                      key={m.key}
+                      match={m}
+                      onPress={() => router.push('/(app)/(tabs)/matches')}
+                    />
                   ))}
                 </Stack>
               )}
@@ -327,11 +345,26 @@ export default function HomeScreen() {
               overflow: 'hidden',
             }}
           >
-            <StatChip value={activeHave} label="listed" tone="accent" onPress={() => router.push('/(app)/(tabs)/profile')} />
+            <StatChip
+              value={activeHave}
+              label="listed"
+              tone="accent"
+              onPress={() => router.push('/(app)/(tabs)/profile')}
+            />
             <View style={{ width: 1, backgroundColor: colors.borderSoft }} />
-            <StatChip value={activeNeed} label="wanted" tone="need" onPress={() => router.push('/(app)/(tabs)/profile')} />
+            <StatChip
+              value={activeNeed}
+              label="wanted"
+              tone="need"
+              onPress={() => router.push('/(app)/(tabs)/profile')}
+            />
             <View style={{ width: 1, backgroundColor: colors.borderSoft }} />
-            <StatChip value={matchCount} label="matches" tone="match" onPress={() => router.push('/(app)/(tabs)/matches')} />
+            <StatChip
+              value={matchCount}
+              label="matches"
+              tone="match"
+              onPress={() => router.push('/(app)/(tabs)/matches')}
+            />
           </View>
 
           {/* ----------------------------------------------- how it works -- */}
@@ -356,8 +389,8 @@ export default function HomeScreen() {
                 <Text variant="bodySm" tone="need" style={{ fontWeight: '700' }}>
                   photography
                 </Text>
-                . Someone else has photography and needs web design. PANDAM spots the mirror — no money
-                changes hands.
+                . Someone else has photography and needs web design. PANDAM spots the mirror — no
+                money changes hands.
               </Text>
             </View>
           ) : null}

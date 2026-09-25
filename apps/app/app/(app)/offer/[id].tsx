@@ -162,7 +162,9 @@ export default function OfferDetailScreen() {
   const chatButton = o.conversationId ? (
     <Button
       label={`Chat with ${person.displayName.split(' ')[0]}`}
-      variant={canRespond && iAmRecipient ? 'secondary' : o.status === 'accepted' ? 'secondary' : 'primary'}
+      variant={
+        canRespond && iAmRecipient ? 'secondary' : o.status === 'accepted' ? 'secondary' : 'primary'
+      }
       size="lg"
       fullWidth
       onPress={() => router.push(`/(app)/chat/${o.conversationId}`)}
@@ -170,7 +172,13 @@ export default function OfferDetailScreen() {
         <Ionicons
           name="chatbubbles-outline"
           size={17}
-          color={canRespond && iAmRecipient ? colors.textPrimary : o.status === 'accepted' ? colors.textPrimary : colors.textInverse}
+          color={
+            canRespond && iAmRecipient
+              ? colors.textPrimary
+              : o.status === 'accepted'
+                ? colors.textPrimary
+                : colors.textInverse
+          }
         />
       }
     />
@@ -226,7 +234,10 @@ export default function OfferDetailScreen() {
           )
         ) : o.status === 'accepted' ? (
           <Stack gap="sm">
-            <Notice kind="success" icon={<Ionicons name="checkmark-circle" size={16} color={colors.match} />}>
+            <Notice
+              kind="success"
+              icon={<Ionicons name="checkmark-circle" size={16} color={colors.match} />}
+            >
               Trade Accepted
             </Notice>
             <Button
@@ -239,7 +250,7 @@ export default function OfferDetailScreen() {
             {chatButton}
           </Stack>
         ) : (
-          chatButton ?? undefined
+          (chatButton ?? undefined)
         )
       }
     >
@@ -320,7 +331,12 @@ export default function OfferDetailScreen() {
                 </Text>
                 <Image
                   source={{ uri: mediaSrc(o.imageUrl) }}
-                  style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: 12, backgroundColor: colors.surfaceMuted }}
+                  style={{
+                    width: '100%',
+                    aspectRatio: 4 / 3,
+                    borderRadius: 12,
+                    backgroundColor: colors.surfaceMuted,
+                  }}
                   resizeMode="cover"
                   accessibilityLabel="Photo attached to this offer"
                 />
